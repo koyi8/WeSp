@@ -13,7 +13,8 @@ let action = ACTION_NONE;
 
 
 let stats;
-
+let curve;
+let amount = 0; // amount variable for the curve
 let flow;
 let container;
 let camera, scene, renderer;
@@ -44,10 +45,21 @@ const params = {
     exportSpline: exportSpline
 };
 
+//position
+// Initialize animation parameters
+var animationSpeed = 0.001; // Adjust the speed as needed
+var currentPosition = 0; // Initial position along the spline
+var cubePosition = new THREE.Vector3(); // Store the cube's position
+let cube;
+const clock = new THREE.Clock();
+let delta;
+
+
 init();
 animate(); 
 
 function init() {
+
 
     container = document.getElementById( 'container' );
 
@@ -120,7 +132,8 @@ function init() {
     transformControl.addEventListener( 'change', function (event){
         if ( ! event.value ) {
 
-            flow.updateCurve( 0, curve );
+            //flow.updateCurve( 0, curve );
+            //trackTrigger(curve, 0.001);
             render();
         }
     } );
@@ -184,7 +197,9 @@ function init() {
     curve.mesh.castShadow = true;
     splines.uniform = curve;
 
+    //Track the boxtrigger: 
 
+    //trackTrigger(curve, 0.001);
 
     for ( const k in splines ) {
 
@@ -201,15 +216,21 @@ function init() {
         // Erstelle einen Cube
 	const cubeGeometry = new THREE.BoxGeometry( 50, 50, 50 );
 	const cubeMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-	const cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+	cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
     cube.geometry.rotateX(Math.PI);
+    //new approach
+    scene.add(cube);
 
+    
     // Erstelle ein Flow-Objekt und binde es an den Cube
-	flow = new Flow( cube );
-	flow.updateCurve( 0, curve );
-    scene.add(flow.object3D);
+	//flow = new Flow( cube );
+	//flow.updateCurve( 0, curve );
+    //scene.add(flow.object3D);
+
+
 
     render();
+
 
 }
 
@@ -261,8 +282,10 @@ function onDoubleClick(event) {
         const mouseY = - (event.clientY / window.innerHeight) * 2 + 1;
 
         // Logge die berechneten Werte
-        console.log('mouseX:', mouseX);
-        console.log('mouseY:', mouseY);
+
+
+        //console.log('mouseX:', mouseX);
+        //console.log('mouseY:', mouseY);
 
         // Erstelle einen Raycaster, um die Mausposition in der Szene zu verfolgen
         const raycaster = new THREE.Raycaster();
@@ -347,6 +370,19 @@ function exportSpline() {
 
 }
 
+//function to track the curve ! 
+
+function trackTrigger(curve, increment) {
+    let amount = 0;
+    amount += increment;
+    amount %= 1;
+
+    const TrigPos = curve.getPointAt(amount);
+    console.log('Amount:', amount);
+    console.log('Position:', TrigPos);
+
+}
+
 function load( new_positions ) {
 
     while ( new_positions.length > positions.length ) {
@@ -376,6 +412,7 @@ function render() {
     splines.uniform.mesh.visible = params.uniform;
     //deleted other curve functions
     renderer.render( scene, camera );
+    
 
 }
 
@@ -444,19 +481,36 @@ function animate() {
         }
 
     }
+
+    if (cube) {
+        // You can now use the cube variable here
+        delta = clock.getDelta();
+        currentPosition += delta/10;
+        currentPosition %= 1;
     
-  
+        const TrigPos = splines.uniform.getPointAt(currentPosition);
+        // Log the cube's position
+        //console.log('Cube Position:', TrigPos);
+        cube.position.copy(TrigPos);
+    }
+    /*
     if (flow) {
         //flow.updateCurve(0, curve);
-      flow.moveAlongCurve(0.001); //was bedeutet dieser wert?? 
+
+        
+        flow.moveAlongCurve(0.001);
+        //console.log( flow.object3D.position );
+        //cube.object3D.updateMatrixWorld();
+        //trackTrigger(curve, 0.001)
       // + / - geben bewegungsrichtung an ! 
       // Du kannst die Geschwindigkeit oder andere Animationseigenschaften hier anpassen.
-
     }
+    */
 
+    
     updateSplineOutline();
     render();
-    // Die render-Funktion zeichnet die Szene.
+
   }
   
 

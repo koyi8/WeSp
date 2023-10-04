@@ -1,14 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<title>My second three.js app</title>
-		<style>
-			body { margin: 0; }
-		</style>
-	</head>
-	<body>
-        <div id="container"></div>
-		<script type="module" src="/main copy.js"></script>
-	</body>
+<head>
+    <meta charset="utf-8">
+    <title>My second three.js app</title>
+    <style>
+        body {
+            margin: 0;
+			overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Style for the clickable element */
+        .clickable {
+            cursor: pointer;
+            text-decoration: underline;
+            color: blue;
+            position: absolute; /* Add position property */
+			top: 20px; /* Adjust the position as needed */
+            left: 20px;
+            z-index: 2; /* Increase the z-index to bring it to the front */
+        }
+
+        /* Style for the container div */
+        .container {
+            position: relative; /* Add position property */
+            z-index: 1; /* Lower z-index to place it behind the clickable element */
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="stats-container"></div>
+
+    <!-- Add a clickable element (div) -->
+    <div id="clickableElement" class="clickable">Next page</div>
+
+    <!-- Include the "main copy.js" script -->
+    <script type="module" src="/main copy.js"></script>
+
+    <!-- JavaScript for page navigation -->
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', () => {
+            const clickableElement = document.getElementById('clickableElement');
+            
+            clickableElement.addEventListener('click', () => {
+                // Redirect to another page when the element is clicked
+                window.location.href = 'next_page.html';
+            });
+        });
+    </script>
+</body>
 </html>
