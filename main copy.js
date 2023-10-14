@@ -4,8 +4,11 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { Flow } from 'three/addons/modifiers/CurveModifier.js';
+//import { Flow } from 'three/addons/modifiers/CurveModifier.js';
 import Stats from "three/addons/libs/stats.module.js";
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+
 
 
 const ACTION_SELECT = 1, ACTION_NONE = 0;
@@ -13,11 +16,9 @@ let action = ACTION_NONE;
 
 
 let stats;
-let curve;
-let amount = 0; // amount variable for the curve
-let flow;
+
 let container;
-let camera, scene, renderer;
+let camera, scene, renderer, labelRenderer;
 const splineHelperObjects = [];
 let splinePointsLength = 4;
 const positions = [];
@@ -47,12 +48,14 @@ const params = {
 
 //position
 // Initialize animation parameters
-var animationSpeed = 0.001; // Adjust the speed as needed
-var currentPosition = 0; // Initial position along the spline
-var cubePosition = new THREE.Vector3(); // Store the cube's position
+
+var currentPosition = 0; // Initial position along the spline   
+let TrigPos;
 let cube;
 const clock = new THREE.Clock();
 let delta;
+let cubeP;
+
 
 
 init();
@@ -70,6 +73,7 @@ function init() {
     camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
     camera.position.set( 0, 250, 1000 );
     scene.add( camera );
+
     //Light
     scene.add( new THREE.AmbientLight( 0xf0f0f0, 3 ) );
     const light = new THREE.SpotLight( 0xffffff, 4.5 );
@@ -104,7 +108,21 @@ function init() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.shadowMap.enabled = true;
     container.appendChild( renderer.domElement );
+
+    // LabelRenderer
+    labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize( window.innerWidth, window.innerHeight );
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild( labelRenderer.domElement );
     
+
+    cubeP = document.createElement( 'p' );
+    const cubeLabel = new CSS2DObject(cubeP );
+    cubeLabel.position.set( 0, 3, 0);
+
+
 
     const gui = new GUI();
 
@@ -133,7 +151,6 @@ function init() {
         if ( ! event.value ) {
 
             //flow.updateCurve( 0, curve );
-            //trackTrigger(curve, 0.001);
             render();
         }
     } );
@@ -144,10 +161,7 @@ function init() {
     } );
     scene.add( transformControl );
     
-    /*
-    stats = new Stats();
-    document.body.appendChild( stats.dom );
-    */
+
     transformControl.addEventListener( 'objectChange', function () {
 
         updateSplineOutline();
@@ -165,6 +179,7 @@ function init() {
     document.addEventListener( 'pointerup', onPointerUp );
     document.addEventListener( 'pointermove', onPointerMove );
     window.addEventListener( 'resize', onWindowResize );
+
 
     /*******
      * Curves
@@ -220,6 +235,7 @@ function init() {
     cube.geometry.rotateX(Math.PI);
     //new approach
     scene.add(cube);
+    cube.add(cubeLabel);
 
     
     // Erstelle ein Flow-Objekt und binde es an den Cube
@@ -227,7 +243,8 @@ function init() {
 	//flow.updateCurve( 0, curve );
     //scene.add(flow.object3D);
 
-
+    stats = new Stats();
+    container.appendChild( stats.dom );
 
     render();
 
@@ -347,6 +364,7 @@ function updateSplineOutline() {
         }
 
         position.needsUpdate = true;
+    
 
     }
 
@@ -412,6 +430,7 @@ function render() {
     splines.uniform.mesh.visible = params.uniform;
     //deleted other curve functions
     renderer.render( scene, camera );
+    
     
 
 }
@@ -484,15 +503,22 @@ function animate() {
 
     if (cube) {
         // You can now use the cube variable here
+        const arcLenght = splines.uniform.getLength();
         delta = clock.getDelta();
-        currentPosition += delta/10;
+        const speed = 3;
+        currentPosition += speed / arcLenght;
         currentPosition %= 1;
+        //console.log('Current Position:', currentPosition);
     
-        const TrigPos = splines.uniform.getPointAt(currentPosition);
+        TrigPos = splines.uniform.getPointAt(currentPosition);
+        cubeP.textContent = 'CP: ' + TrigPos.x.toFixed(2) + ', ' + TrigPos.y.toFixed(2) + ', ' + TrigPos.z.toFixed(2);
+        //exportthecubesposition:
+        //export {TrigPos};
         // Log the cube's position
         //console.log('Cube Position:', TrigPos);
         cube.position.copy(TrigPos);
     }
+
     /*
     if (flow) {
         //flow.updateCurve(0, curve);
@@ -509,7 +535,10 @@ function animate() {
 
     
     updateSplineOutline();
+    labelRenderer.render( scene, camera );
     render();
+    stats.update();
+    splines.uniform.updateArcLengths(); //this is nice!
 
   }
   
@@ -532,8 +561,12 @@ function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize( window.innerWidth, window.innerHeight);
+    labelRenderer.setSize( window.innerWidth, window.innerHeight );
 
     render();
 
 }
+
+// export the trigPos_function to the html //
+export {TrigPos};
