@@ -51,20 +51,45 @@
 
         // Send OSC messages every 100ms
         setInterval(() => {
-            console.log('TrigPos:', TrigPos); // Add this line to log the variable
+            //console.log('TrigPos:', TrigPos); // Add this line to log the variable
 
             // Create three separate OSC messages for x, y, and z
+            // AND: HARDCODE to OSC REceiver IEM PLUGIN ROOMENCODER
+
+            
+            // Map the x component of TrigPos from [-1000, 1000] to [-15, 15]
+            // THE X-VALUE needs to be flipped !! Mapping
+            const xMapped = map(TrigPos.x, 1000, -1000, -15, 15);
+
+        // Map the y component of TrigPos from [0, 500] to [0, 10]
+        // In the ROOM-ENCODER this is the Z-VALUE
+        const zMapped = map(TrigPos.y, 0, 500, 0, 10);
+
+        // Map the z component of TrigPos from [-1000, 1000] to [-15, 15]
+        const yMapped = map(TrigPos.z, -1000, 1000, -15, 15);
+
+        // Map a value from one range to another
+        function map(value, min1, max1, min2, max2) {
+        return (value - min1) * (max2 - min2) / (max1 - min1) + min2;
+        }
+
+        console.log('xMapped:', xMapped);
+        console.log('yMapped:', yMapped);
+        console.log('zMapped:', zMapped);
+
+
             const xMessage = {
-                address: '/x',
-                args: [{ type: 'f', value: TrigPos.x.toFixed(2) }]
+                address: '/RoomEncoder/sourceX',
+                // Mapping values from -1000 - 1000 to -15 - 15
+                args: [{ type: 'f', value: xMapped.toFixed(2) }]
             };
             const yMessage = {
-                address: '/y',
-                args: [{ type: 'f', value: TrigPos.y.toFixed(2) }]
+                address: '/RoomEncoder/sourceY',
+                args: [{ type: 'f', value: yMapped.toFixed(2) }]
             };
             const zMessage = {
-                address: '/z',
-                args: [{ type: 'f', value: TrigPos.z.toFixed(2) }]
+                address: '/RoomEncoder/sourceZ',
+                args: [{ type: 'f', value: zMapped.toFixed(2) }]
             };
 
             // Send the messages over OSC

@@ -71,7 +71,7 @@ function init() {
     scene.background = new THREE.Color( 0xf0f0f0 );
     //Camera
     camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
-    camera.position.set( 0, 250, 1000 );
+    camera.position.set( 1500, 800, 0 );
     scene.add( camera );
 
     //Light
@@ -93,12 +93,12 @@ function init() {
     const planeMaterial = new THREE.ShadowMaterial( { color: 0x000000, opacity: 0.2 } );
 
     const plane = new THREE.Mesh( planeGeometry, planeMaterial );
-    plane.position.y = - 200;
+    plane.position.y = 0;
     plane.receiveShadow = true;
     scene.add( plane );
     //PlaneGridHelper
     const helper = new THREE.GridHelper( 2000, 100 );
-    helper.position.y = - 199;
+    helper.position.y = 0;
     helper.material.opacity = 1;
     helper.material.transparent = true;
     scene.add( helper );
@@ -180,6 +180,13 @@ function init() {
     document.addEventListener( 'pointermove', onPointerMove );
     window.addEventListener( 'resize', onWindowResize );
 
+    //Global AXES-HELPER: 
+
+    const GlobAxesHelper = new THREE.AxesHelper( 1500 );
+    scene.add( GlobAxesHelper );
+    GlobAxesHelper.position.set(0, 0, 0);
+    GlobAxesHelper.lineWidth = 10;
+
 
     /*******
      * Curves
@@ -222,12 +229,18 @@ function init() {
         scene.add( spline.mesh );
 
     }
-
+    /*
     load( [ new THREE.Vector3( 289.76843686945404, 50.0, 56.10018915737797 ),
         new THREE.Vector3( - 53.56300074753207, 50.0, - 14.495472686253045 ),
         new THREE.Vector3( - 91.40118730204415, 50.0, - 6.958271935582161 ),
         new THREE.Vector3( - 383.785318791128, 50.0, 47.869296953772746 ) ] );
-
+        */
+    load([
+        new THREE.Vector3(-500, 50, -500), // Bottom left corner
+        new THREE.Vector3(500, 50, -500), // Bottom right corner
+        new THREE.Vector3(500, 50, 500), // Top right corner
+        new THREE.Vector3(-500, 50, 500) // Top left corner
+        ]);
         // Erstelle einen Cube
 	const cubeGeometry = new THREE.BoxGeometry( 50, 50, 50 );
 	const cubeMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
