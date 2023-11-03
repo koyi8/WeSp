@@ -46,7 +46,17 @@ const params = {
     exportSpline: exportSpline
 };
 
-//position
+
+//speed control for GUI
+let speed = 3;
+// closed spline option or open // DEFAULT: true
+let closed = true;
+// loop vs alternate option // DEFAULT: true
+let loop = true;
+// global arclenth variable // DEFAULT:0
+let arcLenght = 0;
+
+
 // Initialize animation parameters
 
 var currentPosition = 0; // Initial position along the spline   
@@ -55,6 +65,8 @@ let cube;
 const clock = new THREE.Clock();
 let delta;
 let cubeP;
+
+
 
 
 
@@ -117,13 +129,13 @@ function init() {
     labelRenderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild( labelRenderer.domElement );
     
-
+    //CubeLabel
     cubeP = document.createElement( 'p' );
     const cubeLabel = new CSS2DObject(cubeP );
     cubeLabel.position.set( 0, 3, 0);
 
 
-
+    //GUI
     const gui = new GUI();
 
     gui.add( params, 'uniform' ).onChange( render );
@@ -138,6 +150,34 @@ function init() {
     gui.add( params, 'addPoint' );
     gui.add( params, 'removePoint' );
     gui.add( params, 'exportSpline' );
+
+    //speed control
+    gui.add({ speed: speed }, 'speed', 1, 10).step(0.2).onChange(function(value) {
+        speed = value;
+        render();
+      });
+    //closed spline option
+    gui.add({ closed: closed }, 'closed').onChange(function(value) {
+        if (value === true) {
+            splines.uniform.closed = true;
+        }
+        else {
+            splines.uniform.closed = false;
+        }
+        
+        render();
+      });
+    //loop vs alternate option
+    gui.add({ loop: loop }, 'loop').onChange(function(value) {
+        if (value === true) {
+            loop = true;
+        } else {
+            loop = false;
+        }
+    });
+
+    console.log('loop:', loop);
+
     gui.open();
 
     // Controls
@@ -210,7 +250,7 @@ function init() {
     geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( ARC_SEGMENTS * 3 ), 3 ) );
 
     //curve uniform
-    let curve = new THREE.CatmullRomCurve3( positions, true);
+    let curve = new THREE.CatmullRomCurve3( positions, closed);
     curve.curveType = 'catmullrom';
     curve.mesh = new THREE.Line( geometry.clone(), new THREE.LineBasicMaterial( {
         color: 0xff0000,
@@ -219,22 +259,14 @@ function init() {
     curve.mesh.castShadow = true;
     splines.uniform = curve;
 
-    //Track the boxtrigger: 
-
-    //trackTrigger(curve, 0.001);
-
     for ( const k in splines ) {
 
         const spline = splines[ k ];
         scene.add( spline.mesh );
 
     }
-    /*
-    load( [ new THREE.Vector3( 289.76843686945404, 50.0, 56.10018915737797 ),
-        new THREE.Vector3( - 53.56300074753207, 50.0, - 14.495472686253045 ),
-        new THREE.Vector3( - 91.40118730204415, 50.0, - 6.958271935582161 ),
-        new THREE.Vector3( - 383.785318791128, 50.0, 47.869296953772746 ) ] );
-        */
+    
+    // Preset the Splines Default-Position
     load([
         new THREE.Vector3(-500, 50, -500), // Bottom left corner
         new THREE.Vector3(500, 50, -500), // Bottom right corner
@@ -250,11 +282,6 @@ function init() {
     scene.add(cube);
     cube.add(cubeLabel);
 
-    
-    // Erstelle ein Flow-Objekt und binde es an den Cube
-	//flow = new Flow( cube );
-	//flow.updateCurve( 0, curve );
-    //scene.add(flow.object3D);
 
     stats = new Stats();
     container.appendChild( stats.dom );
@@ -401,18 +428,7 @@ function exportSpline() {
 
 }
 
-//function to track the curve ! 
 
-function trackTrigger(curve, increment) {
-    let amount = 0;
-    amount += increment;
-    amount %= 1;
-
-    const TrigPos = curve.getPointAt(amount);
-    console.log('Amount:', amount);
-    console.log('Position:', TrigPos);
-
-}
 
 function load( new_positions ) {
 
@@ -441,6 +457,7 @@ function load( new_positions ) {
 function render() {
 
     splines.uniform.mesh.visible = params.uniform;
+
     //deleted other curve functions
     renderer.render( scene, camera );
     
@@ -516,11 +533,23 @@ function animate() {
 
     if (cube) {
         // You can now use the cube variable here
-        const arcLenght = splines.uniform.getLength();
+        arcLenght = splines.uniform.getLength();
         delta = clock.getDelta();
-        const speed = 3;
+        //speed is controlled by the GUI !! Actually the increment of the position
         currentPosition += speed / arcLenght;
-        currentPosition %= 1;
+        // loop alternate option
+        if (loop === true) {
+            //currentPosition += speed / arcLenght;
+            currentPosition %= 1;
+        } else  {
+            //currentPosition += speed / arcLenght;
+            if (currentPosition >= 0.99) {
+                speed *= -1;
+            } else if (currentPosition <= 0.01) {
+                speed *= -1;
+            }
+        }    
+        //currentPosition %= 1;
         //console.log('Current Position:', currentPosition);
     
         TrigPos = splines.uniform.getPointAt(currentPosition);
