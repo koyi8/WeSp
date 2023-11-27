@@ -217,7 +217,7 @@ function init() {
     // Controls
     const controls = new OrbitControls( camera, renderer.domElement );
     controls.damping = 0.2;
-    controls.addEventListener( 'change', render );
+    //controls.addEventListener( 'change', render ); // cahnged because of poor mobile performance
 
     transformControl = new TransformControls( camera, renderer.domElement );
     transformControl.addEventListener( 'change', function (event){
@@ -290,7 +290,7 @@ function init() {
             positions.push(splineHelperObjects[i].position);
         }
     
-        let curve = createCurve(positions); // Use updatedPositions instead of positions
+        let curve = createCurve(positions); 
         curves.push(curve); // Store the curve in the array
         scene.add(curve.mesh);
     }
