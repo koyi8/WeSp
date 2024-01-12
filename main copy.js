@@ -20,6 +20,7 @@ let stats;
 let container;
 //GUI
 const gui = new GUI();
+
 // Keep a reference to the GUI controllers
 let speedFolder;
 let guiControllers = [];
@@ -119,7 +120,7 @@ function init() {
 
     //Light
     scene.add( new THREE.AmbientLight( 0xf0f0f0, 3 ) );
-    const light = new THREE.SpotLight( 0xffffff, 4.5 );
+    const light = new THREE.DirectionalLight( 0xffffff, 4.5 );
     light.position.set( 0, 1500, 200 );
     light.angle = Math.PI * 0.2;
     light.decay = 0;
@@ -134,11 +135,11 @@ function init() {
     //PlaneGeometry
     const planeGeometry = new THREE.PlaneGeometry( 2000, 2000 );
     planeGeometry.rotateX( - Math.PI / 2 );
-    const planeMaterial = new THREE.ShadowMaterial( { color: 0x000000, opacity: 0.2 } );
+    const planeMaterial = new THREE.ShadowMaterial( { color: 0x000000, opacity: 1.0 } );
 
     const plane = new THREE.Mesh( planeGeometry, planeMaterial );
     plane.position.y = 0;
-    plane.receiveShadow = true;
+    //plane.receiveShadow = true;
     scene.add( plane );
 
     //PlaneGridHelper
@@ -149,10 +150,12 @@ function init() {
     scene.add( helper );
 
     renderer = new THREE.WebGLRenderer( { antialias: true } );
-    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setPixelRatio( window.devicePixelRatio * 0.95 ); //changed because of poor mobile performance
     renderer.setSize( window.innerWidth, window.innerHeight );
-    renderer.shadowMap.enabled = true;
+    //renderer.shadowMap.enabled = true;
     container.appendChild( renderer.domElement );
+
+
 
     // LabelRenderer
     labelRenderer = new CSS2DRenderer();
@@ -162,13 +165,15 @@ function init() {
     labelRenderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild( labelRenderer.domElement );
     
+ 
+
     //GUI
     gui.add( params, 'uniform' ).onChange( render );
     gui.add( params, 'tension', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
         curves[curveIndex].tension = value;
         updateSplineOutline();
-        render();
+        //render();
 
     } );
 
@@ -200,7 +205,7 @@ function init() {
         else {
             curves[curveIndex].closed = false;
         }
-        render();
+        //render();
       });
 
     //loop vs alternate option
@@ -299,10 +304,12 @@ function init() {
      * Triggers
      *********/
     //Create Triggers (multiple cubes possible) DEFAULT 1 
+    // Cube geometry and material
+    const cubeGeometry = new THREE.BoxGeometry(50, 50, 50);
+    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
     for (let i = 0; i < triggerAmount; i++) {
-        // Create a cube
-        const cubeGeometry = new THREE.BoxGeometry(50, 50, 50);
-        const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        // Create a Trigger-Cube
         let cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
         cube.geometry.rotateX(Math.PI);
     
@@ -346,7 +353,7 @@ function init() {
 
 // ANIMATION - LOOP
 function animate() {
-    requestAnimationFrame(animate);
+    //requestAnimationFrame(animate);
 
     
     if (triggers.length > 0) {
@@ -404,6 +411,7 @@ function animate() {
     render();
     stats.update();
     curves[curveIndex].updateArcLengths(); //this is nice!
+    requestAnimationFrame(animate);
   }
 
 
@@ -430,7 +438,7 @@ function createCurve(positions) {
         color: randomColor,
         opacity: 0.35
     }));
-    curve.mesh.castShadow = true;
+    //curve.mesh.castShadow = true;
     //splines.uniform = curve;
 
     return curve;
@@ -439,7 +447,7 @@ function createCurve(positions) {
 // Create a spline object
 function addSplineObject( position ) {
 
-    const material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
+    const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
     const object = new THREE.Mesh( geometry, material );
 
     if ( position ) {
@@ -455,8 +463,8 @@ function addSplineObject( position ) {
        
     }
 
-    object.castShadow = true;
-    object.receiveShadow = true;
+    //object.castShadow = true;
+    //object.receiveShadow = true;
     scene.add( object );
     splineHelperObjects.push( object );
     console.log(splineHelperObjects);
@@ -505,7 +513,7 @@ function addTrigger() {
     updateSplineOutline();
 
     // Update the scene
-    render();
+    //render();
     
 }
 
@@ -539,7 +547,7 @@ function removeTrigger() {
     updateSplineOutline();
 
     // Update the scene
-    render();
+    //render();
 }
 
 
@@ -558,7 +566,7 @@ function addPoint(position, curveIndex) {
     updateSplineOutline();
 
     // Render the scene
-    render();
+    //render();
 }
 
 
@@ -578,7 +586,7 @@ function removePoint(curveIndex) {
 
     updateSplineOutline();
 
-    render();
+    //render();
 }
 
 // doubleclick function add point at clicked space
@@ -653,7 +661,7 @@ function onPointerUp( event ) {
     if ( onDownPosition.distanceTo( onUpPosition ) === 0 ) {
 
         transformControl.detach();
-        render();
+        //render();
 
     }
         // Call updateSplineOutline when a control point is moved
