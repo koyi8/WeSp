@@ -58,7 +58,7 @@ setInterval(() => {
 // RTT Latency Check
 socket.on('pongCheck', () => {
     const latency = Date.now() - start;
-    console.log(`Latency is ${latency} ms`);
+    //console.log(`Latency is ${latency} ms`);
 });
 
 let start;

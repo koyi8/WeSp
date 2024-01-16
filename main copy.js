@@ -24,6 +24,9 @@ const gui = new GUI();
 // Keep a reference to the GUI controllers
 let speedFolder;
 let guiControllers = [];
+// Store the GUI controller in a variable
+let curveControllers = [];
+let curveFolder;
 
 let camera, scene, renderer, labelRenderer;
 const splineHelperObjects = [];
@@ -178,12 +181,9 @@ function init() {
         //render();
 
     } );
-
-    // Switch between curves
-    gui.add(guiParams, 'curve', ['curve1', 'curve2']).onChange(function(value) {
-        // Update the curveIndex variable based on the selected curve
-        curveIndex = value === 'curve1' ? 0 : 1;
-    });
+    // Create a new folder for the curves
+    curveFolder = gui.addFolder('Curves');
+    //updateCurveController();
 
     // AddRandomPoint-GUI
     gui.add({ addPointRandom: function() {
@@ -198,6 +198,11 @@ function init() {
     //gui.add( params, 'exportSpline' );
     gui.add(params, 'addTrigger');
     gui.add(params, 'removeTrigger');
+    // Add a button to add a random trajectory
+    gui.add({ addTrajectory }, 'addTrajectory');
+
+    // Add a button to delete the last trajectory
+    gui.add({ deleteTrajectory }, 'deleteTrajectory');
 
     //closed spline option
     gui.add({ closed: closed }, 'closed').onChange(function(value) {
@@ -327,6 +332,7 @@ function init() {
         let curve = createCurve(positions); 
         curves.push(curve); // Store the curve in the array
         scene.add(curve.mesh);
+        updateCurveController();
     }
 
     /*******
@@ -472,6 +478,85 @@ function createCurve(positions) {
     //splines.uniform = curve;
 
     return curve;
+}
+
+//Add a random Trajectory
+
+function addTrajectory() {
+    let randomPositions = [];
+
+    for (let i = 0; i < splinePointsLength; i++) {
+        randomPositions.push(new THREE.Vector3(
+            getRandomArbitrary(-10, 10),
+            getRandomArbitrary(1, 1),
+            getRandomArbitrary(-10, 10)
+        ));
+    }
+    
+    for (let i = 0; i < splinePointsLength; i++) {
+        addSplineObject(randomPositions[i]);
+    }
+
+    randomPositions.length  = 0
+
+    let start = splineHelperObjects.length - splinePointsLength;
+    for (let i = start; i < splineHelperObjects.length; i++) {
+        randomPositions.push(splineHelperObjects[i].position);
+    }
+
+    let curve = createCurve(randomPositions); 
+    curves.push(curve); // Store the curve in the array
+    scene.add(curve.mesh);
+
+    console.log(curves);
+    console.log(splineHelperObjects);
+    updateCurveController();
+    updateSplineOutline();
+}
+
+// Delete the last trajectory
+function deleteTrajectory() {
+    if (curves.length <= 0) {  // Check if there are any curves to delete
+        return;
+    }
+
+    // Get the last curve
+    let lastCurve = curves[curves.length - 1];
+
+    // Remove the last curve from the scene
+    scene.remove(lastCurve.mesh);
+
+    // Remove the last curve from the array
+    curves.pop();
+
+    // Remove the corresponding spline helper objects
+    for (let i = 0; i < splinePointsLength; i++) {
+        let lastSplineHelperObject = splineHelperObjects[splineHelperObjects.length - 1];
+        scene.remove(lastSplineHelperObject);
+        splineHelperObjects.pop();
+    }
+    updateCurveController();
+}
+
+// Function to update the curve controller
+function updateCurveController() {
+    // Hide the last curve's GUI controller
+    if (curveControllers.length > 0) {
+        let controller = curveControllers.pop();
+        controller.domElement.style.display = 'none';
+    }
+
+    // Generate curve names
+    let curveNames = curves.map((_, index) => 'curve' + (index + 1));
+
+    // Add a new controller with the updated options
+    let newController = curveFolder.add(guiParams, 'curve', curveNames).onChange(function(value) {
+        // Update the curveIndex variable based on the selected curve
+        curveIndex = parseInt(value.replace('curve', '')) - 1;
+    });
+
+    // Push the new controller to the curveControllers array
+    curveControllers.push(newController);
 }
 
 // Create a spline object
@@ -749,6 +834,11 @@ function onWindowResize() {
 
     render();
 
+}
+
+// Randomizer function
+function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
 
