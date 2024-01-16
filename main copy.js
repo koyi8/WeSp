@@ -36,7 +36,7 @@ const pointer = new THREE.Vector2();
 const onUpPosition = new THREE.Vector2();
 const onDownPosition = new THREE.Vector2();
 
-const geometry = new THREE.BoxGeometry( 20, 20, 20 );
+const geometry = new THREE.BoxGeometry( 0.4, 0.4, 0.4 );
 let transformControl;
 
 const ARC_SEGMENTS = 200;
@@ -57,13 +57,15 @@ const params = {
 
 
 //speed control for GUI
-let speed = 3;
+let speed = 0.1;
 // closed spline option or open // DEFAULT: true
 let closed = true;
 // loop vs alternate option // DEFAULT: true
 let loop = true;
 // global arclenth variable // DEFAULT:0
 let arcLenght = 0;
+//antialias option for mobile // DEFAULT: true
+let antialias = true;
 
 // Define an object to hold the GUI parameters
 let guiParams = {
@@ -115,25 +117,25 @@ function init() {
     scene.background = new THREE.Color( 0xf0f0f0 );
     //Camera
     camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
-    camera.position.set( 1500, 800, 0 );
+    camera.position.set( 30, 16, 0 );
     scene.add( camera );
 
     //Light
     scene.add( new THREE.AmbientLight( 0xf0f0f0, 3 ) );
     const light = new THREE.DirectionalLight( 0xffffff, 4.5 );
-    light.position.set( 0, 1500, 200 );
+    light.position.set( 0, 30, 4 );
     light.angle = Math.PI * 0.2;
     light.decay = 0;
     light.castShadow = true;
-    light.shadow.camera.near = 200;
-    light.shadow.camera.far = 2000;
+    light.shadow.camera.near = 4;
+    light.shadow.camera.far = 40;
     light.shadow.bias = - 0.000222;
     light.shadow.mapSize.width = 1024;
     light.shadow.mapSize.height = 1024;
     scene.add( light );
 
     //PlaneGeometry
-    const planeGeometry = new THREE.PlaneGeometry( 2000, 2000 );
+    const planeGeometry = new THREE.PlaneGeometry( 20, 20 );
     planeGeometry.rotateX( - Math.PI / 2 );
     const planeMaterial = new THREE.ShadowMaterial( { color: 0x000000, opacity: 1.0 } );
 
@@ -143,14 +145,14 @@ function init() {
     scene.add( plane );
 
     //PlaneGridHelper
-    const helper = new THREE.GridHelper( 2000, 100 );
+    const helper = new THREE.GridHelper( 20, 20 );
     helper.position.y = 0;
     helper.material.opacity = 1;
     helper.material.transparent = true;
     scene.add( helper );
 
-    renderer = new THREE.WebGLRenderer( { antialias: true } );
-    renderer.setPixelRatio( window.devicePixelRatio * 0.95 ); //changed because of poor mobile performance
+    renderer = new THREE.WebGLRenderer( { antialias: antialias } );
+    renderer.setPixelRatio( window.devicePixelRatio ); //changed because of poor mobile performance
     renderer.setSize( window.innerWidth, window.innerHeight );
     //renderer.shadowMap.enabled = true;
     container.appendChild( renderer.domElement );
@@ -216,6 +218,33 @@ function init() {
             loop = false;
         }
     });
+    
+    // Add the antialias option to the GUI
+    gui.add({ Mobile: false }, 'Mobile').onChange(function(value) {
+        // Remove the old renderer from the DOM
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+
+        // Create a new renderer with the new antialias value
+        renderer = new THREE.WebGLRenderer({ antialias: !value });
+        renderer.setPixelRatio( window.devicePixelRatio * 0.95 ); //changed because of poor mobile performance
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        // Add the new renderer to the DOM
+        document.body.appendChild(renderer.domElement);
+        // Re-attach the controls to the new renderer's DOM element
+        const controls = new OrbitControls( camera, renderer.domElement );
+        controls.damping = 0.2;
+        transformControl = new TransformControls( camera, renderer.domElement );
+        transformControl.addEventListener( 'change', function (event){
+            if ( ! event.value ) {
+                render();
+            }
+        } );
+        
+        transformControl.addEventListener( 'dragging-changed', function ( event ) {
+            controls.enabled = ! event.value;
+        } );
+        scene.add( transformControl );
+    });
 
     gui.open();
 
@@ -255,7 +284,7 @@ function init() {
     window.addEventListener( 'resize', onWindowResize );
 
     //Global AXES-HELPER: 
-    const GlobAxesHelper = new THREE.AxesHelper( 1500 );
+    const GlobAxesHelper = new THREE.AxesHelper( 20 );
     scene.add( GlobAxesHelper );
     GlobAxesHelper.position.set(0, 0, 0);
     GlobAxesHelper.lineWidth = 10;
@@ -268,16 +297,16 @@ function init() {
     // Define the positions for each curve // Default: 2 curves
     curvesPositions = [
         [
-            new THREE.Vector3(-500, 50, -500),
-            new THREE.Vector3(500, 50, -500),
-            new THREE.Vector3(500, 50, 500),
-            new THREE.Vector3(-500, 50, 500)
+            new THREE.Vector3(-10, 1, -10),
+            new THREE.Vector3(10, 1, -10),
+            new THREE.Vector3(10, 1, 10),
+            new THREE.Vector3(-10, 1, 10)
         ],
         [
-            new THREE.Vector3(-500, 200, -500),
-            new THREE.Vector3(500, 200, -500),
-            new THREE.Vector3(500, 200, 500),
-            new THREE.Vector3(-500, 400, 500)
+            new THREE.Vector3(-10, 4, -10),
+            new THREE.Vector3(10, 4, -10),
+            new THREE.Vector3(10, 4, 10),
+            new THREE.Vector3(-10, 4, 10)
         ]
     ];
 
@@ -305,7 +334,7 @@ function init() {
      *********/
     //Create Triggers (multiple cubes possible) DEFAULT 1 
     // Cube geometry and material
-    const cubeGeometry = new THREE.BoxGeometry(50, 50, 50);
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
     const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
     for (let i = 0; i < triggerAmount; i++) {
@@ -328,17 +357,18 @@ function init() {
         triggers.push(cube);
     
         // Store the cube's speed
-        triggerSpeeds.push(Math.random() * 10);  // Random speed between 0 and 10
+        triggerSpeeds.push(Math.random() * 0.2);  // Random speed between 0 and 10
         speedFolder = gui.addFolder('Speed');
 
         // Keep a reference to the GUI controllers
         let guiControllers = [];
         // Add a GUI controller for the cube's speed
         let index = triggers.indexOf(cube);
-        let controller = speedFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 1, 10).step(0.2).onChange(function(value) {
+        let controller = speedFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 0.02, 0.2).step(0.004).onChange(function(value) {
             // Update the cube's speed
             triggerSpeeds[index] = Math.abs(value);
         });
+        
         // Store the controller
         guiControllers.push(controller);
 
@@ -456,9 +486,9 @@ function addSplineObject( position ) {
 
     } else {
         
-        object.position.x = Math.random() * 1000 - 500;
-        object.position.y = Math.random() * 600;
-        object.position.z = Math.random() * 800 - 400;
+        object.position.x = Math.random() * 20 - 10;
+        object.position.y = Math.random() * 12;
+        object.position.z = Math.random() * 16 - 8;
         
        
     }
@@ -476,7 +506,7 @@ function addSplineObject( position ) {
 function addTrigger() {
 
     // Create a cube
-    const cubeGeometry = new THREE.BoxGeometry(50, 50, 50);
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
     const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     let cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
     cube.geometry.rotateX(Math.PI);
@@ -498,11 +528,11 @@ function addTrigger() {
     // initial position
     triggerPositions.push(0);
 
-    triggerSpeeds.push(Math.random() * 10);  // Random speed between 0 and 10
+    triggerSpeeds.push(Math.random() * 0.2);  // Random speed between 0 and 10
     
     // Add a GUI controller for the cube's speed
     let index = triggers.indexOf(cube);
-    let controller = speedFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 1, 10).step(0.2).onChange(function(value) {
+    let controller = speedFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 0.02, 0.2).step(0.004).onChange(function(value) {
         // Update the cube's speed
         triggerSpeeds[index] = value;
     });

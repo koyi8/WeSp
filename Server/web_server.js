@@ -58,7 +58,7 @@ const getIPAddresses = function () {
 const udp = new osc.UDPPort({
     localAddress: "0.0.0.0",
     localPort: 7400,
-    remoteAddress: "127.0.0.1",
+    remoteAddress: "127.0.0.1", // possibly send to other network here
     remotePort: 7500
 });
 
