@@ -1,0 +1,16 @@
+
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+
+#trajectoryGUI {
+    position: absolute;
+    top: 0; /* Adjusted to place the GUI in the bottom half of the screen */
+    left: 0;
+    z-index: 0;
+}
+

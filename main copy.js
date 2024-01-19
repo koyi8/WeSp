@@ -7,6 +7,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 //import { Flow } from 'three/addons/modifiers/CurveModifier.js';
 import Stats from "three/addons/libs/stats.module.js";
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { get } from 'jquery';
 
 
 
@@ -18,8 +19,16 @@ let action = ACTION_NONE;
 let stats;
 
 let container;
+
 //GUI
 const gui = new GUI();
+const trajectoryGUI = new GUI({container: document.getElementById('trajectoryGUI'), autoPlace: false});
+
+let trajectoriesFolder = [];
+let trajectoryFolder = [];
+
+let triggersFolder = [];
+
 
 // Keep a reference to the GUI controllers
 let speedFolder;
@@ -90,10 +99,14 @@ let triggers = [];
 let triggerAmount = 1;
 let triggerSpeeds = [];
 let triggerPositions = [];
+let triggerAnimate = [];
 //randomize start values for triggerPositions
 for (let i = 0; i < triggerAmount; i++) {
     triggerPositions.push(Math.random());
 }
+let triggerPosition =  [];
+// Initialize the triggerCurves array
+let triggerCurves = [];
 
 let exportPositionsArray = [];
 
@@ -104,7 +117,7 @@ let curvesPositions = [];
 let curveIndex = 0;
 let updatedPositions = [];
 
-
+var w,h;
 
 
 init();
@@ -114,6 +127,9 @@ function init() {
 
 
     container = document.getElementById( 'container' );
+    let containerDimensions = container.getBoundingClientRect();
+    w = container.clientWidth;
+    h = container.clientHeight;
 
     //Scene
     scene = new THREE.Scene();
@@ -170,7 +186,7 @@ function init() {
     labelRenderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild( labelRenderer.domElement );
     
- 
+
 
     //GUI
     gui.add( params, 'uniform' ).onChange( render );
@@ -315,6 +331,8 @@ function init() {
         ]
     ];
 
+    trajectoriesFolder = trajectoryGUI.addFolder('Trajectories' ).close();
+
     // Create multiple curves
     for (let j = 0; j < curveAmount; j++) {
         let positions = curvesPositions[j];  
@@ -332,8 +350,23 @@ function init() {
         let curve = createCurve(positions); 
         curves.push(curve); // Store the curve in the array
         scene.add(curve.mesh);
+
+        //TrajectoryGUI
+
+        trajectoryFolder = trajectoriesFolder.addFolder('Trajectory ' + (j + 1) ).close();
+        for (let i = 0; i < positions.length; i++) {
+            let controlpointFolder = trajectoryFolder.addFolder('Control Point ' + (i + 1)).close();
+            controlpointFolder.add(positions[i], 'x').name('X').listen();
+            controlpointFolder.add(positions[i], 'y').name('Y').listen();
+            controlpointFolder.add(positions[i], 'z').name('Z').listen();
+        }
+
         updateCurveController();
     }
+
+    //TrajectoryGUI
+    //trajectoryFolder = trajectoryGUI.addFolder('Trajectory');
+    
 
     /*******
      * Triggers
@@ -342,6 +375,8 @@ function init() {
     // Cube geometry and material
     const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
     const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+    triggersFolder = gui.addFolder('Triggers');
 
     for (let i = 0; i < triggerAmount; i++) {
         // Create a Trigger-Cube
@@ -364,25 +399,65 @@ function init() {
     
         // Store the cube's speed
         triggerSpeeds.push(Math.random() * 0.2);  // Random speed between 0 and 10
-        speedFolder = gui.addFolder('Speed');
-
+    
+        let triggerFolder = triggersFolder.addFolder('Trigger ' + (i + 1));
         // Keep a reference to the GUI controllers
         let guiControllers = [];
         // Add a GUI controller for the cube's speed
         let index = triggers.indexOf(cube);
-        let controller = speedFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 0.02, 0.2).step(0.004).onChange(function(value) {
+        let controller = triggerFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 0.02, 0.2).step(0.004).onChange(function(value) {
             // Update the cube's speed
             triggerSpeeds[index] = Math.abs(value);
         });
         
+        
         // Store the controller
         guiControllers.push(controller);
 
+        //set triggerAnimate  DEFAULT:true
+        triggerAnimate.push(true);
+        
+        // Add triggerAnimate option to the GUI
+        triggerFolder.add({ ['Animate T' + (index + 1)]: triggerAnimate[index] }, ['Animate T' + (index + 1)]).onChange(function(value) {
+            // Update the trigger's animate state
+            triggerAnimate[index] = value;
+        });
+
+        // Add a dropdown to the GUI to select the curve for the trigger
+        triggerCurves.push(curveIndex);  // Assign the current curve to the trigger
+
+        // Add a dropdown to the GUI to select the curve for the trigger
+        let curveOptions = curves.map((_, i) => 'Curve ' + (i + 1));
+        triggerFolder.add({ ['Curve T' + (index + 1)]: curveOptions[curveIndex] }, ['Curve T' + (index + 1)], curveOptions).onChange(function(value) {
+            // Update the trigger's curve when the dropdown value changes
+            triggerCurves[index] = curveOptions.indexOf(value);
+        });
+        
+
+        // Add a slider to the GUI folder
+        triggerFolder.add({ ['Position T' + (i + 1)]: triggerPositions[i] }, ['Position T' + (i + 1)], 0, 1).onChange(function(value) {
+            // When the slider value changes, update the trigger's position on the curve
+            TrigPos = curves[triggerCurves[i]].getPointAt(value);
+
+            // Push the value to the CurPosition array
+            triggerPosition[i] = value;
+        });
+
+        // Initialize triggerPosition[i] with the initial slider value: ensures that triggerPosition[i] is always defined
+        triggerPosition[i] = triggerPositions[i];
+
+            triggerFolder.open();
+        
+
     }
 
-    // General 
+    // General stats HTML STYLING IN HERE. maybe later in a div?
     stats = new Stats();
-    container.appendChild( stats.dom );
+    stats.dom.style.position = 'absolute';
+    stats.dom.style.left = '50%';
+    stats.dom.style.top = '0';
+    stats.dom.style.transform = 'translateX(-50%)';
+    document.body.appendChild(stats.dom);
 
     render();
 }
@@ -404,24 +479,32 @@ function animate() {
             
             //let speed = triggerSpeeds[i];
             
+
+
             //speed is controlled by the GUI !! Actually the increment of the position
             triggerPositions[i] += triggerSpeeds[i] / arcLenght;
-            
-            // loop alternate option
-            if (loop === true) {
-                triggerSpeeds[i] = Math.abs(triggerSpeeds[i]);
-                triggerPositions[i] %= 1;
-            } else  {
-                //currentPosition += speed / arcLenght;
-                if (triggerPositions[i] >= 0.99) {
-                    triggerSpeeds[i] *= -1;
-                } else if (triggerPositions[i] <= 0.01) {
-                    triggerSpeeds[i] *= -1;
-                }
-            }    
-    
-            
-            TrigPos = curves[curveIndex].getPointAt(triggerPositions[i]);
+
+            // trigger Animation condition
+
+            if (triggerAnimate[i]) {
+                // loop alternate option
+                if (loop === true) {
+                    triggerSpeeds[i] = Math.abs(triggerSpeeds[i]);
+                    triggerPositions[i] %= 1;
+                } else  {
+                    //currentPosition += speed / arcLenght;
+                    if (triggerPositions[i] >= 0.99) {
+                        triggerSpeeds[i] *= -1;
+                    } else if (triggerPositions[i] <= 0.01) {
+                        triggerSpeeds[i] *= -1;
+                    }
+                }   
+                TrigPos = curves[triggerCurves[i]].getPointAt(triggerPositions[i]); 
+            }
+            else {  
+                TrigPos = curves[triggerCurves[i]].getPointAt(triggerPosition[i]);
+            }
+
 
             //store the trigger positions in an array for export
             exportPositionsArray[i].push(TrigPos);
@@ -508,10 +591,19 @@ function addTrajectory() {
     curves.push(curve); // Store the curve in the array
     scene.add(curve.mesh);
 
-    console.log(curves);
-    console.log(splineHelperObjects);
+    // Add the new trajectory to the GUI
+    trajectoryFolder = trajectoriesFolder.addFolder('Trajectory ' + curves.length).close();
+    for (let i = 0; i < randomPositions.length; i++) {
+        let controlpointFolder = trajectoryFolder.addFolder('Control Point ' + (i + 1)).close();
+        controlpointFolder.add(randomPositions[i], 'x').name('X').listen();
+        controlpointFolder.add(randomPositions[i], 'y').name('Y').listen();
+        controlpointFolder.add(randomPositions[i], 'z').name('Z').listen();
+    }
+    
     updateCurveController();
     updateSplineOutline();
+
+    
 }
 
 // Delete the last trajectory
@@ -535,8 +627,24 @@ function deleteTrajectory() {
         scene.remove(lastSplineHelperObject);
         splineHelperObjects.pop();
     }
+    
+
+    // Get the names of the folders
+    let folderNames = Object.keys(trajectoriesFolder.folders);
+    // Check if there are any folders to delete
+    if (folderNames.length <= 0) {
+    return;
+    }
+    // Get the name of the last folder
+    let lastFolderName = folderNames[folderNames.length - 1];
+    // Get the last folder
+    let lastFolder = trajectoriesFolder.folders[lastFolderName];
+    // Destroy the last folder
+    lastFolder.destroy();
+
     updateCurveController();
 }
+
 
 // Function to update the curve controller
 function updateCurveController() {
@@ -614,16 +722,53 @@ function addTrigger() {
     triggerPositions.push(0);
 
     triggerSpeeds.push(Math.random() * 0.2);  // Random speed between 0 and 10
+
+   
     
     // Add a GUI controller for the cube's speed
     let index = triggers.indexOf(cube);
-    let controller = speedFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 0.02, 0.2).step(0.004).onChange(function(value) {
+    let triggerFolder = triggersFolder.addFolder('Trigger ' + (index + 1));
+
+    let controller = triggerFolder.add({ ['Speed T' + (index +1)]: speed  }, ['Speed T' + (index +1)] , 0.02, 0.2).step(0.004).onChange(function(value) {
         // Update the cube's speed
         triggerSpeeds[index] = value;
     });
 
     // Store the controller
     guiControllers.push(controller);
+
+    // Initialize the triggerCurves array with the default curve for the trigger
+    triggerCurves.push(curveIndex);
+
+    triggerAnimate.push(true);
+    // Add triggerAnimate option to the GUI
+    triggerFolder.add({ ['Animate T' + (index + 1)]: triggerAnimate[index] }, ['Animate T' + (index + 1)]).onChange(function(value) {
+        // Update the trigger's animate state
+        triggerAnimate[index] = value;
+    });
+
+    // Add a dropdown to the GUI to select the curve for the trigger
+    let curveOptions = curves.map((_, index) => 'Curve ' + (index + 1));
+    triggerFolder.add({ ['Curve T' + (index + 1)]: curveOptions[curveIndex] }, ['Curve T' + (index + 1)], curveOptions).onChange(function(value) {
+        // Update the trigger's curve when the dropdown value changes
+        triggerCurves[index] = curveOptions.indexOf(value);
+    });
+
+    // Add a slider to the GUI folder
+    triggerFolder.add({ ['Position T' + (index + 1)]: triggerPositions[index] }, ['Position T' + (index + 1)], 0, 1).onChange(function(value) {
+        // When the slider value changes, update the trigger's position on the curve
+        TrigPos = curves[triggerCurves[index]].getPointAt(value);
+
+        // Push the value to the CurPosition array
+        triggerPosition[index] = value;
+    });
+
+    // Initialize triggerPosition[i] with the initial slider value: ensures that triggerPosition[i] is always defined
+    triggerPosition[index] = triggerPositions[index];
+
+
+
+
 
     updateSplineOutline();
 
@@ -637,11 +782,27 @@ function removeTrigger() {
     if (triggerAmount <= 0) {
         return;
     }
+    /*
     // Hide the last cube's GUI controller // NOT THE PREFERED OPTION BUT REMOVE IS NOT WORKING 
     if (guiControllers.length > 0) {
         let controller = guiControllers.pop();
         controller.domElement.style.display = 'none';
     }
+    */
+
+    // Remove the Trigger from the TriggersFolder
+    let folderNames = Object.keys(triggersFolder.folders);
+    // Check if there are any folders to delete
+    if (folderNames.length <= 0) {
+        return;
+    }
+    // Get the name of the last folder
+    let lastFolderName = folderNames[folderNames.length - 1];
+    // Get the last folder  
+    let lastFolder = triggersFolder.folders[lastFolderName];
+    // Destroy the last folder
+    lastFolder.destroy();
+
 
     // Remove the cube from the scene
     let cube = triggers.pop();
@@ -673,9 +834,23 @@ function addPoint(position, curveIndex) {
     // Get the positions array for the specified curve
     let positions = curvesPositions[curveIndex];
 
-    console.log(positions);
+    // Add a new point to the positions array
+    let newPoint = addSplineObject(position).position;
+    positions.push( newPoint );
 
-    positions.push( addSplineObject(position).position );
+    // Add a new controller for the new point in the GUI
+    // Get the names of the folders
+    let folderNames = Object.keys(trajectoriesFolder.folders);
+    // Get the name of the folder at curveIndex
+    let indexFolderName = folderNames[curveIndex ];
+    // Get the last folder
+    let indexFolder = trajectoriesFolder.folders[indexFolderName];
+
+    let controlpointFolder = indexFolder.addFolder('Control Point ' + positions.length).close();
+    controlpointFolder.add(newPoint, 'x').name('X').listen();
+    controlpointFolder.add(newPoint, 'y').name('Y').listen();
+    controlpointFolder.add(newPoint, 'z').name('Z').listen();
+    
 
     // Update the spline outline
     updateSplineOutline();
@@ -698,6 +873,29 @@ function removePoint(curveIndex) {
 
     if (transformControl.object === point) transformControl.detach();
     scene.remove(point);
+
+
+    // Remove the last controller from the GUI
+    // Get the names of the folders
+    let folderNames = Object.keys(trajectoriesFolder.folders);
+    // Get the name of the folder at curveIndex
+    let indexFolderName = folderNames[curveIndex];
+    // Get the indexfolders
+    let indexFolder = trajectoriesFolder.folders[indexFolderName];
+    // Get the names of the controlpointFolders
+    let controlPointfolderNames = Object.keys(indexFolder.folders);
+    // Check if there are any subfolders
+    if (controlPointfolderNames.length > 0) {
+        // Get the name of the last subfolder
+        let lastcontrolPointfolderName = controlPointfolderNames[controlPointfolderNames.length - 1];
+
+        // Get the last subfolder
+        let lastSubfolder = indexFolder.folders[lastcontrolPointfolderName];
+
+        // Remove the last subfolder
+        lastSubfolder.destroy();
+    }
+
 
     updateSplineOutline();
 
@@ -722,7 +920,7 @@ function onDoubleClick(event) {
             const pointPosition = intersects[0].point; // Position des Schnittpunkts
             
             // Logge die Position des Schnittpunkts
-            console.log('pointPosition:', pointPosition);
+           // console.log('pointPosition:', pointPosition);
 
             // Füge das Spline-Objekt an der gefundenen Position hinzu
             addPoint(pointPosition, curveIndex);
