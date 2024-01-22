@@ -37,6 +37,9 @@ let guiControllers = [];
 let curveControllers = [];
 let curveFolder;
 
+// Array to store the curve index for each trigger
+let triggerCurveIndices = [];
+
 let camera, scene, renderer, labelRenderer;
 const splineHelperObjects = [];
 let splinePointsLength = 4;
@@ -331,7 +334,7 @@ function init() {
         ]
     ];
 
-    trajectoriesFolder = trajectoryGUI.addFolder('Trajectories' ).close();
+    trajectoriesFolder = trajectoryGUI.addFolder('Trajectories' );
 
     // Create multiple curves
     for (let j = 0; j < curveAmount; j++) {
@@ -423,17 +426,12 @@ function init() {
             triggerAnimate[index] = value;
         });
 
-        // Add a dropdown to the GUI to select the curve for the trigger
-        triggerCurves.push(curveIndex);  // Assign the current curve to the trigger
+        // Initialize triggerCurveIndices[index] with a default value
+        triggerCurveIndices[i] = 0; // default: curve 1
 
         // Add a dropdown to the GUI to select the curve for the trigger
-        let curveOptions = curves.map((_, i) => 'Curve ' + (i + 1));
-        triggerFolder.add({ ['Curve T' + (index + 1)]: curveOptions[curveIndex] }, ['Curve T' + (index + 1)], curveOptions).onChange(function(value) {
-            // Update the trigger's curve when the dropdown value changes
-            triggerCurves[index] = curveOptions.indexOf(value);
-        });
+        triggerCurves.push(triggerCurveIndices[i]);  // Assign the current curve to the trigger
         
-
         // Add a slider to the GUI folder
         triggerFolder.add({ ['Position T' + (i + 1)]: triggerPositions[i] }, ['Position T' + (i + 1)], 0, 1).onChange(function(value) {
             // When the slider value changes, update the trigger's position on the curve
@@ -446,7 +444,20 @@ function init() {
         // Initialize triggerPosition[i] with the initial slider value: ensures that triggerPosition[i] is always defined
         triggerPosition[i] = triggerPositions[i];
 
-            triggerFolder.open();
+
+        
+        // Add a dropdown to the GUI to select the curve for the trigger
+        let curveOptions = curves.map((_, i) => 'Curve ' + (i + 1));
+        triggerFolder.add({ ['Curve T' + (index + 1)]: curveOptions[curveIndex] }, ['Curve T' + (index + 1)], curveOptions).onChange(function(value) {
+            // Get the index of the selected curve
+            let selectedCurveIndex = curveOptions.indexOf(value);
+        
+            // Assign the selected curve index to triggerCurveIndices
+            triggerCurveIndices[index] = selectedCurveIndex;
+            console.log(triggerCurveIndices[0]);
+        });
+
+        triggerFolder.open();
         
 
     }
@@ -474,13 +485,11 @@ function animate() {
             // Initialize the sub-array for this trigger
             exportPositionsArray[i] = [];
             // You can now use the cube variable here
-            arcLenght = curves[curveIndex].getLength();
+            arcLenght = curves[triggerCurveIndices[i]].getLength();
             delta = clock.getDelta();
             
             //let speed = triggerSpeeds[i];
             
-
-
             //speed is controlled by the GUI !! Actually the increment of the position
             triggerPositions[i] += triggerSpeeds[i] / arcLenght;
 
@@ -499,10 +508,10 @@ function animate() {
                         triggerSpeeds[i] *= -1;
                     }
                 }   
-                TrigPos = curves[triggerCurves[i]].getPointAt(triggerPositions[i]); 
+                TrigPos = curves[triggerCurveIndices[i]].getPointAt(triggerPositions[i]); 
             }
             else {  
-                TrigPos = curves[triggerCurves[i]].getPointAt(triggerPosition[i]);
+                TrigPos = curves[triggerCurveIndices[i]].getPointAt(triggerPosition[i]);
             }
 
 
@@ -520,6 +529,7 @@ function animate() {
 
             cube.position.copy(TrigPos);
             
+            curves[triggerCurveIndices[i]].updateArcLengths(); //this is nice!
         }
     
     }
@@ -529,7 +539,7 @@ function animate() {
 
     render();
     stats.update();
-    curves[curveIndex].updateArcLengths(); //this is nice!
+    //curves[curveIndex].updateArcLengths(); //this is nice!
     requestAnimationFrame(animate);
   }
 
@@ -589,6 +599,8 @@ function addTrajectory() {
 
     let curve = createCurve(randomPositions); 
     curves.push(curve); // Store the curve in the array
+    // Push the new points to curvePositions
+    curvesPositions.push(randomPositions);
     scene.add(curve.mesh);
 
     // Add the new trajectory to the GUI
@@ -601,8 +613,25 @@ function addTrajectory() {
     }
     
     updateCurveController();
-    updateSplineOutline();
 
+        // Get the names of the folders
+    let folderNames = Object.keys(triggersFolder.folders);
+
+    // Iterate over the folder names
+    for (let i = 0; i < folderNames.length; i++) {
+        // Get the current folder
+        let currentFolder = triggersFolder.folders[folderNames[i]];
+
+        // Get the curve controller
+    let curveController = currentFolder.controllers[currentFolder.controllers.length - 1]; // Get the last controller
+
+        // Call the updateCurveController function
+        setTrajectoryForTrigger(currentFolder, [curveController], i);
+    }
+
+
+    //setTrajectoryForTrigger();
+    updateSplineOutline();
     
 }
 
@@ -643,6 +672,7 @@ function deleteTrajectory() {
     lastFolder.destroy();
 
     updateCurveController();
+    
 }
 
 
@@ -666,6 +696,31 @@ function updateCurveController() {
     // Push the new controller to the curveControllers array
     curveControllers.push(newController);
 }
+
+
+// Function to update the curve controller
+function setTrajectoryForTrigger(folder, controller, triggerIndex) {
+    // Hide the last curve's GUI controller
+    if (controller.length > 0) {
+        let lastController = controller.pop();
+        lastController.domElement.style.display = 'none';
+    }
+
+    // Generate curve names
+    let curveNames = curves.map((_, triggerIndex) => 'Curve ' + (triggerIndex + 1));
+
+    // Add a new controller with the updated options
+    let newController = folder.add(guiParams, 'Curve ', curveNames).onChange(function(value) {
+        // Update the curveIndex variable for this trigger based on the selected curve
+        triggerCurveIndices[triggerIndex] = parseInt(value.replace('Curve ', '')) - 1;
+        console.log(triggerCurveIndices[triggerIndex]);
+    });
+
+    // Push the new controller to the controller array
+    controller.push(newController);
+}
+
+
 
 // Create a spline object
 function addSplineObject( position ) {
@@ -737,6 +792,9 @@ function addTrigger() {
     // Store the controller
     guiControllers.push(controller);
 
+
+    // Initialize triggerCurveIndices[index] with a default value
+    triggerCurveIndices[index] = 0; // default: curve 1
     // Initialize the triggerCurves array with the default curve for the trigger
     triggerCurves.push(curveIndex);
 
@@ -747,13 +805,6 @@ function addTrigger() {
         triggerAnimate[index] = value;
     });
 
-    // Add a dropdown to the GUI to select the curve for the trigger
-    let curveOptions = curves.map((_, index) => 'Curve ' + (index + 1));
-    triggerFolder.add({ ['Curve T' + (index + 1)]: curveOptions[curveIndex] }, ['Curve T' + (index + 1)], curveOptions).onChange(function(value) {
-        // Update the trigger's curve when the dropdown value changes
-        triggerCurves[index] = curveOptions.indexOf(value);
-    });
-
     // Add a slider to the GUI folder
     triggerFolder.add({ ['Position T' + (index + 1)]: triggerPositions[index] }, ['Position T' + (index + 1)], 0, 1).onChange(function(value) {
         // When the slider value changes, update the trigger's position on the curve
@@ -761,6 +812,18 @@ function addTrigger() {
 
         // Push the value to the CurPosition array
         triggerPosition[index] = value;
+    });
+
+    
+    // Add a dropdown to the GUI to select the curve for the trigger
+    let curveOptions = curves.map((_, index) => 'Curve ' + (index + 1));
+    triggerFolder.add({ ['Curve T' + (index + 1)]: curveOptions[curveIndex] }, ['Curve T' + (index + 1)], curveOptions).onChange(function(value) {
+        // Get the index of the selected curve
+        let selectedCurveIndex = curveOptions.indexOf(value);
+    
+        // Assign the selected curve index to triggerCurveIndices
+        triggerCurveIndices[index] = selectedCurveIndex;
+        console.log(triggerCurveIndices[0]);
     });
 
     // Initialize triggerPosition[i] with the initial slider value: ensures that triggerPosition[i] is always defined
@@ -831,6 +894,7 @@ function removeTrigger() {
 
 function addPoint(position, curveIndex) {
 
+
     // Get the positions array for the specified curve
     let positions = curvesPositions[curveIndex];
 
@@ -855,6 +919,8 @@ function addPoint(position, curveIndex) {
     // Update the spline outline
     updateSplineOutline();
 
+    
+
     // Render the scene
     //render();
 }
@@ -864,7 +930,7 @@ function removePoint(curveIndex) {
     // Get the positions array for the specified curve
     let positions = curvesPositions[curveIndex];
 
-    if (positions.length <= 4) {
+    if (positions.length <= 2) {
         return;
     }
 
