@@ -434,6 +434,7 @@ function init() {
         
         // Add a slider to the GUI folder
         triggerFolder.add({ ['Position T' + (i + 1)]: triggerPositions[i] }, ['Position T' + (i + 1)], 0, 1).onChange(function(value) {
+
             // When the slider value changes, update the trigger's position on the curve
             TrigPos = curves[triggerCurves[i]].getPointAt(value);
 
@@ -539,6 +540,7 @@ function animate() {
 
     render();
     stats.update();
+   
     //curves[curveIndex].updateArcLengths(); //this is nice!
     requestAnimationFrame(animate);
   }
