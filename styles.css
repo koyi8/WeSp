@@ -8,9 +8,33 @@ body {
 
 
 #trajectoryGUI {
-    position: absolute;
-    top: 0; /* Adjusted to place the GUI in the bottom half of the screen */
+    /* position: absolute;
+    top: 0; 
     left: 0;
-    z-index: 0;
+    z-index: 0; */
 }
 
+.main-container {
+  background-color: black;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: 'row';
+}
+
+.col {
+  width: 50%;
+}
+
+.left-col {
+  position: relative;
+}
+
+/* #container canvas {
+  width: 100% !important;
+  height: 100%;
+} */
+
+/* #container .col canvas {
+  width: 100% !important;
+} */
