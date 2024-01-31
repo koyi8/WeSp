@@ -258,13 +258,18 @@ function init() {
   gui.add({ Mobile: false }, "Mobile").onChange(function (value) {
     // Remove the old renderer from the DOM
     renderer.domElement.parentNode.removeChild(renderer.domElement);
+    // Get the container's dimensions
+    let container = document.getElementById("container");
+    let containerDimensions = container.getBoundingClientRect();
+    let containerWidth = containerDimensions.width;
+    let containerHeight = containerDimensions.height;
 
     // Create a new renderer with the new antialias value
     renderer = new THREE.WebGLRenderer({ antialias: !value });
     renderer.setPixelRatio(window.devicePixelRatio * 0.95); //changed because of poor mobile performance
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(containerWidth, containerHeight);
     // Add the new renderer to the DOM
-    document.body.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
     // Re-attach the controls to the new renderer's DOM element
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.damping = 0.2;
