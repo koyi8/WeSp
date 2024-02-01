@@ -1,16 +1,16 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 
-import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { TransformControls } from "three/addons/controls/TransformControls.js";
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 //import { Flow } from 'three/addons/modifiers/CurveModifier.js';
-import Stats from "three/addons/libs/stats.module.js";
+import Stats from 'three/addons/libs/stats.module.js';
 import {
   CSS2DRenderer,
   CSS2DObject,
-} from "three/addons/renderers/CSS2DRenderer.js";
-import { get } from "jquery";
+} from 'three/addons/renderers/CSS2DRenderer.js';
+import { get } from 'jquery';
 
 const ACTION_SELECT = 1,
   ACTION_NONE = 0;
@@ -23,7 +23,7 @@ let container;
 //GUI
 const gui = new GUI();
 const trajectoryGUI = new GUI({
-  container: document.getElementById("trajectoryGUI"),
+  container: document.getElementById('trajectoryGUI'),
   autoPlace: false,
 });
 
@@ -85,7 +85,7 @@ let antialias = true;
 
 // Define an object to hold the GUI parameters
 let guiParams = {
-  curve: "curve1",
+  curve: 'curve1',
 };
 
 // Initialize animation parameters
@@ -126,7 +126,7 @@ init();
 animate();
 
 function init() {
-  let container = document.getElementById("container");
+  let container = document.getElementById('container');
   let containerDimensions = container.getBoundingClientRect();
   let containerWidth = containerDimensions.width;
   let containerHeight = containerDimensions.height;
@@ -139,7 +139,7 @@ function init() {
     70,
     containerWidth / containerHeight,
     1,
-    10000
+    10000,
   );
   camera.position.set(30, 16, 0);
   scene.add(camera);
@@ -187,15 +187,15 @@ function init() {
   // LabelRenderer
   labelRenderer = new CSS2DRenderer();
   labelRenderer.setSize(containerWidth, containerHeight);
-  labelRenderer.domElement.style.position = "absolute";
-  labelRenderer.domElement.style.top = "0px";
-  labelRenderer.domElement.style.pointerEvents = "none";
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0px';
+  labelRenderer.domElement.style.pointerEvents = 'none';
   document.body.appendChild(labelRenderer.domElement);
 
   //GUI
-  gui.add(params, "uniform").onChange(render);
+  gui.add(params, 'uniform').onChange(render);
   gui
-    .add(params, "tension", 0, 1)
+    .add(params, 'tension', 0, 1)
     .step(0.01)
     .onChange(function (value) {
       curves[curveIndex].tension = value;
@@ -203,7 +203,7 @@ function init() {
       //render();
     });
   // Create a new folder for the curves
-  curveFolder = gui.addFolder("Curves");
+  curveFolder = gui.addFolder('Curves');
   //updateCurveController();
 
   // AddRandomPoint-GUI
@@ -213,7 +213,7 @@ function init() {
         addPoint(undefined, curveIndex);
       },
     },
-    "addPointRandom"
+    'addPointRandom',
   );
 
   // RemoveRandomPoint-GUI
@@ -223,20 +223,20 @@ function init() {
         removePoint(curveIndex);
       },
     },
-    "removePointRandom"
+    'removePointRandom',
   );
 
   //gui.add( params, 'exportSpline' );
-  gui.add(params, "addTrigger");
-  gui.add(params, "removeTrigger");
+  gui.add(params, 'addTrigger');
+  gui.add(params, 'removeTrigger');
   // Add a button to add a random trajectory
-  gui.add({ addTrajectory }, "addTrajectory");
+  gui.add({ addTrajectory }, 'addTrajectory');
 
   // Add a button to delete the last trajectory
-  gui.add({ deleteTrajectory }, "deleteTrajectory");
+  gui.add({ deleteTrajectory }, 'deleteTrajectory');
 
   //closed spline option
-  gui.add({ closed: closed }, "closed").onChange(function (value) {
+  gui.add({ closed: closed }, 'closed').onChange(function (value) {
     if (value === true) {
       curves[curveIndex].closed = true;
     } else {
@@ -246,7 +246,7 @@ function init() {
   });
 
   //loop vs alternate option
-  gui.add({ loop: loop }, "loop").onChange(function (value) {
+  gui.add({ loop: loop }, 'loop').onChange(function (value) {
     if (value === true) {
       loop = true;
     } else {
@@ -255,11 +255,11 @@ function init() {
   });
 
   // Add the antialias option to the GUI
-  gui.add({ Mobile: false }, "Mobile").onChange(function (value) {
+  gui.add({ Mobile: false }, 'Mobile').onChange(function (value) {
     // Remove the old renderer from the DOM
     renderer.domElement.parentNode.removeChild(renderer.domElement);
     // Get the container's dimensions
-    let container = document.getElementById("container");
+    let container = document.getElementById('container');
     let containerDimensions = container.getBoundingClientRect();
     let containerWidth = containerDimensions.width;
     let containerHeight = containerDimensions.height;
@@ -274,13 +274,13 @@ function init() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.damping = 0.2;
     transformControl = new TransformControls(camera, renderer.domElement);
-    transformControl.addEventListener("change", function (event) {
+    transformControl.addEventListener('change', function (event) {
       if (!event.value) {
         render();
       }
     });
 
-    transformControl.addEventListener("dragging-changed", function (event) {
+    transformControl.addEventListener('dragging-changed', function (event) {
       controls.enabled = !event.value;
     });
     scene.add(transformControl);
@@ -294,31 +294,31 @@ function init() {
   //controls.addEventListener( 'change', render ); // cahnged because of poor mobile performance
 
   transformControl = new TransformControls(camera, renderer.domElement);
-  transformControl.addEventListener("change", function (event) {
+  transformControl.addEventListener('change', function (event) {
     if (!event.value) {
       render();
     }
   });
-  transformControl.addEventListener("dragging-changed", function (event) {
+  transformControl.addEventListener('dragging-changed', function (event) {
     controls.enabled = !event.value;
   });
   scene.add(transformControl);
 
-  transformControl.addEventListener("objectChange", function () {
+  transformControl.addEventListener('objectChange', function () {
     updateSplineOutline();
   });
 
   // Event-Handler Keyboard buttons
-  document.addEventListener("keydown", onKeyDownP);
-  document.addEventListener("keydown", onKeyDownR);
+  document.addEventListener('keydown', onKeyDownP);
+  document.addEventListener('keydown', onKeyDownR);
 
   // Event-Handler for doubleclick (AddPoint)
-  document.addEventListener("dblclick", onDoubleClick);
+  document.addEventListener('dblclick', onDoubleClick);
 
-  document.addEventListener("pointerdown", onPointerDown);
-  document.addEventListener("pointerup", onPointerUp);
-  document.addEventListener("pointermove", onPointerMove);
-  window.addEventListener("resize", onWindowResize);
+  document.addEventListener('pointerdown', onPointerDown);
+  document.addEventListener('pointerup', onPointerUp);
+  document.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('resize', onWindowResize);
 
   //Global AXES-HELPER:
   const GlobAxesHelper = new THREE.AxesHelper(20);
@@ -346,7 +346,7 @@ function init() {
     ],
   ];
 
-  trajectoriesFolder = trajectoryGUI.addFolder("Trajectories");
+  trajectoriesFolder = trajectoryGUI.addFolder('Trajectories');
 
   // Create multiple curves
   for (let j = 0; j < curveAmount; j++) {
@@ -373,15 +373,15 @@ function init() {
     //TrajectoryGUI
 
     trajectoryFolder = trajectoriesFolder
-      .addFolder("Trajectory " + (j + 1))
+      .addFolder('Trajectory ' + (j + 1))
       .close();
     for (let i = 0; i < positions.length; i++) {
       let controlpointFolder = trajectoryFolder
-        .addFolder("Control Point " + (i + 1))
+        .addFolder('Control Point ' + (i + 1))
         .close();
-      controlpointFolder.add(positions[i], "x").name("X").listen();
-      controlpointFolder.add(positions[i], "y").name("Y").listen();
-      controlpointFolder.add(positions[i], "z").name("Z").listen();
+      controlpointFolder.add(positions[i], 'x').name('X').listen();
+      controlpointFolder.add(positions[i], 'y').name('Y').listen();
+      controlpointFolder.add(positions[i], 'z').name('Z').listen();
     }
 
     updateCurveController();
@@ -398,7 +398,7 @@ function init() {
   const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
   const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
-  triggersFolder = gui.addFolder("Triggers");
+  triggersFolder = gui.addFolder('Triggers');
 
   for (let i = 0; i < triggerAmount; i++) {
     // Create a Trigger-Cube
@@ -409,8 +409,8 @@ function init() {
     scene.add(cube);
 
     // Create a label for this cube
-    let cubeP = document.createElement("p");
-    cubeP.style.fontSize = "10px"; // Set the font size to 20 pixels
+    let cubeP = document.createElement('p');
+    cubeP.style.fontSize = '10px'; // Set the font size to 20 pixels
     let cubeLabel = new CSS2DObject(cubeP);
     cubeLabel.position.set(0, 3, 0);
 
@@ -422,17 +422,17 @@ function init() {
     // Store the cube's speed
     triggerSpeeds.push(Math.random() * 0.2); // Random speed between 0 and 10
 
-    let triggerFolder = triggersFolder.addFolder("Trigger " + (i + 1));
+    let triggerFolder = triggersFolder.addFolder('Trigger ' + (i + 1));
     // Keep a reference to the GUI controllers
     let guiControllers = [];
     // Add a GUI controller for the cube's speed
     let index = triggers.indexOf(cube);
     let controller = triggerFolder
       .add(
-        { ["Speed T" + (index + 1)]: speed },
-        ["Speed T" + (index + 1)],
+        { ['Speed T' + (index + 1)]: speed },
+        ['Speed T' + (index + 1)],
         0.02,
-        0.2
+        0.2,
       )
       .step(0.004)
       .onChange(function (value) {
@@ -448,8 +448,8 @@ function init() {
 
     // Add triggerAnimate option to the GUI
     triggerFolder
-      .add({ ["Animate T" + (index + 1)]: triggerAnimate[index] }, [
-        "Animate T" + (index + 1),
+      .add({ ['Animate T' + (index + 1)]: triggerAnimate[index] }, [
+        'Animate T' + (index + 1),
       ])
       .onChange(function (value) {
         // Update the trigger's animate state
@@ -465,10 +465,10 @@ function init() {
     // Add a slider to the GUI folder
     triggerFolder
       .add(
-        { ["Position T" + (i + 1)]: triggerPositions[i] },
-        ["Position T" + (i + 1)],
+        { ['Position T' + (i + 1)]: triggerPositions[i] },
+        ['Position T' + (i + 1)],
         0,
-        1
+        1,
       )
       .onChange(function (value) {
         // When the slider value changes, update the trigger's position on the curve
@@ -482,12 +482,12 @@ function init() {
     triggerPosition[i] = triggerPositions[i];
 
     // Add a dropdown to the GUI to select the curve for the trigger
-    let curveOptions = curves.map((_, i) => "Curve " + (i + 1));
+    let curveOptions = curves.map((_, i) => 'Curve ' + (i + 1));
     triggerFolder
       .add(
-        { ["Curve T" + (index + 1)]: curveOptions[curveIndex] },
-        ["Curve T" + (index + 1)],
-        curveOptions
+        { ['Curve T' + (index + 1)]: curveOptions[curveIndex] },
+        ['Curve T' + (index + 1)],
+        curveOptions,
       )
       .onChange(function (value) {
         // Get the index of the selected curve
@@ -503,10 +503,10 @@ function init() {
 
   // General stats HTML STYLING IN HERE. maybe later in a div?
   stats = new Stats();
-  stats.dom.style.position = "absolute";
-  stats.dom.style.left = "50%";
-  stats.dom.style.top = "0";
-  stats.dom.style.transform = "translateX(-50%)";
+  stats.dom.style.position = 'absolute';
+  stats.dom.style.left = '50%';
+  stats.dom.style.top = '0';
+  stats.dom.style.transform = 'translateX(-50%)';
   document.body.appendChild(stats.dom);
 
   render();
@@ -547,7 +547,7 @@ function animate() {
           }
         }
         TrigPos = curves[triggerCurveIndices[i]].getPointAt(
-          triggerPositions[i]
+          triggerPositions[i],
         );
       } else {
         TrigPos = curves[triggerCurveIndices[i]].getPointAt(triggerPosition[i]);
@@ -564,14 +564,14 @@ function animate() {
       cubeP.innerHTML =
         '<span style="font-size: 20px;">' +
         (i + 1) +
-        "</span> " +
+        '</span> ' +
         '<span style="font-size: 10px;">' +
         TrigPos.x.toFixed(2) +
-        ", " +
+        ', ' +
         TrigPos.y.toFixed(2) +
-        ", " +
+        ', ' +
         TrigPos.z.toFixed(2) +
-        "</span>";
+        '</span>';
 
       cube.position.copy(TrigPos);
 
@@ -597,12 +597,12 @@ function animate() {
 function createCurve(positions) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(new Float32Array(ARC_SEGMENTS * 3), 3)
+    'position',
+    new THREE.BufferAttribute(new Float32Array(ARC_SEGMENTS * 3), 3),
   );
 
   let curve = new THREE.CatmullRomCurve3(positions, closed);
-  curve.curveType = "catmullrom";
+  curve.curveType = 'catmullrom';
 
   const colors = [0x000000, 0xff0000, 0x0000ff, 0x808080]; // black, red, blue, grey
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -612,7 +612,7 @@ function createCurve(positions) {
     new THREE.LineBasicMaterial({
       color: randomColor,
       opacity: 0.35,
-    })
+    }),
   );
   //curve.mesh.castShadow = true;
   //splines.uniform = curve;
@@ -630,8 +630,8 @@ function addTrajectory() {
       new THREE.Vector3(
         getRandomArbitrary(-10, 10),
         getRandomArbitrary(1, 1),
-        getRandomArbitrary(-10, 10)
-      )
+        getRandomArbitrary(-10, 10),
+      ),
     );
   }
 
@@ -654,15 +654,15 @@ function addTrajectory() {
 
   // Add the new trajectory to the GUI
   trajectoryFolder = trajectoriesFolder
-    .addFolder("Trajectory " + curves.length)
+    .addFolder('Trajectory ' + curves.length)
     .close();
   for (let i = 0; i < randomPositions.length; i++) {
     let controlpointFolder = trajectoryFolder
-      .addFolder("Control Point " + (i + 1))
+      .addFolder('Control Point ' + (i + 1))
       .close();
-    controlpointFolder.add(randomPositions[i], "x").name("X").listen();
-    controlpointFolder.add(randomPositions[i], "y").name("Y").listen();
-    controlpointFolder.add(randomPositions[i], "z").name("Z").listen();
+    controlpointFolder.add(randomPositions[i], 'x').name('X').listen();
+    controlpointFolder.add(randomPositions[i], 'y').name('Y').listen();
+    controlpointFolder.add(randomPositions[i], 'z').name('Z').listen();
   }
 
   updateCurveController();
@@ -732,18 +732,18 @@ function updateCurveController() {
   // Hide the last curve's GUI controller
   if (curveControllers.length > 0) {
     let controller = curveControllers.pop();
-    controller.domElement.style.display = "none";
+    controller.domElement.style.display = 'none';
   }
 
   // Generate curve names
-  let curveNames = curves.map((_, index) => "curve" + (index + 1));
+  let curveNames = curves.map((_, index) => 'curve' + (index + 1));
 
   // Add a new controller with the updated options
   let newController = curveFolder
-    .add(guiParams, "curve", curveNames)
+    .add(guiParams, 'curve', curveNames)
     .onChange(function (value) {
       // Update the curveIndex variable based on the selected curve
-      curveIndex = parseInt(value.replace("curve", "")) - 1;
+      curveIndex = parseInt(value.replace('curve', '')) - 1;
     });
 
   // Push the new controller to the curveControllers array
@@ -755,21 +755,21 @@ function setTrajectoryForTrigger(folder, controller, triggerIndex) {
   // Hide the last curve's GUI controller
   if (controller.length > 0) {
     let lastController = controller.pop();
-    lastController.domElement.style.display = "none";
+    lastController.domElement.style.display = 'none';
   }
 
   // Generate curve names
   let curveNames = curves.map(
-    (_, triggerIndex) => "Curve " + (triggerIndex + 1)
+    (_, triggerIndex) => 'Curve ' + (triggerIndex + 1),
   );
 
   // Add a new controller with the updated options
   let newController = folder
-    .add(guiParams, "Curve ", curveNames)
+    .add(guiParams, 'Curve ', curveNames)
     .onChange(function (value) {
       // Update the curveIndex variable for this trigger based on the selected curve
       triggerCurveIndices[triggerIndex] =
-        parseInt(value.replace("Curve ", "")) - 1;
+        parseInt(value.replace('Curve ', '')) - 1;
       console.log(triggerCurveIndices[triggerIndex]);
     });
 
@@ -812,8 +812,8 @@ function addTrigger() {
   scene.add(cube);
 
   // Add a label to the cube
-  let cubeP = document.createElement("p");
-  cubeP.style.fontSize = "10px";
+  let cubeP = document.createElement('p');
+  cubeP.style.fontSize = '10px';
   let cubeLabel = new CSS2DObject(cubeP);
   cubeLabel.position.set(0, 3, 0);
 
@@ -829,14 +829,14 @@ function addTrigger() {
 
   // Add a GUI controller for the cube's speed
   let index = triggers.indexOf(cube);
-  let triggerFolder = triggersFolder.addFolder("Trigger " + (index + 1));
+  let triggerFolder = triggersFolder.addFolder('Trigger ' + (index + 1));
 
   let controller = triggerFolder
     .add(
-      { ["Speed T" + (index + 1)]: speed },
-      ["Speed T" + (index + 1)],
+      { ['Speed T' + (index + 1)]: speed },
+      ['Speed T' + (index + 1)],
       0.02,
-      0.2
+      0.2,
     )
     .step(0.004)
     .onChange(function (value) {
@@ -855,8 +855,8 @@ function addTrigger() {
   triggerAnimate.push(true);
   // Add triggerAnimate option to the GUI
   triggerFolder
-    .add({ ["Animate T" + (index + 1)]: triggerAnimate[index] }, [
-      "Animate T" + (index + 1),
+    .add({ ['Animate T' + (index + 1)]: triggerAnimate[index] }, [
+      'Animate T' + (index + 1),
     ])
     .onChange(function (value) {
       // Update the trigger's animate state
@@ -866,10 +866,10 @@ function addTrigger() {
   // Add a slider to the GUI folder
   triggerFolder
     .add(
-      { ["Position T" + (index + 1)]: triggerPositions[index] },
-      ["Position T" + (index + 1)],
+      { ['Position T' + (index + 1)]: triggerPositions[index] },
+      ['Position T' + (index + 1)],
       0,
-      1
+      1,
     )
     .onChange(function (value) {
       // When the slider value changes, update the trigger's position on the curve
@@ -880,12 +880,12 @@ function addTrigger() {
     });
 
   // Add a dropdown to the GUI to select the curve for the trigger
-  let curveOptions = curves.map((_, index) => "Curve " + (index + 1));
+  let curveOptions = curves.map((_, index) => 'Curve ' + (index + 1));
   triggerFolder
     .add(
-      { ["Curve T" + (index + 1)]: curveOptions[curveIndex] },
-      ["Curve T" + (index + 1)],
-      curveOptions
+      { ['Curve T' + (index + 1)]: curveOptions[curveIndex] },
+      ['Curve T' + (index + 1)],
+      curveOptions,
     )
     .onChange(function (value) {
       // Get the index of the selected curve
@@ -972,11 +972,11 @@ function addPoint(position, curveIndex) {
   let indexFolder = trajectoriesFolder.folders[indexFolderName];
 
   let controlpointFolder = indexFolder
-    .addFolder("Control Point " + positions.length)
+    .addFolder('Control Point ' + positions.length)
     .close();
-  controlpointFolder.add(newPoint, "x").name("X").listen();
-  controlpointFolder.add(newPoint, "y").name("Y").listen();
-  controlpointFolder.add(newPoint, "z").name("Z").listen();
+  controlpointFolder.add(newPoint, 'x').name('X').listen();
+  controlpointFolder.add(newPoint, 'y').name('Y').listen();
+  controlpointFolder.add(newPoint, 'z').name('Z').listen();
 
   // Update the spline outline
   updateSplineOutline();
@@ -1028,7 +1028,7 @@ function removePoint(curveIndex) {
 
 // doubleclick function add point at clicked space
 function onDoubleClick(event) {
-  let container = document.getElementById("container");
+  let container = document.getElementById('container');
   let containerDimensions = container.getBoundingClientRect();
   let containerWidth = containerDimensions.width;
   let containerHeight = containerDimensions.height;
@@ -1105,7 +1105,7 @@ function onPointerUp(event) {
 }
 
 function onPointerMove(event) {
-  let container = document.getElementById("container");
+  let container = document.getElementById('container');
   let containerDimensions = container.getBoundingClientRect();
   let containerWidth = containerDimensions.width;
   let containerHeight = containerDimensions.height;
@@ -1117,7 +1117,7 @@ function onPointerMove(event) {
 
   const intersects = raycaster.intersectObjects(
     splineHelperObjects.flat(),
-    false
+    false,
   );
 
   if (intersects.length > 0) {
@@ -1131,14 +1131,14 @@ function onPointerMove(event) {
 
 // Keyboard functions
 function onKeyDownP(event) {
-  if (event.key === "p") {
+  if (event.key === 'p') {
     // Prüfe, ob die Taste 'p' gedrückt wurde
     addPoint(); // Rufe die addPoint-Funktion auf, um ein neues Spline-Objekt hinzuzufügen
   }
 }
 
 function onKeyDownR(event) {
-  if (event.key === "r") {
+  if (event.key === 'r') {
     // Prüfe, ob die Taste 'r' gedrückt wurde
     removePoint(); // Rufe die addPoint-Funktion auf, um ein neues Spline-Objekt hinzuzufügen
   }
@@ -1170,9 +1170,9 @@ function exportSpline() {
     strplace.push(`new THREE.Vector3(${p.x}, ${p.y}, ${p.z})`);
   }
 
-  console.log(strplace.join(",\n"));
-  const code = "[" + strplace.join(",\n\t") + "]";
-  prompt("copy and paste code", code);
+  console.log(strplace.join(',\n'));
+  const code = '[' + strplace.join(',\n\t') + ']';
+  prompt('copy and paste code', code);
 }
 
 function load(new_positions, curveIndex) {
