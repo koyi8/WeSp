@@ -1,30 +1,30 @@
 // add CDN for socket.io and link to this file in index.html header
 
 // Variables
-const serverURL = "http://:8081/"; // make sure you EDIT THIS!
+const serverURL = 'http://:8081/'; // make sure you EDIT THIS!
 //"http://DESKTOP-ECNAGKS:8081/";
 //"https://omniscient-brainy-sprite.glitch.me/";                                                           // use http://localhost:3000
 // if running server locally
-let socketID = "";
-let clientSource = "";
+let socketID = '';
+let clientSource = '';
 
 // Client Initialization
 const socket = io(serverURL);
 
 // RECEIVE
 
-socket.on("connect", () => {
-  console.log("Connected to server!");
+socket.on('connect', () => {
+  console.log('Connected to server!');
   socketID = socket.id; // unique random 20-character id is given to client from server
   console.log(`Your socket id is ${socketID}`);
-  clientSource = "Browser";
+  clientSource = 'Browser';
 
   // Emit an event to the server with the clientSource
-  socket.emit("clientSource", { id: socketID, source: clientSource });
+  socket.emit('clientSource', { id: socketID, source: clientSource });
 });
 
 // Inlcude data from main_copy.js
-import { exportPositionsArray } from "/main copy.js";
+import { exportPositionsArray } from '/main.js';
 
 setInterval(() => {
   // Iterate over the exportPositionsArray
@@ -38,9 +38,9 @@ setInterval(() => {
 
     //console.log(`Trigger ${i+1}: X = ${xMapped}, Y = ${yMapped}, Z = ${zMapped}`);
     // Send the mapped x, y, z coordinates to the server
-    socket.emit("coordinates", {
+    socket.emit('coordinates', {
       id: socketID,
-      TriggerID: "Trigger_" + (i + 1),
+      TriggerID: 'Trigger_' + (i + 1),
       x: xMapped,
       y: yMapped,
       z: zMapped,
@@ -49,7 +49,7 @@ setInterval(() => {
 }, 20); //every 20 ms
 
 // RTT Latency Check
-socket.on("pongCheck", () => {
+socket.on('pongCheck', () => {
   const latency = Date.now() - start;
   //console.log(`Latency is ${latency} ms`);
 });
@@ -57,7 +57,7 @@ socket.on("pongCheck", () => {
 let start;
 setInterval(() => {
   start = Date.now();
-  socket.emit("pingCheck");
+  socket.emit('pingCheck');
 }, 1000);
 
 // Map a value from one range to another
@@ -66,6 +66,6 @@ function map(value, min1, max1, min2, max2) {
 }
 
 //Disconnect from Server
-socket.on("disconnect", () => {
-  console.log("Disconnected from server!");
+socket.on('disconnect', () => {
+  console.log('Disconnected from server!');
 });

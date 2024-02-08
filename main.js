@@ -10,7 +10,6 @@ import {
   CSS2DRenderer,
   CSS2DObject,
 } from 'three/addons/renderers/CSS2DRenderer.js';
-import { get } from 'jquery';
 
 const ACTION_SELECT = 1,
   ACTION_NONE = 0;
