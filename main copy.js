@@ -317,8 +317,10 @@ function init() {
   document.addEventListener('keydown', onKeyDownP);
   document.addEventListener('keydown', onKeyDownR);
 
-  // Event-Handler for doubleclick (AddPoint)
-  document.addEventListener('dblclick', onDoubleClick);
+  // Bind the double click event to the left column
+  document
+    .getElementById('container')
+    .addEventListener('dblclick', onDoubleClick);
 
   document.addEventListener('pointerdown', onPointerDown);
   document.addEventListener('pointerup', onPointerUp);
@@ -1040,8 +1042,13 @@ function onDoubleClick(event) {
 
   // Überprüfe, ob die linke Maustaste (button 0) gedrückt wurde
   if (event.button === 0) {
-    const mouseX = (event.clientX / containerWidth) * 2 - 1;
-    const mouseY = -(event.clientY / containerHeight) * 2 + 1;
+    const mouseX =
+      ((event.clientX - containerDimensions.left) / containerWidth) * 2 - 1;
+    const mouseY =
+      -((event.clientY - containerDimensions.top) / containerHeight) * 2 + 1;
+
+    console.log('mouseX:', mouseX);
+    console.log('mouseY:', mouseY);
 
     // Erstelle einen Raycaster, um die Mausposition in der Szene zu verfolgen
     const raycaster = new THREE.Raycaster();
