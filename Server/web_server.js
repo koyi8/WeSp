@@ -1,12 +1,11 @@
-import express from "express"; 
-import { createServer } from "http";                      
-import { Server } from "socket.io"; 
-import path from "path";     
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import path from 'path';
 import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';     
-import osc from "osc";
-import os from "os";      
-
+import { dirname, resolve } from 'path';
+import osc from 'osc';
+import os from 'os';
 
 const app = express(); // create express app
 const httpServer = createServer(app);
@@ -26,104 +25,152 @@ const httpServer = createServer((req, res) => {
 });
 */
 // Create a socket.io server instance passing it httpServer and required options
-const io = new Server(httpServer, {              
-    cors: { origin: "*" }                 // wild card since security isn't a concern
+const io = new Server(httpServer, {
+  cors: { origin: '*' }, // wild card since security isn't a concern
 });
 
 // object to store connected clients
 const clients = {};
 
-
 // OPening UDP-Port for OSC communication
 //--------------------------------------------------
+
+const defaultRemotePort = 7500,
+  defaultLocalPort = 7400,
+  udpSendPorts = []; // array of UDP ports to send
+
+//Get current IP-Addresses for the local machine
 const getIPAddresses = function () {
-    const interfaces = os.networkInterfaces();
-    const ipAddresses = [];
+  const interfaces = os.networkInterfaces();
+  const ipAddresses = [];
 
-    for (const deviceName in interfaces){
-        const addresses = interfaces[deviceName];
+  for (const deviceName in interfaces) {
+    const addresses = interfaces[deviceName];
 
-        for (let i = 0; i < addresses.length; i++) {
-            const addressInfo = addresses[i];
+    for (let i = 0; i < addresses.length; i++) {
+      const addressInfo = addresses[i];
 
-            if (addressInfo.family === "IPv4" && !addressInfo.internal) {
-                ipAddresses.push(addressInfo.address);
-            }
-        }
+      if (addressInfo.family === 'IPv4' && !addressInfo.internal) {
+        ipAddresses.push(addressInfo.address);
+      }
     }
+  }
 
-    return ipAddresses;
+  return ipAddresses;
 };
 
-const udp = new osc.UDPPort({
-    localAddress: "0.0.0.0",
-    localPort: 7400,
-    remoteAddress: "127.0.0.1", // possibly send to other network here
-    remotePort: 7500
-});
+// Setting up UDP Port
 
-udp.on("ready", function () {
+function createUDPPort(
+  localPort = defaultLocalPort,
+  remotePort = defaultRemotePort,
+) {
+  return new osc.UDPPort({
+    localAddress: '0.0.0.0',
+    localPort: localPort,
+    remoteAddress: '127.0.0.1',
+    remotePort: remotePort,
+  });
+}
+
+function setupReadyEvent(udp) {
+  udp.on('ready', function () {
     const ipAddresses = getIPAddresses();
-    console.log("Listening for OSC over UDP.");
+    console.log('New UDPPort created');
     ipAddresses.forEach(function (address) {
-        console.log(" Host:", address + ", Port:", udp.options.localPort);
+      console.log(' Host:', address + ', Port:', udp.options.localPort);
     });
-    console.log("Broadcasting OSC over UDP to", udp.options.remoteAddress + ", Port:", udp.options.remotePort);
-});
+    console.log(
+      'Broadcasting OSC over UDP to',
+      udp.options.remoteAddress + ', Port:',
+      udp.options.remotePort,
+    );
+  });
+}
 
-udp.open();
+function setupUDPPort(
+  localPort = defaultLocalPort,
+  remotePort = defaultRemotePort,
+) {
+  const udp = createUDPPort(localPort, remotePort);
+  udpSendPorts.push(udp);
+  setupReadyEvent(udp);
+  udp.open();
+  return udp;
+}
 
+const initialUDPPort = setupUDPPort();
+
+// function to close the UDP Port
+function closeUDPPort(index) {
+  if (index >= 0 && index < udpSendPorts.length) {
+    const udp = udpSendPorts[index];
+    udp.close();
+    console.log('Closed udpSendPort port on', udp.options.remotePort);
+  } else {
+    console.log('Invalid index:', index);
+  }
+}
 
 // Event fired when client connects, giving each client a unique "socket" instance
-io.on("connection", (socket) => {   
-    console.log("a user connected" + socket.id);
+io.on('connection', (socket) => {
+  console.log('a user connected' + socket.id);
 
-    //Store client id and source (browser or max) in clients object
-    clients[socket.id] = { clientID: socket.id, clientSource: null };
+  //Store client id and source (browser or max) in clients object
+  clients[socket.id] = { clientID: socket.id, clientSource: null };
 
-    // RECIEVE 
+  // RECIEVE
 
-    //Receive Client ID and Source (Browser or Max)
-    socket.on('clientSource', (data) => {
-        console.log('Client source: ' + data.source);
-        //update client source in clients object
-        clients[data.id].clientSource = data.source;
+  //Receive Client ID and Source (Browser or Max)
+  socket.on('clientSource', (data) => {
+    console.log('Client source: ' + data.source);
+    //update client source in clients object
+    clients[data.id].clientSource = data.source;
+  });
+
+  // Listening for AddUDPPort event from client
+  // OpenPort message
+  socket.on('addUDPPort', (localPort, remotePort) => {
+    setupUDPPort(localPort, remotePort);
+  });
+  // close port message
+  socket.on('removeUDPPort', (index) => {
+    closeUDPPort(index);
+  });
+
+  // SEND the coordinates via OSC
+
+  socket.on('coordinates', (coordinates) => {
+    //console.log(coordinates);
+    initialUDPPort.send({
+      address: '/coordinates',
+      args: [
+        { type: 's', value: coordinates.id },
+        { type: 's', value: coordinates.TriggerID },
+        { type: 'f', value: coordinates.x },
+        { type: 'f', value: coordinates.y },
+        { type: 'f', value: coordinates.z },
+      ],
     });
+  });
 
+  //LATENCY TEST
 
-    // SEND the coordinates via OSC
-    
-    socket.on("coordinates", (coordinates) => {
-        //console.log(coordinates);
-        udp.send({
-            address: "/coordinates",
-            args: [
-                { type: "s", value: coordinates.id },
-                { type: "s", value: coordinates.TriggerID },
-                { type: "f", value: coordinates.x },
-                { type: "f", value: coordinates.y },
-                { type: "f", value: coordinates.z }
-            ]
-        });
-    });
+  // Measure RTT
+  socket.on('pingCheck', () => {
+    socket.emit('pongCheck');
+  });
 
-    //LATENCY TEST
+  socket.on('message', (message) => {
+    console.log(message);
+    io.emit('message', message); // send to all clients
+  });
 
-    // Measure RTT
-    socket.on('pingCheck', () => {
-        socket.emit('pongCheck');
-    });
-    
-    socket.on("message", (message) => {
-        console.log(message);
-        io.emit("message", message );    // send to all clients
-    });
-
-    // Remove client from clients object when they disconnect
-    socket.on("disconnect", () => {
-        console.log("a user disconnected" + socket.id);
-        delete clients[socket.id];
-    });
+  // Remove client from clients object when they disconnect
+  socket.on('disconnect', () => {
+    console.log('a user disconnected' + socket.id);
+    delete clients[socket.id];
+  });
 });
 
 /*
@@ -133,9 +180,8 @@ setInterval(() => {
 }, 2000);
 */
 
-
 // Launch server
 const myPort = process.env.PORT || 8081; // let Glitch choose port OR use 3000
 httpServer.listen(myPort, () => {
-    console.log(`the server is listening on port: ${myPort}`);
+  console.log(`the server is listening on port: ${myPort}`);
 });
