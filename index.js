@@ -57,7 +57,6 @@ const setupLights = () => {
   const directionalLight = new THREE.DirectionalLight(0xffffff, 4.5);
   directionalLight.position.set(0, 30, 4);
   directionalLight.angle = Math.PI * 0.2;
-  directionalLight.castShadow = false; // i set this to false, cause we dont need shadows?
   scene.add(directionalLight);
 };
 
