@@ -28,7 +28,7 @@ const init = () => {
   setupControls();
   curveManager = new CurveManager(scene, settings);
   curveManager.createCurves();
-  triggerManager = new TriggerManager(scene, settings, curveManager);
+  triggerManager = new TriggerManager(scene, settings, curveManager, container);
   triggerManager.createTriggers();
   render();
   window.addEventListener('resize', onWindowResize, false);
@@ -88,6 +88,7 @@ const animate = () => {
 
 const render = () => {
   renderer.render(scene, camera);
+  triggerManager.renderLabels(camera);
 };
 
 // Throttle resize function
@@ -100,6 +101,7 @@ const onWindowResize = () => {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      triggerManager.updateLabelRendererSize(width, height);
       render();
     }, 250); // execute every 250ms
   }
