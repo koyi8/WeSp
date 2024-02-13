@@ -2,21 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Spat App</title>
     <!-- <link rel="icon" href="/favicon.ico" type="image/x-icon" /> -->
     <link rel="stylesheet" type="text/css" href="styles.scss" />
-    <script type="module" src="/main.js"></script>
   </head>
   <body>
     <div class="main-container">
-      <div id="container" class="left-col col"></div>
-      <div id="trajectoryGUI" class="right-col col"></div>
+      <div id="3d-container" class="left-col col"></div>
+      <div id="gui" class="right-col col"></div>
     </div>
 
     <!-- Including Socket.IO for real-time communication -->
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <script type="module" src="/client_web.js"></script>
+    <script type="module" src="/index.js"></script>
   </body>
 </html>

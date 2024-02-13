@@ -1,22 +1,27 @@
 @import "normalize.css";
 
+html,
 body {
-  font-family: Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+  background-color: #FFFFFF;
 }
 
-#trajectoryGUI {
-  /* position: absolute;
-    top: 0; 
-    left: 0;
-    z-index: 0; */
+* {
+  box-sizing: border-box;
 }
+
+// #trajectoryGUI {
+// }
 
 .main-container {
-  background-color: black;
   width: 100vw;
   height: 100vh;
   display: flex;
-  flex-direction: 'row';
+  flex-direction: row;
 }
 
 .col {
@@ -25,13 +30,5 @@ body {
 
 .left-col {
   position: relative;
+  border-left: 1px solid #eee;
 }
-
-/* #container canvas {
-  width: 100% !important;
-  height: 100%;
-} */
-
-/* #container .col canvas {
-  width: 100% !important;
-} */

@@ -24,7 +24,7 @@ socket.on('connect', () => {
 });
 
 // Inlcude data from main_copy.js
-import { exportPositionsArray } from '/main.js';
+import { exportPositionsArray } from '/index.js';
 
 setInterval(() => {
   // Iterate over the exportPositionsArray
