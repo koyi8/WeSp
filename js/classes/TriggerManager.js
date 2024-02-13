@@ -20,8 +20,7 @@ class TriggerManager {
       this.container.offsetWidth,
       this.container.offsetHeight,
     );
-    this.labelRenderer.domElement.style.position = 'absolute';
-    this.labelRenderer.domElement.style.top = '0';
+    this.labelRenderer.domElement.className = 'trigger-container';
     this.container.appendChild(this.labelRenderer.domElement);
   }
 
@@ -32,7 +31,7 @@ class TriggerManager {
     for (let i = 0; i < this.settings.triggerAmount; i++) {
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
       const labelElement = document.createElement('div');
-      labelElement.className = 'trigger-label';
+      labelElement.className = 'label';
       const cubeLabel = new CSS2DObject(labelElement);
       cubeLabel.position.set(0, 1.5, 0);
       cube.add(cubeLabel);
