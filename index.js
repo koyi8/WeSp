@@ -17,7 +17,7 @@ const settings = {
 let camera, scene, renderer;
 let curveManager;
 let triggerManager;
-let exportPositionsArray = [];
+let positionsArray = [];
 let container;
 
 const init = () => {
@@ -110,4 +110,4 @@ const onWindowResize = () => {
 init();
 animate();
 
-export { exportPositionsArray };
+export { positionsArray };

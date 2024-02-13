@@ -24,12 +24,12 @@ socket.on('connect', () => {
 });
 
 // Inlcude data from main_copy.js
-import { exportPositionsArray } from '/index.js';
+import { positionsArray } from '/index.js';
 
 setInterval(() => {
-  // Iterate over the exportPositionsArray
-  for (let i = 0; i < exportPositionsArray.length; i++) {
-    let TrigPos = exportPositionsArray[i][0];
+  // Iterate over the positionsArray
+  for (let i = 0; i < positionsArray.length; i++) {
+    let TrigPos = positionsArray[i][0];
 
     // Map the x, y, and z components of TrigPos
     const xMapped = map(TrigPos.x, 1000, -1000, -15, 15);
