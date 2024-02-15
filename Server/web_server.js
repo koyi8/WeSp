@@ -1,7 +1,6 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import osc from 'osc';
@@ -24,6 +23,7 @@ const httpServer = createServer((req, res) => {
     res.end();                                          // signals headers/body sent
 });
 */
+
 // Create a socket.io server instance passing it httpServer and required options
 const io = new Server(httpServer, {
   cors: { origin: '*' }, // wild card since security isn't a concern
@@ -32,52 +32,44 @@ const io = new Server(httpServer, {
 // object to store connected clients
 const clients = {};
 
-// OPening UDP-Port for OSC communication
+// Opening UDP-Port for OSC communication
 //--------------------------------------------------
 
-const defaultRemotePort = 7500,
-  defaultLocalPort = 7400,
-  udpSendPorts = []; // array of UDP ports to send
+const defaultLocalPort = 7400,
+  defaultRemotePort = 7500,
+  udpPorts = []; // array of open UDP ports to send
 
-//Get current IP-Addresses for the local machine
-const getIPAddresses = function () {
+// Get current IP-Addresses for the local machine
+const getIPAddresses = () => {
   const interfaces = os.networkInterfaces();
-  const ipAddresses = [];
 
-  for (const deviceName in interfaces) {
-    const addresses = interfaces[deviceName];
-
-    for (let i = 0; i < addresses.length; i++) {
-      const addressInfo = addresses[i];
-
-      if (addressInfo.family === 'IPv4' && !addressInfo.internal) {
-        ipAddresses.push(addressInfo.address);
-      }
-    }
-  }
-
-  return ipAddresses;
+  return Object.values(interfaces)
+    .flat()
+    .filter(
+      (addressInfo) => addressInfo.family === 'IPv4' && !addressInfo.internal,
+    )
+    .map((addressInfo) => addressInfo.address);
 };
 
 // Setting up UDP Port
 
-function createUDPPort(
+const createUDPPort = (
   localPort = defaultLocalPort,
   remotePort = defaultRemotePort,
-) {
+) => {
   return new osc.UDPPort({
     localAddress: '0.0.0.0',
     localPort: localPort,
     remoteAddress: '127.0.0.1',
     remotePort: remotePort,
   });
-}
+};
 
-function setupReadyEvent(udp) {
-  udp.on('ready', function () {
+const setupReadyEvent = (udp) => {
+  udp.on('ready', () => {
     const ipAddresses = getIPAddresses();
     console.log('New UDPPort created');
-    ipAddresses.forEach(function (address) {
+    ipAddresses.forEach((address) => {
       console.log(' Host:', address + ', Port:', udp.options.localPort);
     });
     console.log(
@@ -86,38 +78,52 @@ function setupReadyEvent(udp) {
       udp.options.remotePort,
     );
   });
-}
+};
 
-function setupUDPPort(
+const setupUDPPort = (
   localPort = defaultLocalPort,
   remotePort = defaultRemotePort,
-) {
+) => {
+  // Get all the local port numbers from the udpPorts array
+  const localPorts = udpPorts.map((udp) => udp.options.localPort);
+  // If the provided localPort is already in use, set it to one more than the highest port number
+  if (localPorts.includes(localPort)) {
+    const maxLocalPort = Math.max(...localPorts);
+    localPort = maxLocalPort + 1;
+  }
   const udp = createUDPPort(localPort, remotePort);
-  udpSendPorts.push(udp);
+  udpPorts.push(udp);
   setupReadyEvent(udp);
   udp.open();
   return udp;
-}
+};
 
 const initialUDPPort = setupUDPPort();
 
-// function to close the UDP Port
-function closeUDPPort(index) {
-  if (index >= 0 && index < udpSendPorts.length) {
-    const udp = udpSendPorts[index];
+// Function to close the UDP Port
+const closeUDPPort = (index) => {
+  if (index >= 0 && index < udpPorts.length) {
+    const udp = udpPorts[index];
     udp.close();
-    console.log('Closed udpSendPort port on', udp.options.remotePort);
+    console.log('Closed udpPort port on', udp.options.remotePort);
+    udpPorts.splice(index, 1);
+    console.log('udpPorts:', udpPorts.lenght);
   } else {
     console.log('Invalid index:', index);
   }
-}
+};
 
 // Event fired when client connects, giving each client a unique "socket" instance
 io.on('connection', (socket) => {
-  console.log('a user connected' + socket.id);
+  console.log('a user connected ' + socket.id);
 
   //Store client id and source (browser or max) in clients object
   clients[socket.id] = { clientID: socket.id, clientSource: null };
+  // Remove client from clients object when they disconnect
+  socket.on('disconnect', () => {
+    console.log('a user disconnected ' + socket.id);
+    delete clients[socket.id];
+  });
 
   // RECIEVE
 
@@ -164,12 +170,6 @@ io.on('connection', (socket) => {
   socket.on('message', (message) => {
     console.log(message);
     io.emit('message', message); // send to all clients
-  });
-
-  // Remove client from clients object when they disconnect
-  socket.on('disconnect', () => {
-    console.log('a user disconnected' + socket.id);
-    delete clients[socket.id];
   });
 });
 
