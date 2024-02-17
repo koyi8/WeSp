@@ -21,7 +21,8 @@ body {
 
 .col {
   width: 50%;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .left-col {
@@ -38,7 +39,8 @@ body {
   .col {
     width: 100vw;
     height: 50vh;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
@@ -59,4 +61,32 @@ body {
   display: none;
   padding: 15px;
   border-top: none;
+}
+
+/*GUI for OSC*/
+.oscConfigTable {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  table-layout: fixed;
+  background-color: white; /* Set the background color of the table */
+}
+
+.oscConfigTable,
+.oscConfigTableHeader,
+.oscConfigTableRow {
+  border: 1px solid black;
+}
+
+.oscConfigTableHeader,
+.oscConfigTableRow {
+  padding: 10px;
+  text-align: left;
+  background-color: white; /* Set the background color of the cells */
+}
+
+/* Set the width of input fields to 100% */
+input {
+  width: 100%;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
