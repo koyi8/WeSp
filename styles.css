@@ -21,17 +21,72 @@ body {
 
 .col {
   width: 50%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .left-col {
   position: relative;
 }
+.right-col {
+  position: relative;
+}
 
-/* #container canvas {
-  width: 100% !important;
-  height: 100%;
-} */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+  }
+  .col {
+    width: 100vw;
+    height: 50vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
 
-/* #container .col canvas {
-  width: 100% !important;
-} */
+/*GUI*/
+.tab {
+  background-color: #f1f1f1;
+  border: none;
+  cursor: pointer;
+  padding: 10px 15px;
+  transition: 0.3s;
+}
+
+.tab:hover {
+  background-color: #ddd;
+}
+
+.tabcontent {
+  display: none;
+  padding: 15px;
+  border-top: none;
+}
+
+/*GUI for OSC*/
+.oscConfigTable {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  table-layout: fixed;
+  background-color: white; /* Set the background color of the table */
+}
+
+.oscConfigTable,
+.oscConfigTableHeader,
+.oscConfigTableRow {
+  border: 1px solid black;
+}
+
+.oscConfigTableHeader,
+.oscConfigTableRow {
+  padding: 10px;
+  text-align: left;
+  background-color: white; /* Set the background color of the cells */
+}
+
+/* Set the width of input fields to 100% */
+input {
+  width: 100%;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
