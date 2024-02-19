@@ -10,7 +10,7 @@ const settings = {
   loop: true,
   arcLength: 0,
   antialias: true,
-  triggerAmount: 1,
+  triggerAmount: 2,
   curveAmount: 2,
 };
 

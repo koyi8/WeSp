@@ -11,10 +11,11 @@
     <!-- <link rel="icon" href="/favicon.ico" type="image/x-icon" /> -->
     <link rel="stylesheet" type="text/css" href="styles.scss" />
   </head>
+  <body>
     <div class="main-container">
-      <div id="3d-container" class="left-col col"></div>
+      <div id="3d-container" class="col left"></div>
 
-      <div id="gui-container" class="right-col col">
+      <div id="gui-container" class="col right">
         <div class="tabs">
           <button class="tab" onclick="openTab(event, 'Tab1')">
             Trajectories
@@ -23,8 +24,65 @@
           <button class="tab" onclick="openTab(event, 'Tab3')">Settings</button>
           <button class="tab" onclick="openTab(event, 'Tab4')">OSC</button>
         </div>
-        <div id="Tab1" class="tabcontent">Content for Tab 1</div>
-        <div id="Tab2" class="tabcontent">Content for Tab 2</div>
+        <div id="Tab1" class="tabcontent trajectories" style="display: block">
+          <div id="trajectory-tabs" class="trajectory-tabs">
+            <button>Trajectory 1</button>
+            <button>Trajectory 2</button>
+            <button>Trajectory 3</button>
+          </div>
+          <div class="header">
+            <div class="title">Trajectory 1</div>
+            <div class="control">
+              <label for="animate">Closed</label>
+              <input type="checkbox" id="animate" name="animate" />
+            </div>
+            <div class="control">
+              <label class="label">Tension</label>
+              <input type="range" />
+            </div>
+          </div>
+          <div id="trajectories-container">
+            <div class="item">
+              <div>1</div>
+              <div class="control">
+                <label>x</label>
+                <div>
+                  <input type="range" />
+                  <input />
+                </div>
+              </div>
+              <div class="control">
+                <label>y</label>
+                <div>
+                  <input type="range" />
+                  <input />
+                </div>
+              </div>
+              <div class="control">
+                <label>z</label>
+                <div>
+                  <input type="range" />
+                  <input />
+                </div>
+              </div>
+              <div class="control">
+                <button>x</button>
+              </div>
+              <div class="control">
+                <button>+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="Tab2" class="tabcontent">
+          <div id="triggers" class="triggers">
+            <button class="add-trigger">
+              <span>+</span>
+              <span>Add</span>
+              <span>trigger</span>
+            </button>
+          </div>
+        </div>
         <div id="Tab3" class="tabcontent">Content for Tab 3</div>
         <div id="Tab4" class="tabcontent">
           <h2>OSC_Config</h2>
