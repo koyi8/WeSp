@@ -20,9 +20,14 @@ let stats;
 let container;
 
 //GUI
-const gui = new GUI();
+//const gui = new GUI();
+const gui = new GUI({
+  container: document.getElementById('Tab2'),
+  autoPlace: false,
+});
+
 const trajectoryGUI = new GUI({
-  container: document.getElementById('trajectoryGUI'),
+  container: document.getElementById('Tab1'),
   autoPlace: false,
 });
 
@@ -311,8 +316,10 @@ function init() {
   document.addEventListener('keydown', onKeyDownP);
   document.addEventListener('keydown', onKeyDownR);
 
-  // Event-Handler for doubleclick (AddPoint)
-  document.addEventListener('dblclick', onDoubleClick);
+  // Bind the double click event to the left column
+  document
+    .getElementById('container')
+    .addEventListener('dblclick', onDoubleClick);
 
   document.addEventListener('pointerdown', onPointerDown);
   document.addEventListener('pointerup', onPointerUp);
@@ -503,9 +510,9 @@ function init() {
   // General stats HTML STYLING IN HERE. maybe later in a div?
   stats = new Stats();
   stats.dom.style.position = 'absolute';
-  stats.dom.style.left = '50%';
+  stats.dom.style.left = '0';
   stats.dom.style.top = '0';
-  stats.dom.style.transform = 'translateX(-50%)';
+  //stats.dom.style.transform = 'translateX(-50%)';
   document.body.appendChild(stats.dom);
 
   render();
@@ -1034,8 +1041,13 @@ function onDoubleClick(event) {
 
   // Überprüfe, ob die linke Maustaste (button 0) gedrückt wurde
   if (event.button === 0) {
-    const mouseX = (event.clientX / containerWidth) * 2 - 1;
-    const mouseY = -(event.clientY / containerHeight) * 2 + 1;
+    const mouseX =
+      ((event.clientX - containerDimensions.left) / containerWidth) * 2 - 1;
+    const mouseY =
+      -((event.clientY - containerDimensions.top) / containerHeight) * 2 + 1;
+
+    console.log('mouseX:', mouseX);
+    console.log('mouseY:', mouseY);
 
     // Erstelle einen Raycaster, um die Mausposition in der Szene zu verfolgen
     const raycaster = new THREE.Raycaster();
@@ -1145,11 +1157,16 @@ function onKeyDownR(event) {
 
 // Window Resize function
 function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  let container = document.getElementById('container');
+  let containerDimensions = container.getBoundingClientRect();
+  let containerWidth = containerDimensions.width;
+  let containerHeight = containerDimensions.height;
+
+  camera.aspect = containerWidth / containerHeight;
   camera.updateProjectionMatrix();
 
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(containerWidth, containerHeight);
+  labelRenderer.setSize(containerWidth, containerHeight);
 
   render();
 }
