@@ -11,10 +11,11 @@
     <!-- <link rel="icon" href="/favicon.ico" type="image/x-icon" /> -->
     <link rel="stylesheet" type="text/css" href="styles.scss" />
   </head>
+  <body>
     <div class="main-container">
-      <div id="3d-container" class="left-col col"></div>
+      <div id="3d-container" class="col left"></div>
 
-      <div id="gui-container" class="right-col col">
+      <div id="gui-container" class="col right">
         <div class="tabs">
           <button class="tab" onclick="openTab(event, 'Tab1')">
             Trajectories
@@ -24,7 +25,15 @@
           <button class="tab" onclick="openTab(event, 'Tab4')">OSC</button>
         </div>
         <div id="Tab1" class="tabcontent">Content for Tab 1</div>
-        <div id="Tab2" class="tabcontent">Content for Tab 2</div>
+        <div id="Tab2" class="tabcontent" style="display: block">
+          <div id="triggers" class="triggers">
+            <button class="add-trigger">
+              <span>+</span>
+              <span>Add</span>
+              <span>trigger</span>
+            </button>
+          </div>
+        </div>
         <div id="Tab3" class="tabcontent">Content for Tab 3</div>
         <div id="Tab4" class="tabcontent">
           <h2>OSC_Config</h2>

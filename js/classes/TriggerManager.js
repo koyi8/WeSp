@@ -3,6 +3,7 @@ import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
+import { createTriggerControlDiv } from '../createTriggerControlDiv';
 
 class TriggerManager {
   constructor(scene, settings, curveManager, container) {
@@ -27,6 +28,7 @@ class TriggerManager {
   createTriggers() {
     const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
     const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const triggersContainer = document.getElementById('triggers');
 
     for (let i = 0; i < this.settings.triggerAmount; i++) {
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
@@ -45,6 +47,12 @@ class TriggerManager {
         animate: true,
         curveIndex: 0,
       });
+
+      const triggerDiv = createTriggerControlDiv(i);
+      triggersContainer.insertBefore(
+        triggerDiv,
+        triggersContainer.lastElementChild,
+      );
     }
   }
 
