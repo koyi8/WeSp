@@ -2,16 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>My second three.js app</title>
-    <link rel="stylesheet" type="text/css" href="styles.css" />
-    <script type="module" src="/main copy.js"></script>
-    <script src="gui-actions.js"></script>
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-    <script type="module" src="/client_web.js"></script>
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Spat App</title>
+    <!-- <link rel="icon" href="/favicon.ico" type="image/x-icon" /> -->
+    <link rel="stylesheet" type="text/css" href="styles.scss" />
   </head>
-  <body>
     <div class="main-container">
-      <div id="container" class="left-col col"></div>
+      <div id="3d-container" class="left-col col"></div>
 
       <div id="gui-container" class="right-col col">
         <div class="tabs">
@@ -41,5 +42,10 @@
         </div>
       </div>
     </div>
+    <!-- Including Socket.IO for real-time communication -->
+    <script src="gui-actions.js"></script>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script type="module" src="/client_web.js"></script>
+    <script type="module" src="/index.js"></script>
   </body>
 </html>

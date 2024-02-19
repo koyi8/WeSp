@@ -1,0 +1,108 @@
+@import "normalize.css";
+
+html,
+body {
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+  background-color: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// #trajectoryGUI {
+// }
+
+.main-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.col {
+  width: 50%;
+}
+
+.left-col {
+  position: relative;
+  border-left: 1px solid #eee;
+}
+
+.trigger-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+
+  .trigger-label {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+  }
+
+  .col {
+    width: 100vw;
+    height: 50vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+/*GUI*/
+.tab {
+  background-color: #f1f1f1;
+  border: none;
+  cursor: pointer;
+  padding: 10px 15px;
+  transition: 0.3s;
+}
+
+.tab:hover {
+  background-color: #ddd;
+}
+
+.tabcontent {
+  display: none;
+  padding: 15px;
+  border-top: none;
+}
+
+/*GUI for OSC*/
+.oscConfigTable {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  table-layout: fixed;
+  background-color: white;
+  /* Set the background color of the table */
+}
+
+.oscConfigTable,
+.oscConfigTableHeader,
+.oscConfigTableRow {
+  border: 1px solid black;
+}
+
+.oscConfigTableHeader,
+.oscConfigTableRow {
+  padding: 10px;
+  text-align: left;
+  background-color: white;
+  /* Set the background color of the cells */
+}
+
+/* Set the width of input fields to 100% */
+input {
+  width: 100%;
+  box-sizing: border-box;
+  /* Include padding and border in the element's total width and height */
+}

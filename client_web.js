@@ -34,12 +34,12 @@ setTimeout(() => {
 */
 
 // Inlcude data from main_copy.js
-import { exportPositionsArray } from '/main copy.js';
+import { positionsArray } from '/index.js';
 
 setInterval(() => {
-  // Iterate over the exportPositionsArray
-  for (let i = 0; i < exportPositionsArray.length; i++) {
-    let TrigPos = exportPositionsArray[i][0];
+  // Iterate over the positionsArray
+  for (let i = 0; i < positionsArray.length; i++) {
+    let TrigPos = positionsArray[i][0];
 
     // Map the x, y, and z components of TrigPos
     const xMapped = map(TrigPos.x, 1000, -1000, -15, 15);
@@ -80,20 +80,3 @@ const map = (value, min1, max1, min2, max2) =>
   ((value - min1) * (max2 - min2)) / (max1 - min1) + min2;
 
 // coordinate conversion // probaply another file? coodinates MATH?
-
-// in radians //
-const cartesianToSphericalRad = (x, y, z) => {
-  const distance = Math.sqrt(x * x + y * y + z * z);
-  const azimuth = Math.atan2(y, x);
-  const elevation = Math.atan2(z, Math.sqrt(x * x + y * y));
-
-  return { azimuth, elevation, distance };
-};
-
-const cartesianToSphericalDeg = (x, y, z) => {
-  const distance = Math.sqrt(x * x + y * y + z * z);
-  const azimuth = Math.atan2(y, x) * (180 / Math.PI);
-  const elevation = Math.atan2(z, Math.sqrt(x * x + y * y)) * (180 / Math.PI);
-
-  return { azimuth, elevation, distance };
-};
