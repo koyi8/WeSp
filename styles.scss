@@ -132,6 +132,8 @@ button {
     font-size: 10px;
     text-transform: uppercase;
     color: #666;
+    border-right: none;
+    border-bottom: none;
 
     &:hover {
       background-color: #eee;
