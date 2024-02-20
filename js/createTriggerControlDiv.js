@@ -18,7 +18,7 @@ export const createTriggerControlDiv = (
     .join('');
 
   div.innerHTML = `
-      <div>${index + 1}</div>
+      <div class="title">${index + 1}</div>
       <div class="control">
         <label class="label">Trajectory</label>
         <select name="trajectory" id="trajectory${index}">
