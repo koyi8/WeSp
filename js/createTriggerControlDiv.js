@@ -3,6 +3,7 @@ export const createTriggerControlDiv = (
   onUpdate,
   curves,
   triggerDefaults,
+  onAnimateChange,
 ) => {
   const div = document.createElement('div');
   div.id = `trigger${index}`;
@@ -17,6 +18,7 @@ export const createTriggerControlDiv = (
     .join('');
 
   div.innerHTML = `
+      <div>${index + 1}</div>
       <div class="control">
         <label class="label">Trajectory</label>
         <select name="trajectory" id="trajectory${index}">
@@ -35,31 +37,47 @@ export const createTriggerControlDiv = (
     triggerDefaults.speed
   }"/>
       </div>
-      <div class="control">
+      <div class="control" style="display: none;">
         <label class="label">Position</label>
         <input type="range" orient="vertical" id="position${index}" min="0" max="1" step="0.01" value="${
     triggerDefaults.position
   }"/>
       </div>
       <div class="control direction">
-        <label class="label">Direction</label>
-        <button id="loop${index}" ${
-    triggerDefaults.direction === 'loop' ? 'class="selected"' : ''
-  }>Loop</button>
+        <label class="label">Loop</label>
+        <input type="checkbox" id="loop${index}" name="animate" ${
+    triggerDefaults.loop ? 'checked' : ''
+  }/>
+        <br />
         <button id="ltr${index}" ${
     triggerDefaults.direction === 'ltr' ? 'class="selected"' : ''
   }>LTR</button>
+        <button id="rtl${index}" ${
+    triggerDefaults.direction === 'rtl' ? 'class="selected"' : ''
+  }>RTL</button>
       </div>
       <div class="control">
         <button id="delete${index}">Delete</button>
       </div>
     `;
 
-  // Animate Checkbox
+  const speedControl = div.querySelector(`div.control:has(#speed${index})`);
+  const positionControl = div.querySelector(
+    `div.control:has(#position${index})`,
+  );
   const animateCheckbox = div.querySelector(`#animate${index}`);
   animateCheckbox.addEventListener('change', (e) => {
-    console.log(e.target.checked);
     onUpdate(index, { animate: e.target.checked });
+    // When animation starts, update the position range input to match the trigger's current position.
+    onAnimateChange(index);
+
+    if (e.target.checked) {
+      positionControl.style.display = 'none'; // Hide position control when animated
+      speedControl.style.display = ''; // Show speed control (use default or '' to reset)
+    } else {
+      positionControl.style.display = ''; // Show position control when not animated
+      speedControl.style.display = 'none'; // Hide speed control
+    }
   });
 
   // Speed Range Input
@@ -82,13 +100,18 @@ export const createTriggerControlDiv = (
 
   // Direction Buttons
   const loopButton = div.querySelector(`#loop${index}`);
-  loopButton.addEventListener('click', () => {
-    onUpdate(index, { loop: false });
+  loopButton.addEventListener('click', (e) => {
+    onUpdate(index, { loop: e.target.checked });
   });
 
   const ltrButton = div.querySelector(`#ltr${index}`);
   ltrButton.addEventListener('click', () => {
     onUpdate(index, { direction: 'ltr' });
+  });
+
+  const rtlButton = div.querySelector(`#rtl${index}`);
+  rtlButton.addEventListener('click', () => {
+    onUpdate(index, { direction: 'rtl' });
   });
 
   // Delete Button
