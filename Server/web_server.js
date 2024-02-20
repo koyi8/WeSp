@@ -86,11 +86,20 @@ const setupUDPPort = (
 ) => {
   // Get all the local port numbers from the udpPorts array
   const localPorts = udpPorts.map((udp) => udp.options.localPort);
+  // Get all the remote port numbers from the udpPorts array
+  const remotePorts = udpPorts.map((udp) => udp.options.remotePort);
+
+  // If the provided localPort and remotePort are already in use, return without doing anything
+  if (localPorts.includes(localPort) && remotePorts.includes(remotePort)) {
+    return;
+  }
+
   // If the provided localPort is already in use, set it to one more than the highest port number
   if (localPorts.includes(localPort)) {
     const maxLocalPort = Math.max(...localPorts);
     localPort = maxLocalPort + 1;
   }
+
   const udp = createUDPPort(localPort, remotePort);
   udpPorts.push(udp);
   setupReadyEvent(udp);
@@ -98,18 +107,23 @@ const setupUDPPort = (
   return udp;
 };
 
-const initialUDPPort = setupUDPPort();
+//const initialUDPPort = setupUDPPort();
 
 // Function to close the UDP Port
-const closeUDPPort = (index) => {
+const closeUDPPort = (localPort, remotePort) => {
+  // Find the index of the port with the specified localPort and remotePort
+  const index = udpPorts.findIndex(
+    (udp) =>
+      udp.options.localPort === localPort &&
+      udp.options.remotePort === remotePort,
+  );
+
   if (index >= 0 && index < udpPorts.length) {
     const udp = udpPorts[index];
     udp.close();
     console.log('Closed udpPort port on', udp.options.remotePort);
     udpPorts.splice(index, 1);
-    console.log('udpPorts:', udpPorts.lenght);
-  } else {
-    console.log('Invalid index:', index);
+    console.log('udpPorts:', udpPorts.length);
   }
 };
 
@@ -140,15 +154,16 @@ io.on('connection', (socket) => {
     setupUDPPort(localPort, remotePort);
   });
   // close port message
-  socket.on('removeUDPPort', (index) => {
-    closeUDPPort(index);
+  socket.on('removeUDPPort', (localPort, remotePort) => {
+    //console.log('Remove UDP Port');
+    closeUDPPort(localPort, remotePort);
   });
 
   // SEND the coordinates via OSC
 
   socket.on('coordinates', (coordinates) => {
     //console.log(coordinates);
-    initialUDPPort.send({
+    /*initialUDPPort.send({
       address: '/coordinates',
       args: [
         { type: 's', value: coordinates.id },
@@ -157,7 +172,7 @@ io.on('connection', (socket) => {
         { type: 'f', value: coordinates.y },
         { type: 'f', value: coordinates.z },
       ],
-    });
+    });*/
   });
 
   //LATENCY TEST
