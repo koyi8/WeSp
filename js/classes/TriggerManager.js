@@ -31,6 +31,12 @@ class TriggerManager {
     const triggersContainer = document.getElementById('triggers');
 
     for (let i = 0; i < this.settings.triggerAmount; i++) {
+      const triggerDefaults = {
+        animate: true,
+        speed: Math.random() * 0.2,
+        position: Math.random(),
+        curveIndex: 0,
+      };
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
       const labelElement = document.createElement('div');
       labelElement.className = 'label';
@@ -42,13 +48,15 @@ class TriggerManager {
       this.triggers.push({
         mesh: cube,
         label: labelElement,
-        speed: Math.random() * 0.2,
-        position: Math.random(),
-        animate: true,
-        curveIndex: 0,
+        ...triggerDefaults,
       });
 
-      const triggerDiv = createTriggerControlDiv(i);
+      const triggerDiv = createTriggerControlDiv(
+        i,
+        (index, updates) => this.updateTrigger(index, updates),
+        this.curveManager.curves,
+        triggerDefaults,
+      );
       triggersContainer.insertBefore(
         triggerDiv,
         triggersContainer.lastElementChild,
@@ -56,7 +64,7 @@ class TriggerManager {
     }
   }
 
-  animateTriggers() {
+  animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
       let position = trigger.position;
       let speed = trigger.speed;
@@ -81,6 +89,23 @@ class TriggerManager {
       label.innerHTML = `${index + 1}: ${trigPos.x.toFixed(
         2,
       )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
+
+      positionsArray[index] = trigPos.clone();
+    });
+  }
+
+  updateTrigger(index, updates) {
+    const trigger = this.triggers[index];
+
+    if (!trigger) return;
+
+    Object.keys(updates).forEach((key) => {
+      if (key === 'delete' && updates[key] === true) {
+        // Handle trigger deletion
+        // this.deleteTrigger(index);
+      } else {
+        trigger[key] = updates[key];
+      }
     });
   }
 

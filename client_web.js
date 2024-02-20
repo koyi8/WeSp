@@ -39,22 +39,19 @@ import { positionsArray } from '/index.js';
 setInterval(() => {
   // Iterate over the positionsArray
   for (let i = 0; i < positionsArray.length; i++) {
-    let TrigPos = positionsArray[i][0];
-
-    // Map the x, y, and z components of TrigPos
-    const xMapped = map(TrigPos.x, 1000, -1000, -15, 15);
-    const zMapped = map(TrigPos.y, 0, 500, 0, 10);
-    const yMapped = map(TrigPos.z, -1000, 1000, -15, 15);
+    let trigPos = positionsArray[i];
 
     //console.log(`Trigger ${i+1}: X = ${xMapped}, Y = ${yMapped}, Z = ${zMapped}`);
-    // Send the mapped x, y, z coordinates to the server
-    socket.emit('coordinates', {
-      id: socketID,
-      TriggerID: 'Trigger_' + (i + 1),
-      x: xMapped,
-      y: yMapped,
-      z: zMapped,
-    });
+    if (trigPos) {
+      // Send the mapped x, y, z coordinates to the server
+      socket.emit('coordinates', {
+        id: socketID,
+        TriggerID: 'Trigger_' + (i + 1),
+        x: trigPos.x,
+        y: trigPos.y,
+        z: trigPos.z,
+      });
+    }
   }
 }, 20); //every 20 ms
 
@@ -74,9 +71,5 @@ setInterval(() => {
   start = Date.now();
   socket.emit('pingCheck');
 }, 1000);
-
-// Map a value from one range to another
-const map = (value, min1, max1, min2, max2) =>
-  ((value - min1) * (max2 - min2)) / (max1 - min1) + min2;
 
 // coordinate conversion // probaply another file? coodinates MATH?
