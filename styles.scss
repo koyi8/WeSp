@@ -122,6 +122,11 @@ button {
     &:nth-child(2n) {
       background-color: #eee;
     }
+
+    .direction {
+      display: flex;
+      flex-direction: row;
+    }
   }
 
   .title {

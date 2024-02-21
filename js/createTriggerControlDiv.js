@@ -43,18 +43,20 @@ export const createTriggerControlDiv = (
     triggerDefaults.position
   }"/>
       </div>
-      <div class="control direction">
+      <div class="control">
         <label class="label">Loop</label>
         <input type="checkbox" id="loop${index}" name="animate" ${
     triggerDefaults.loop ? 'checked' : ''
   }/>
         <br />
+        <div class="direction">
         <button id="ltr${index}" ${
     triggerDefaults.direction === 'ltr' ? 'class="selected"' : ''
   }>LTR</button>
         <button id="rtl${index}" ${
     triggerDefaults.direction === 'rtl' ? 'class="selected"' : ''
   }>RTL</button>
+      </div>
       </div>
       <div class="control">
         <button id="delete${index}">Delete</button>

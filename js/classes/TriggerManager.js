@@ -28,13 +28,30 @@ class TriggerManager {
   setupAddTriggerListeners() {
     document.querySelectorAll('.add-trigger').forEach((button) => {
       button.addEventListener('click', () => {
-        const index = parseInt(button.id.split('-')[2]);
-        this.addTrigger(index, button);
+        this.createTrigger(button);
       });
     });
   }
 
-  addTrigger(index, buttonElement) {
+  createTrigger(button) {
+    const index = this.triggers.length;
+
+    const colors = [0x000000, 0xff0000, 0x0000ff, 0x808080];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const cubeMaterial = new THREE.MeshBasicMaterial({ color: randomColor });
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+
+    // Create a label for the cube
+    const labelElement = document.createElement('div');
+    labelElement.className = 'label';
+    const cubeLabel = new CSS2DObject(labelElement);
+    cubeLabel.position.set(0, 1.5, 0);
+    cube.add(cubeLabel);
+
+    this.scene.add(cube);
+
+    // default properties for the new trigger
     const triggerDefaults = {
       animate: true,
       loop: true,
@@ -44,6 +61,12 @@ class TriggerManager {
       direction: 'ltr',
     };
 
+    this.triggers.push({
+      mesh: cube,
+      label: labelElement,
+      ...triggerDefaults,
+    });
+
     const triggerDiv = createTriggerControlDiv(
       index,
       (index, updates) => this.updateTrigger(index, updates),
@@ -52,72 +75,51 @@ class TriggerManager {
       () => this.updatePositionInput(index),
     );
 
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-
-    const labelElement = document.createElement('div');
-    labelElement.className = 'label';
-    const cubeLabel = new CSS2DObject(labelElement);
-    cubeLabel.position.set(0, 1.5, 0);
-    cube.add(cubeLabel);
-
-    this.scene.add(cube);
-
-    const curve = this.curveManager.curves[triggerDefaults.curveIndex];
-    const trigPos = curve.getPointAt(Math.abs(triggerDefaults.position) % 1);
-    cube.position.copy(trigPos);
-
-    this.triggers.push({
-      mesh: cube,
-      label: labelElement,
-      ...triggerDefaults,
-    });
-
-    buttonElement.parentNode.replaceChild(triggerDiv, buttonElement);
+    // Replace the clicked button with the trigger's UI control
+    button.replaceWith(triggerDiv);
   }
 
-  // createTriggers() {
-  //   const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-  //   const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-  //   const triggersContainer = document.getElementById('triggers');
+  createTriggers() {
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const triggersContainer = document.getElementById('triggers');
 
-  //   for (let i = 0; i < this.settings.triggerAmount; i++) {
-  //     const triggerDefaults = {
-  //       animate: true,
-  //       loop: true,
-  //       speed: Math.random() * 0.2,
-  //       position: Math.random(),
-  //       curveIndex: 0,
-  //       direction: 'ltr',
-  //     };
-  //     const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-  //     const labelElement = document.createElement('div');
-  //     labelElement.className = 'label';
-  //     const cubeLabel = new CSS2DObject(labelElement);
-  //     cubeLabel.position.set(0, 1.5, 0);
-  //     cube.add(cubeLabel);
-  //     this.scene.add(cube);
+    for (let i = 0; i < this.settings.triggerAmount; i++) {
+      const triggerDefaults = {
+        animate: true,
+        loop: true,
+        speed: Math.random() * 0.2,
+        position: Math.random(),
+        curveIndex: 0,
+        direction: 'ltr',
+      };
+      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+      const labelElement = document.createElement('div');
+      labelElement.className = 'label';
+      const cubeLabel = new CSS2DObject(labelElement);
+      cubeLabel.position.set(0, 1.5, 0);
+      cube.add(cubeLabel);
+      this.scene.add(cube);
 
-  //     this.triggers.push({
-  //       mesh: cube,
-  //       label: labelElement,
-  //       ...triggerDefaults,
-  //     });
+      this.triggers.push({
+        mesh: cube,
+        label: labelElement,
+        ...triggerDefaults,
+      });
 
-  //     const triggerDiv = createTriggerControlDiv(
-  //       i,
-  //       (index, updates) => this.updateTrigger(index, updates),
-  //       this.curveManager.curves,
-  //       triggerDefaults,
-  //       () => this.updatePositionInput(i),
-  //     );
-  //     triggersContainer.insertBefore(
-  //       triggerDiv,
-  //       triggersContainer.lastElementChild,
-  //     );
-  //   }
-  // }
+      const triggerDiv = createTriggerControlDiv(
+        i,
+        (index, updates) => this.updateTrigger(index, updates),
+        this.curveManager.curves,
+        triggerDefaults,
+        () => this.updatePositionInput(i),
+      );
+      triggersContainer.insertBefore(
+        triggerDiv,
+        triggersContainer.lastElementChild,
+      );
+    }
+  }
 
   animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
