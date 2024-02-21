@@ -29,7 +29,8 @@ const init = () => {
   curveManager = new CurveManager(scene, settings);
   curveManager.createCurves();
   triggerManager = new TriggerManager(scene, settings, curveManager, container);
-  triggerManager.createTriggers();
+  // triggerManager.createTriggers();
+  triggerManager.setupAddTriggerListeners();
   render();
   window.addEventListener('resize', onWindowResize, false);
 };

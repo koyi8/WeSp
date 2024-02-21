@@ -24,7 +24,7 @@
           <button class="tab" onclick="openTab(event, 'Tab3')">Settings</button>
           <button class="tab" onclick="openTab(event, 'Tab4')">OSC</button>
         </div>
-        <div id="Tab1" class="tabcontent trajectories" style="display: block">
+        <div id="Tab1" class="tabcontent trajectories">
           <div id="trajectory-tabs" class="trajectory-tabs">
             <button>Trajectory 1</button>
             <button>Trajectory 2</button>
@@ -74,13 +74,28 @@
             </div>
           </div>
         </div>
-        <div id="Tab2" class="tabcontent">
+        <div id="Tab2" class="tabcontent" style="display: block">
+          <div>
+            <div class="lines">
+              <div class="line top"></div>
+              <div class="line middle"></div>
+              <div class="line left20"></div>
+              <div class="line left40"></div>
+              <div class="line left60"></div>
+              <div class="line left80"></div>
+            </div>
+          </div>
           <div id="triggers" class="triggers">
-            <button class="add-trigger">
-              <span>+</span>
-              <span>Add</span>
-              <span>trigger</span>
-            </button>
+            <button id="create-trigger-0" class="add-trigger">+</button>
+            <button id="create-trigger-1" class="add-trigger">+</button>
+            <button id="create-trigger-2" class="add-trigger">+</button>
+            <button id="create-trigger-3" class="add-trigger">+</button>
+            <button id="create-trigger-4" class="add-trigger">+</button>
+            <button id="create-trigger-5" class="add-trigger">+</button>
+            <button id="create-trigger-6" class="add-trigger">+</button>
+            <button id="create-trigger-7" class="add-trigger">+</button>
+            <button id="create-trigger-8" class="add-trigger">+</button>
+            <button id="create-trigger-9" class="add-trigger">+</button>
           </div>
         </div>
         <div id="Tab3" class="tabcontent">Content for Tab 3</div>
