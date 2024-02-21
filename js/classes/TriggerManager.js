@@ -34,15 +34,12 @@ class TriggerManager {
   }
 
   createTrigger(button) {
-    const index = this.triggers.length;
-
     const colors = [0x000000, 0xff0000, 0x0000ff, 0x808080];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
     const cubeMaterial = new THREE.MeshBasicMaterial({ color: randomColor });
     const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
-    // Create a label for the cube
     const labelElement = document.createElement('div');
     labelElement.className = 'label';
     const cubeLabel = new CSS2DObject(labelElement);
@@ -61,9 +58,13 @@ class TriggerManager {
       direction: 'ltr',
     };
 
+    const buttonID = button.id;
+    const index = this.triggers.length;
+
     this.triggers.push({
       mesh: cube,
       label: labelElement,
+      buttonID,
       ...triggerDefaults,
     });
 
@@ -75,8 +76,43 @@ class TriggerManager {
       () => this.updatePositionInput(index),
     );
 
-    // Replace the clicked button with the trigger's UI control
     button.replaceWith(triggerDiv);
+  }
+
+  deleteTrigger(index) {
+    const triggerToRemove = this.triggers[index];
+    if (!triggerToRemove) return;
+
+    this.scene.remove(triggerToRemove.mesh);
+
+    triggerToRemove.mesh.geometry.dispose();
+    triggerToRemove.mesh.material.dispose();
+
+    if (triggerToRemove.mesh.children.length > 0) {
+      const labelObject = triggerToRemove.mesh.children.find(
+        (child) => child instanceof CSS2DObject,
+      );
+      if (labelObject) {
+        labelObject.element.remove(); // Remove label from the DOM
+        this.scene.remove(labelObject); // Remove CSS2DObject from scene graph
+      }
+    }
+
+    const triggersContainer = document.getElementById('triggers');
+    const addButton = document.createElement('button');
+    addButton.id = triggerToRemove.buttonID;
+    addButton.className = 'add-trigger';
+    addButton.textContent = '+';
+    addButton.addEventListener('click', () => {
+      this.createTrigger(addButton);
+    });
+
+    const triggerDiv = document.getElementById(`trigger${index}`);
+    if (triggerDiv) {
+      triggersContainer.replaceChild(addButton, triggerDiv);
+    }
+
+    this.triggers.splice(index, 1);
   }
 
   createTriggers() {
@@ -169,7 +205,7 @@ class TriggerManager {
     Object.keys(updates).forEach((key) => {
       if (key === 'delete' && updates[key] === true) {
         // Handle trigger deletion
-        // this.deleteTrigger(index);
+        this.deleteTrigger(index, trigger.buttonID);
       } else if (key === 'speed') {
         // Update speed magnitude but preserve direction
         const newSpeed = Math.abs(updates[key]);
