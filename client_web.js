@@ -34,12 +34,11 @@ socket.on('connect', () => {
 
 let oscPortObjects = [], // Array to store the row objects
   sendingCoordinates, // Variable to start interval and stop interval sneding coordinates
-  sendingInterval = 1000; // Interval to send coordinates 1 second
+  sendingInterval = 20; // Interval to send coordinates 1 second
 
 window.oscPortObjects = oscPortObjects; // Make oscPortObjects globally accessible
 
 // array to store all the SourceObject -> Javascript objects
-
 let triggerObjects = [],
   triggerObject = {
     clientID: '',
@@ -52,18 +51,11 @@ let triggerObjects = [],
     z: '',
   };
 
-const initTriggerObjects = (positionsArray) => {
-  // Iterate over the positionsArray
-  for (let i = 0; i < positionsArray.length; i++) {
-    // Create a new triggerObject for each position
-    let newTriggerObject = { ...triggerObject, ...positionsArray[i] };
-    // Add the new triggerObject to the triggerObjects array
-    triggerObjects.push(newTriggerObject);
-  }
-};
-
-initTriggerObjects(positionsArray);
-console.log(triggerObjects);
+// updates the triggerObjects array based on the positionsArray and keeps track of x,y,z values
+setInterval(() => {
+  updateTriggerObjectsLength(positionsArray);
+  updateTriggerObjectsPositions(positionsArray);
+}, 17); // ~16.67 ms (1 second / 60) for 60 fps
 
 window.addRow = (inPortValue, outPortValue) => {
   let row = {}; // New object for the row
@@ -88,6 +80,14 @@ window.addRow = (inPortValue, outPortValue) => {
   outPortInput.className = 'outPortInput';
   outPortInput.value = outPortValue || '';
   outPortCell.appendChild(outPortInput);
+  // ad eventlistener to check if the input is a valid port number
+  outPortInput.addEventListener('change', () => {
+    try {
+      row.outPort = checkPortNumberInput(outPortInput.value);
+    } catch (error) {
+      console.error(error.message);
+    }
+  });
 
   let addressInput = document.createElement('input');
   addressInput.type = 'text';
@@ -96,18 +96,16 @@ window.addRow = (inPortValue, outPortValue) => {
 
   addressInput.addEventListener('change', () => {
     let inputValue = addressInput.value;
-
-    interpolateString(inputValue, positionsArray, triggerObjects);
-
     // Regular expression for OSC address
     //checks basic /something/something/else logic
     let oscAddressRegex = /^(\/\w+)+(.*)$/;
-
     if (oscAddressRegex.test(inputValue)) {
       console.log('Valid OSC address');
     } else {
       console.log('Invalid OSC address');
     }
+    // func that looks for placeholders in the string and sets sendOSC flag for the corresponding triggerObject
+    interpolateString(inputValue, triggerObjects);
   });
 
   let openInput = document.createElement('input');
@@ -143,7 +141,10 @@ window.addRow = (inPortValue, outPortValue) => {
 
       // Start the interval to send coordinates
       sendingCoordinates = setInterval(() => {
-        sendCoordinates(); // add function to send coordinates here
+        processTriggerObjects(triggerObjects, row.outPort);
+
+        // socket emit triggerObjects
+        socket.emit('triggerObjects', triggerObjects);
       }, sendingInterval);
     } else {
       clearInterval(sendingCoordinates);
@@ -168,11 +169,47 @@ window.deleteRow = () => {
   }
 };
 
-//Check if sending logic works DUMMY
+// functions to process the trigger objects Object
+const updateTriggerObjectsLength = (positionsArray) => {
+  // If positionsArray length is greater than triggerObjects length
+  if (positionsArray.length > triggerObjects.length) {
+    // Calculate the difference
+    let diff = positionsArray.length - triggerObjects.length;
 
-function sendCoordinates() {
-  console.log('Send Coordinates');
-}
+    // Add new triggerObjects for the difference
+    for (let i = 0; i < diff; i++) {
+      // Create a new triggerObject based on the structure defined outside the function
+      let newTriggerObject = { ...triggerObject };
+
+      // Add the new triggerObject to the triggerObjects array
+      triggerObjects.push(newTriggerObject);
+    }
+  }
+};
+
+const updateTriggerObjectsPositions = (positionsArray) => {
+  // Update the x, y, z values for all triggerObjects
+  for (let i = 0; i < positionsArray.length; i++) {
+    triggerObjects[i].x = positionsArray[i].x;
+    triggerObjects[i].y = positionsArray[i].y;
+    triggerObjects[i].z = positionsArray[i].z;
+  }
+};
+
+const processTriggerObjects = (triggerObjects, outportValue) => {
+  // Convert outportValue to a number using parseInt
+  let outportNumber = parseInt(outportValue, 10);
+
+  // Iterate over the triggerObjects
+  triggerObjects.forEach((triggerObject) => {
+    // If sendOSC is true
+    if (triggerObject.sendOSC) {
+      // Assign outportNumber to the triggerObject attribute outPort
+      triggerObject.outPort = outportNumber;
+    }
+    console.log(triggerObject);
+  });
+};
 
 setInterval(() => {
   // Iterate over the positionsArray

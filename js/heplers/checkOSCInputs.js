@@ -18,50 +18,56 @@ export const checkPortNumberInput = (input) => {
 };
 
 //Checks adress input and sets sendOSC flag for the corresponding triggerObject
-export const interpolateString = (input, positionsArray, triggerObjects) => {
-  let result = input;
-
+// also sets osc adress attribute for the triggerObject
+export const interpolateString = (input, triggerObjects) => {
   // Initialize sendOSC to false for all objects
   triggerObjects.forEach((triggerObject) => (triggerObject.sendOSC = false));
 
-  // Check for general placeholders
-  if (/\$x\b|\$y\b|\$z\b/.test(input)) {
-    triggerObjects.forEach((triggerObject) => (triggerObject.sendOSC = true));
-  }
+  // Determine which placeholders are present in the input string
+  let generalPlaceholdersPresent = /\$x\b|\$y\b|\$z\b/.test(input);
+  let idPlaceholderPresent = /\$srcID\b/.test(input);
 
-  // Iterate over the positionsArray and triggerObjects
-  for (let i = 0; i < positionsArray.length; i++) {
-    let trigPos = positionsArray[i];
+  // Iterate over the triggerObjects
+  for (let i = 0; i < triggerObjects.length; i++) {
     let triggerObject = triggerObjects[i];
 
-    if (trigPos && triggerObject) {
-      let placeholders = {
-        $srcIndex: i + 1,
-        [`$x${i + 1}`]: trigPos.x,
-        [`$y${i + 1}`]: trigPos.y,
-        [`$z${i + 1}`]: trigPos.z,
-      };
+    // Reset result to the original input value at the start of each iteration
+    let result = input;
 
-      for (let placeholder in placeholders) {
-        // Create a regular expression for the placeholder
-        const regex = new RegExp(placeholder.replace(/\$/g, '\\$'), 'g');
-        if (regex.test(input)) {
-          result = result.replace(regex, placeholders[placeholder]);
-
-          // Check for specific placeholders and set sendOSC to true for the corresponding object
-          if (
-            placeholder === `$x${i + 1}` ||
-            placeholder === `$y${i + 1}` ||
-            placeholder === `$z${i + 1}`
-          ) {
-            triggerObject.sendOSC = true;
-          }
-        }
-      }
+    // Set sendOSC to true for all objects if general placeholders are present
+    if (generalPlaceholdersPresent) {
+      triggerObject.sendOSC = true;
     }
+
+    // Set sendOSC to true for the corresponding object if specific placeholders are present
+    let specificPlaceholderPresent = new RegExp(
+      `\\$x${i + 1}\\b|\\$y${i + 1}\\b|\\$z${i + 1}\\b`,
+    ).test(input);
+    if (specificPlaceholderPresent) {
+      triggerObject.sendOSC = true;
+    }
+
+    // Replace $srcID placeholder
+    if (idPlaceholderPresent) {
+      result = result.replace(/\$srcID\b/g, i + 1);
+    }
+
+    // Remove general placeholders
+    result = result.replace(/\$x\b/g, '');
+    result = result.replace(/\$y\b/g, '');
+    result = result.replace(/\$z\b/g, '');
+
+    // Remove specific placeholders
+    result = result.replace(new RegExp(`\\$x${i + 1}\\b`, 'g'), '');
+    result = result.replace(new RegExp(`\\$y${i + 1}\\b`, 'g'), '');
+    result = result.replace(new RegExp(`\\$z${i + 1}\\b`, 'g'), '');
+
+    // Remove trailing whitespaces
+    result = result.trim();
+
+    // Apply the result of the string replacement to the address attribute of the triggerObject
+    triggerObject.address = result;
   }
 
   console.log(triggerObjects); // Logs the triggerObjects array
-
-  return result;
 };

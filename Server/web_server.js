@@ -159,6 +159,12 @@ io.on('connection', (socket) => {
     closeUDPPort(localPort, remotePort);
   });
 
+  //receive triggerObjects from client
+  socket.on('triggerObjects', (triggerObjects) => {
+    console.log(triggerObjects);
+    //console.log('Trigger Objects received');
+  });
+
   // SEND the coordinates via OSC
 
   socket.on('coordinates', (coordinates) => {
