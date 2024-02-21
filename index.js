@@ -81,7 +81,7 @@ const setupControls = () => {
 
 const animate = () => {
   requestAnimationFrame(animate);
-  triggerManager.animateTriggers();
+  triggerManager.animateTriggers(positionsArray);
   curveManager.updateSplineOutline();
   render();
 };

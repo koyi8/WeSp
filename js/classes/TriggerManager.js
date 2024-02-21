@@ -56,7 +56,7 @@ class TriggerManager {
     }
   }
 
-  animateTriggers() {
+  animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
       let position = trigger.position;
       let speed = trigger.speed;
@@ -81,6 +81,8 @@ class TriggerManager {
       label.innerHTML = `${index + 1}: ${trigPos.x.toFixed(
         2,
       )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
+
+      positionsArray[index] = trigPos.clone();
     });
   }
 
