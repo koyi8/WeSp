@@ -1,25 +1,19 @@
-@import "normalize.css";
+@import 'normalize.css';
 
 @mixin respond-to($point) {
   @if $point == small {
     @media (max-width: 600px) {
       @content;
     }
-  }
-
-  @else if $point == medium {
+  } @else if $point == medium {
     @media (max-width: 900px) {
       @content;
     }
-  }
-
-  @else if $point == large {
+  } @else if $point == large {
     @media (max-width: 1200px) {
       @content;
     }
-  }
-
-  @else if $point == portrait {
+  } @else if $point == portrait {
     @media (orientation: portrait) {
       @content;
     }
@@ -33,7 +27,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-overflow-scrolling: touch;
   -webkit-font-smoothing: antialiased;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
 }
 
 * {
@@ -51,7 +45,7 @@ button {
   border: 1px solid black;
   background-color: white;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-      Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   font-size: 12px;
   cursor: pointer;
 
@@ -111,7 +105,8 @@ button {
   overflow: hidden;
   min-height: 620px;
 
-  .trigger, .add-trigger {
+  .trigger,
+  .add-trigger {
     display: flex;
     width: 20%;
     height: 50%;
@@ -202,7 +197,7 @@ button {
     }
   }
 
-  input[type=range] {
+  input[type='range'] {
     appearance: slider-vertical;
   }
 }
@@ -326,6 +321,20 @@ button {
 }
 
 /*GUI for OSC*/
+
+.osc-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+}
+
+.item {
+  flex-direction: column;
+  padding-left: 10px; // Add this line
+  padding-right: 10px;
+}
+
 .oscConfigTable {
   border-collapse: collapse;
   width: 100%;
@@ -335,16 +344,97 @@ button {
   /* Set the background color of the table */
 }
 
-.oscConfigTable,
-.oscConfigTableHeader,
-.oscConfigTableRow {
-  border: 1px solid black;
+/*styling for the udpTable*/
+#portTable {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  background-color: lightgray;
+  table-layout: fixed;
+  /* Set the background color of the table */
+  th,
+  td {
+    border: 1px solid #ddd;
+  }
+  /* Specify the width of the cells */
+  .indexCell {
+    width: 10%;
+  }
+
+  .portCell {
+    width: 10%;
+  }
+
+  .ipCell {
+    width: 30%;
+  }
+
+  .checkboxCell {
+    width: 10%;
+  }
+  input[type='text'] {
+    width: 100%;
+  }
+  input[type='checkbox'] {
+    width: 100%;
+  }
+  .checked {
+    background-color: green;
+  }
 }
 
-.oscConfigTableHeader,
-.oscConfigTableRow {
-  padding: 10px;
-  text-align: left;
-  background-color: white;
-  /* Set the background color of the cells */
+/*styling for the udpTable*/
+#messageTable {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  background-color: lightgray;
+  table-layout: fixed;
+  th,
+  td {
+    border: 1px solid #ddd;
+  }
+
+  .portNumberCell {
+    width: 10%;
+  }
+  .oscMessageCell {
+    width: 30%;
+  }
+  .oscArgumentsCell {
+    width: 80%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sendCell {
+    width: 10%;
+  }
+
+  .portNumberSelect {
+    width: 100%;
+  }
+  .addressInput {
+    width: 100%;
+  }
+  .oscArgumentsInput {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); // Create 3 equal-width columns
+    gap: 1px; // Space between grid items
+  }
+
+  .osc-input,
+  .osc-select,
+  .osc-label {
+    box-sizing: border-box;
+    margin: 0 5px;
+  }
+  .osc-input {
+    width: 50%;
+  }
+
+  input[type='checkbox'] {
+    width: 100%;
+  }
 }
