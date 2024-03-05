@@ -65,62 +65,43 @@ setInterval(() => {
   updateTriggerObjectsPositions(positionsArray);
 }, 17); // ~16.67 ms (1 second / 60) for 60 fps
 
-window.addRowUDPPorts = (inPortValue, outPortValue, outAddressValue) => {
-  let row = {}; // New object for the row
+window.addRowUDPPorts = (
+  inPortValue = '5001',
+  outPortValue = '7001',
+  outAddressValue = '127.0.0.1',
+) => {
+  const row = {};
+  const table = document.getElementById('portTable');
+  const newRow = table.insertRow(table.rows.length);
 
-  let table = document.getElementById('portTable');
-  let newRow = table.insertRow(table.rows.length);
+  newRow.innerHTML = `
+    <td class="portIndexCell">${++portIndex}</td>
+    <td><input type="text" class="inPortCell" value="${inPortValue}"></td>
+    <td><input type="text" class="outPortCell" value="${outPortValue}"></td>
+    <td><input type="text" class="outAddressCell" value="${outAddressValue}"></td>
+    <td><input type="checkbox" class="openCell"></td>
+  `;
 
-  let portIndexCell = newRow.insertCell(0),
-    inPortCell = newRow.insertCell(1),
-    outPortCell = newRow.insertCell(2),
-    outAddressCell = newRow.insertCell(3),
-    openCell = newRow.insertCell(4);
-  // Increment the port index for each new row
-  portIndex++;
-  portIndexCell.textContent = portIndex;
   row.portIndex = portIndex;
-  portIndexCell.className = 'portIndexCell';
-  // inPortCell
-  let inPortInput = document.createElement('input');
-  inPortInput.type = 'text';
-  inPortInput.className = 'inPortCell';
-  inPortInput.value = inPortValue || '5001'; //Default
+
+  const inPortInput = newRow.querySelector('.inPortCell');
   row.inPort = checkPortNumberInput(inPortInput.value);
-  inPortCell.appendChild(inPortInput);
-  // add eventlistener to check if the input is a valid port number
   inPortInput.addEventListener('change', () => {
-    let portNumber = checkPortNumberInput(inPortInput.value);
-    if (portNumber !== false) {
-      row.inPort = portNumber;
-    } else {
-      console.error('Invalid port number.');
-    }
+    const portNumber = checkPortNumberInput(inPortInput.value);
+    if (portNumber !== false) row.inPort = portNumber;
+    else console.error('Invalid port number.');
   });
-  // outPortCell
-  let outPortInput = document.createElement('input');
-  outPortInput.type = 'text';
-  outPortInput.className = 'outPortCell';
-  outPortInput.value = outPortValue || '7001'; //DEFAULT
+
+  const outPortInput = newRow.querySelector('.outPortCell');
   row.outPort = checkPortNumberInput(outPortInput.value);
-  outPortCell.appendChild(outPortInput);
-  // add eventlistener to check if the input is a valid port number
   outPortInput.addEventListener('change', () => {
-    let portNumber = checkPortNumberInput(outPortInput.value);
-    if (portNumber !== false) {
-      row.outPort = portNumber;
-    } else {
-      console.error('Invalid port number.');
-    }
+    const portNumber = checkPortNumberInput(outPortInput.value);
+    if (portNumber !== false) row.outPort = portNumber;
+    else console.error('Invalid port number.');
   });
-  // outAddressCell
-  let outAddressInput = document.createElement('input');
-  outAddressInput.type = 'text';
-  outAddressInput.className = 'outAddressCell';
-  outAddressInput.value = outAddressValue || '127.0.0.1';
+
+  const outAddressInput = newRow.querySelector('.outAddressCell');
   row.outAddress = outAddressInput.value;
-  outAddressCell.appendChild(outAddressInput);
-  // add eventlistener to check if the input is valid
   outAddressInput.addEventListener('change', () => {
     if (isValidIP(outAddressInput.value)) {
       try {
@@ -134,13 +115,9 @@ window.addRowUDPPorts = (inPortValue, outPortValue, outAddressValue) => {
     }
   });
 
-  // openCell
-  let openInput = document.createElement('input');
-  openInput.type = 'checkbox';
-  openInput.className = 'openCell';
+  const openInput = newRow.querySelector('.openCell');
   openInput.addEventListener('change', () => {
     row.active = openInput.checked;
-
     if (row.active) {
       socket.emit('addUDPPort', row.inPort, row.outPort, row.outAddress);
       newRow.classList.add('checked');
@@ -149,48 +126,49 @@ window.addRowUDPPorts = (inPortValue, outPortValue, outAddressValue) => {
       newRow.classList.remove('checked');
     }
   });
-  openCell.appendChild(openInput);
+
   udpPortObjects.push(row);
-  // Update the select options for each oscMessageObject
   updatePortSelect(oscMessageObjects, udpPortObjects);
 };
 
 // Define the deletePort function in the global scope
 window.deleteRowUDPPorts = () => {
-  let table = document.getElementById('portTable');
-  let rowCount = table.rows.length;
-
+  const table = document.querySelector('#portTable');
+  const rows = table.querySelectorAll('tr');
   // Ensure there's at least one row to delete
-  if (rowCount > 1) {
-    table.deleteRow(rowCount - 1);
+  if (rows.length > 1) {
+    rows[rows.length - 1].remove();
     udpPortObjects.pop();
     portIndex--;
     updatePortSelect(oscMessageObjects, udpPortObjects);
-
-    console.log(udpPortObjects.length);
   } else {
     console.log("Can't delete the last row");
   }
 };
 
 // Define the addRowOSCMessage function in the global scope
-window.addRowOSCMessage = (sendOSCValue) => {
+window.addRowOSCMessage = () => {
   let row = {}; // New object for the row
 
   let table = document.getElementById('messageTable');
   let newRow = table.insertRow(table.rows.length);
 
-  let portNumberCell = newRow.insertCell(0),
-    oscMessageCell = newRow.insertCell(1),
-    oscArgumentsCell = newRow.insertCell(2),
-    sendCell = newRow.insertCell(3);
+  newRow.innerHTML = `
+    <td>
+      <select id="portNumberSelect" class="portNumberSelect"></select>
+    </td>
+    <td>
+      <input class="addressInput" value="/source/xyz $srcID" />
+    </td>
+    <td class="oscArgumentsInput"></td>
+    <td>
+      <input type="checkbox" class="sendInput" />
+    </td>
+  `;
 
   // portNumberCell
-  let portNumberSelect = document.createElement('select');
-  portNumberSelect.id = 'portNumberSelect';
-  portNumberSelect.className = 'portNumberSelect';
+  let portNumberSelect = newRow.querySelector('#portNumberSelect');
   row.portNumberSelect = portNumberSelect;
-  portNumberCell.appendChild(portNumberSelect);
   // assign defaults from udpPortObjects
   row['outPort'] = udpPortObjects[0].outPort;
   row['outAddress'] = udpPortObjects[0].outAddress;
@@ -204,10 +182,7 @@ window.addRowOSCMessage = (sendOSCValue) => {
     console.log(row);
   });
 
-  let addressInput = document.createElement('input');
-  addressInput.className = 'addressInput';
-  oscMessageCell.appendChild(addressInput);
-  addressInput.value = '/source/xyz $srcID';
+  let addressInput = newRow.querySelector('.addressInput');
   row.oscMessage = addressInput.value;
   addressInput.addEventListener('change', () => {
     let inputValue = addressInput.value;
@@ -221,39 +196,34 @@ window.addRowOSCMessage = (sendOSCValue) => {
     }
   });
   // oscArgumentsCell
-  oscArgumentsCell.className = 'oscArgumentsInput';
+  let oscArgumentsCell = newRow.querySelector('.oscArgumentsInput');
+  //Default value for the dropdown
+  row.sendX = 'allX';
+  row.sendY = 'allY';
+  row.sendZ = 'allZ';
   // 3pairs of textfields and dropwdowns
   for (let i = 0; i < 3; i++) {
-    // Create Label
+    // Create label
     let label = document.createElement('label');
+    label.className = 'osc-label';
     label.textContent = labels[i];
-    label.className = 'osc-label'; //
     oscArgumentsCell.appendChild(label);
 
-    // Create a text field
+    // Create text field
     let textField = document.createElement('input');
     textField.type = 'text';
-    textField.className = 'osc-input'; // Add class
-    oscArgumentsCell.appendChild(textField);
-    //set defaults scales as 1
-    row[scales[i]] = '*1';
-    // eventlistener for the textfield
+    textField.className = 'osc-input';
+    textField.value = row[scales[i]] = '*1';
     textField.addEventListener('change', () => {
-      //let inputValue = textField.value;
       interpolateStringScaling(textField.value, row, scales[i]);
+      console.log(row);
     });
-    textField.value = row[scales[i]];
+    oscArgumentsCell.appendChild(textField);
 
-    //Default value for the dropdown
-    row.sendX = 'allX';
-    row.sendY = 'allY';
-    row.sendZ = 'allZ';
-
-    // Create a dropdown
+    // Create dropdown
     let dropdown = document.createElement('select');
-    dropdown.className = 'osc-select'; // Add class
-    oscArgumentsCell.appendChild(dropdown);
-    // Add event listener to dropdown
+    dropdown.className = 'osc-select';
+    dropdown.innerHTML = `<option value="all${labels[i]}">all${labels[i]}</option>`;
     dropdown.addEventListener('change', (e) => {
       let selectedValue = e.target.value;
       if (selectedValue.startsWith('X') || selectedValue === 'allX') {
@@ -265,19 +235,11 @@ window.addRowOSCMessage = (sendOSCValue) => {
       }
       console.log(row);
     });
-
-    // set default option "all"
-    let option = document.createElement('option');
-    option.value = 'all' + labels[i];
-    option.text = 'all' + labels[i];
-    dropdown.appendChild(option);
+    oscArgumentsCell.appendChild(dropdown);
   }
 
   // sendOSCCell
-  let sendInput = document.createElement('input');
-  sendInput.type = 'checkbox';
-  sendInput.className = 'sendInput';
-  sendCell.appendChild(sendInput);
+  let sendInput = newRow.querySelector('.sendInput');
   sendInput.addEventListener('change', () => {
     let rowIndex = oscMessageObjects.indexOf(row);
     if (sendInput.checked) {
@@ -326,7 +288,6 @@ window.addRowOSCMessage = (sendOSCValue) => {
         }
 
         console.log(objectsToSend);
-        // socket emit triggerObjects
         socket.emit('sendOSC', objectsToSend);
       }, sendingInterval);
     } else {
@@ -336,7 +297,6 @@ window.addRowOSCMessage = (sendOSCValue) => {
       console.log('Stop sending Coordinates');
     }
   });
-  sendCell.appendChild(sendInput);
 
   oscMessageObjects.push(row);
   updatePortSelect(oscMessageObjects, udpPortObjects);
@@ -437,42 +397,6 @@ const updateTriggerObjectsPositions = (positionsArray) => {
     triggerObjects[i].z = positionsArray[i].z;
   }
 };
-
-const processTriggerObjects = (triggerObjects, outportValue) => {
-  // Convert outportValue to a number using parseInt
-  let outportNumber = parseInt(outportValue, 10);
-
-  // Iterate over the triggerObjects
-  triggerObjects.forEach((triggerObject) => {
-    // If sendOSC is true
-    if (triggerObject.sendOSC) {
-      // Assign outportNumber to the triggerObject attribute outPort
-      triggerObject.outPort = outportNumber;
-    }
-    console.log(triggerObject);
-  });
-};
-
-/*
-setInterval(() => {
-  // Iterate over the positionsArray
-  for (let i = 0; i < positionsArray.length; i++) {
-    let trigPos = positionsArray[i];
-
-    if (trigPos) {
-      // Send the mapped x, y, z coordinates to the server
-      //console.log(trigPos.x, trigPos.y, trigPos.z);
-      socket.emit('coordinates', {
-        id: socketID,
-        TriggerID: 'Trigger_' + (i + 1),
-        x: trigPos.x,
-        y: trigPos.y,
-        z: trigPos.z,
-      });
-    }
-  }
-}, 2000); //every 20 ms
-*/
 
 // RTT Latency Check
 socket.on('pongCheck', () => {
