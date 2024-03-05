@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { debounce } from './js/heplers/debounce';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
 
@@ -19,6 +21,11 @@ let curveManager;
 let triggerManager;
 let positionsArray = [];
 let container;
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let selectedObject = null;
+let controls;
+let transformControl;
 
 const init = () => {
   container = document.getElementById('3d-container');
@@ -29,10 +36,10 @@ const init = () => {
   curveManager = new CurveManager(scene, settings);
   curveManager.createCurves();
   triggerManager = new TriggerManager(scene, settings, curveManager, container);
-  // triggerManager.createTriggers();
   triggerManager.setupAddTriggerListeners();
+
+  initListeners();
   render();
-  window.addEventListener('resize', onWindowResize, false);
 };
 
 const setupScene = () => {
@@ -75,9 +82,11 @@ const setupGeometry = () => {
 };
 
 const setupControls = () => {
-  new OrbitControls(camera, renderer.domElement);
   const axesHelper = new THREE.AxesHelper(20);
-  scene.add(axesHelper);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  transformControl = new TransformControls(camera, renderer.domElement);
+  scene.add(transformControl, axesHelper);
 };
 
 const animate = () => {
@@ -92,20 +101,50 @@ const render = () => {
   triggerManager.renderLabels(camera);
 };
 
-// Throttle resize function
-let resizeTimeout;
 const onWindowResize = () => {
-  if (!resizeTimeout) {
-    resizeTimeout = setTimeout(() => {
-      resizeTimeout = null;
-      const { width, height } = container.getBoundingClientRect();
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-      triggerManager.updateLabelRendererSize(width, height);
-      render();
-    }, 250); // execute every 250ms
+  const { width, height } = container.getBoundingClientRect();
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+  triggerManager.updateLabelRendererSize(width, height);
+  render();
+};
+
+const onDocumentMouseDown = (event) => {
+  event.preventDefault();
+
+  mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+  mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(
+    curveManager.getSplineHelperObjects(),
+    true,
+  );
+
+  if (intersects.length > 0) {
+    controls.enabled = false;
+
+    selectedObject = intersects[0].object;
+
+    transformControl.attach(selectedObject);
   }
+};
+
+const onDocumentMouseUp = (event) => {
+  event.preventDefault();
+  if (controls) controls.enabled = true;
+  selectedObject = null;
+};
+
+const initListeners = () => {
+  renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
+  renderer.domElement.addEventListener('mouseup', onDocumentMouseUp, false);
+  window.addEventListener('resize', debounce(onWindowResize, 250), false);
+  transformControl.addEventListener('dragging-changed', (event) => {
+    controls.enabled = !event.value;
+  });
 };
 
 init();
