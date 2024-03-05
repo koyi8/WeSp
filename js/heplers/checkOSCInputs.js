@@ -102,7 +102,7 @@ export const interpolateStringOscMessage = (input, triggerObjects) => {
 };
 
 export const interpolateStringScaling = (input, row, scale) => {
-  let scalingExpression = input.match(/([*\/]\d+(\.\d+)?)/);
+  let scalingExpression = input.match(/([*\/]-?\d+(\.\d+)?)/);
   // If a scaling expression is found, store it as a string
   if (scalingExpression) {
     row[scale] = scalingExpression[0]; // Store the expression as a string

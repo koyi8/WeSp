@@ -51,7 +51,6 @@ window.oscMessageObjects = oscMessageObjects; // Make oscMessageObjects globally
 let triggerObjects = [],
   triggerObject = {
     clientID: '',
-    sendOSC: '',
     outPort: '',
     outAddress: '',
     oscMessage: '',
@@ -126,6 +125,7 @@ window.addRowUDPPorts = (inPortValue, outPortValue, outAddressValue) => {
     if (isValidIP(outAddressInput.value)) {
       try {
         row.outAddress = outAddressInput.value;
+        console.log(row.outAddress);
       } catch (error) {
         console.error(error.message);
       }
@@ -142,7 +142,7 @@ window.addRowUDPPorts = (inPortValue, outPortValue, outAddressValue) => {
     row.active = openInput.checked;
 
     if (row.active) {
-      socket.emit('addUDPPort', row.inPort, row.outPort);
+      socket.emit('addUDPPort', row.inPort, row.outPort, row.outAddress);
       newRow.classList.add('checked');
     } else {
       socket.emit('removeUDPPort', row.inPort, row.outPort);
@@ -248,6 +248,7 @@ window.addRowOSCMessage = (sendOSCValue) => {
     row.sendX = 'allX';
     row.sendY = 'allY';
     row.sendZ = 'allZ';
+
     // Create a dropdown
     let dropdown = document.createElement('select');
     dropdown.className = 'osc-select'; // Add class
@@ -271,6 +272,7 @@ window.addRowOSCMessage = (sendOSCValue) => {
     option.text = 'all' + labels[i];
     dropdown.appendChild(option);
   }
+
   // sendOSCCell
   let sendInput = document.createElement('input');
   sendInput.type = 'checkbox';
@@ -279,6 +281,7 @@ window.addRowOSCMessage = (sendOSCValue) => {
   sendInput.addEventListener('change', () => {
     let rowIndex = oscMessageObjects.indexOf(row);
     if (sendInput.checked) {
+      socket.emit('startSendOSC', rowIndex);
       //assign the row variables outport, outaddress, oscMessage
       sendingIntervals[rowIndex] = setInterval(() => {
         let triggerObjectsCopy = triggerObjects.map((triggerObject, index) => {
@@ -324,11 +327,12 @@ window.addRowOSCMessage = (sendOSCValue) => {
 
         console.log(objectsToSend);
         // socket emit triggerObjects
-        socket.emit('triggerObjects', objectsToSend);
+        socket.emit('sendOSC', objectsToSend);
       }, sendingInterval);
     } else {
       clearInterval(sendingIntervals[rowIndex]);
       delete sendingIntervals[rowIndex];
+      socket.emit('stopSendOSC', rowIndex);
       console.log('Stop sending Coordinates');
     }
   });
