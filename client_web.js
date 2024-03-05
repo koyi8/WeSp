@@ -63,6 +63,7 @@ let triggerObjects = [],
 setInterval(() => {
   updateTriggerObjectsLength(positionsArray);
   updateTriggerObjectsPositions(positionsArray);
+  console.log(positionsArray.length);
 }, 17); // ~16.67 ms (1 second / 60) for 60 fps
 
 window.addRowUDPPorts = (
