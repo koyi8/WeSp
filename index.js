@@ -5,6 +5,40 @@ import { debounce } from './js/heplers/debounce';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
 
+const cameraSettings = {
+  fov: 70, // Field of View
+  near: 1,
+  far: 10000,
+  position: { x: 30, y: 16, z: 0 },
+};
+
+const lightSettings = {
+  ambient: { color: 0xf0f0f0, intensity: 3 },
+  directional: {
+    color: 0xffffff,
+    intensity: 4.5,
+    position: { x: 0, y: 30, z: 4 },
+    angle: Math.PI * 0.2,
+  },
+};
+
+const geometrySettings = {
+  plane: {
+    width: 20,
+    height: 20,
+    color: 0x000000,
+    opacity: 1.0,
+    rotationX: -Math.PI / 2,
+  },
+  gridHelper: {
+    size: 20,
+    divisions: 20,
+  },
+  axesHelper: {
+    size: 20,
+  },
+};
+
 const settings = {
   splinePointsLength: 4,
   arcSegments: 200,
@@ -16,19 +50,18 @@ const settings = {
   curveAmount: 2,
 };
 
+const container = document.getElementById('3d-container');
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 let camera, scene, renderer;
 let curveManager;
 let triggerManager;
 let positionsArray = [];
-let container;
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
 let selectedObject = null;
 let controls;
 let transformControl;
 
 const init = () => {
-  container = document.getElementById('3d-container');
   setupScene();
   setupLights();
   setupGeometry();
@@ -37,7 +70,6 @@ const init = () => {
   curveManager.createCurves();
   triggerManager = new TriggerManager(scene, settings, curveManager, container);
   triggerManager.setupAddTriggerListeners();
-
   initListeners();
   render();
 };
@@ -47,8 +79,18 @@ const setupScene = () => {
   scene.background = new THREE.Color(0xf0f0f0);
 
   const { width, height } = container.getBoundingClientRect();
-  camera = new THREE.PerspectiveCamera(70, width / height, 1, 10000);
-  camera.position.set(30, 16, 0);
+  camera = new THREE.PerspectiveCamera(
+    cameraSettings.fov,
+    width / height,
+    cameraSettings.near,
+    cameraSettings.far,
+  );
+  camera.position.set(
+    cameraSettings.position.x,
+    cameraSettings.position.y,
+    cameraSettings.position.z,
+  );
+
   scene.add(camera);
 
   renderer = new THREE.WebGLRenderer({ antialias: settings.antialias });
@@ -59,30 +101,46 @@ const setupScene = () => {
 };
 
 const setupLights = () => {
-  const ambientLight = new THREE.AmbientLight(0xf0f0f0, 3);
+  const ambientLight = new THREE.AmbientLight(
+    lightSettings.ambient.color,
+    lightSettings.ambient.intensity,
+  );
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 4.5);
-  directionalLight.position.set(0, 30, 4);
-  directionalLight.angle = Math.PI * 0.2;
+  const directionalLight = new THREE.DirectionalLight(
+    lightSettings.directional.color,
+    lightSettings.directional.intensity,
+  );
+  directionalLight.position.set(
+    lightSettings.directional.position.x,
+    lightSettings.directional.position.y,
+    lightSettings.directional.position.z,
+  );
+  directionalLight.angle = lightSettings.directional.angle;
   scene.add(directionalLight);
 };
 
 const setupGeometry = () => {
-  const planeGeometry = new THREE.PlaneGeometry(20, 20).rotateX(-Math.PI / 2);
+  const planeGeometry = new THREE.PlaneGeometry(
+    geometrySettings.plane.width,
+    geometrySettings.plane.height,
+  ).rotateX(geometrySettings.plane.rotationX);
   const planeMaterial = new THREE.ShadowMaterial({
-    color: 0x000000,
-    opacity: 1.0,
+    color: geometrySettings.plane.color,
+    opacity: geometrySettings.plane.opacity,
   });
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
   scene.add(plane);
 
-  const gridHelper = new THREE.GridHelper(20, 20);
+  const gridHelper = new THREE.GridHelper(
+    geometrySettings.gridHelper.size,
+    geometrySettings.gridHelper.divisions,
+  );
   scene.add(gridHelper);
 };
 
 const setupControls = () => {
-  const axesHelper = new THREE.AxesHelper(20);
+  const axesHelper = new THREE.AxesHelper(geometrySettings.axesHelper.size);
 
   controls = new OrbitControls(camera, renderer.domElement);
   transformControl = new TransformControls(camera, renderer.domElement);
