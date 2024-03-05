@@ -49,6 +49,7 @@ window.oscMessageObjects = oscMessageObjects; // Make oscMessageObjects globally
 
 // array to store all the SourceObject -> Javascript objects
 let triggerObjects = [],
+  previousTriggerObjects = [], // Deep copy of triggerObjects
   triggerObject = {
     clientID: '',
     outPort: '',
@@ -63,7 +64,6 @@ let triggerObjects = [],
 setInterval(() => {
   updateTriggerObjectsLength(positionsArray);
   updateTriggerObjectsPositions(positionsArray);
-  console.log(positionsArray.length);
 }, 17); // ~16.67 ms (1 second / 60) for 60 fps
 
 window.addRowUDPPorts = (
@@ -358,6 +358,13 @@ const updateDropdownSelect = (triggerObjects, labels) => {
 
       if (triggerObjects.length > 0) {
         for (let index = 0; index < triggerObjects.length; index++) {
+          if (
+            triggerObjects[index].x === null ||
+            triggerObjects[index].y === null ||
+            triggerObjects[index].z === null
+          )
+            continue;
+
           // Create and append the triggerObject option
           let triggerOption = document.createElement('option');
           triggerOption.value = label + (index + 1);
@@ -393,9 +400,27 @@ const updateTriggerObjectsLength = (positionsArray) => {
 const updateTriggerObjectsPositions = (positionsArray) => {
   // Update the x, y, z values for all triggerObjects
   for (let i = 0; i < positionsArray.length; i++) {
-    triggerObjects[i].x = positionsArray[i].x;
-    triggerObjects[i].y = positionsArray[i].y;
-    triggerObjects[i].z = positionsArray[i].z;
+    if (triggerObjects[i]) {
+      const oldX = triggerObjects[i].x;
+      const oldY = triggerObjects[i].y;
+      const oldZ = triggerObjects[i].z;
+
+      triggerObjects[i].x = positionsArray[i].x;
+      triggerObjects[i].y = positionsArray[i].y;
+      triggerObjects[i].z = positionsArray[i].z;
+
+      if (
+        (oldX !== null && positionsArray[i].x === null) ||
+        (oldY !== null && positionsArray[i].y === null) ||
+        (oldZ !== null && positionsArray[i].z === null) ||
+        (oldX === null && positionsArray[i].x !== null) ||
+        (oldY === null && positionsArray[i].y !== null) ||
+        (oldZ === null && positionsArray[i].z !== null)
+      ) {
+        updateDropdownSelect(triggerObjects, labels);
+        break;
+      }
+    }
   }
 };
 

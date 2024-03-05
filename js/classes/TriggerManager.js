@@ -168,7 +168,10 @@ class TriggerManager {
 
   animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
-      if (trigger === null) return; // Skip this iteration if trigger is null
+      if (trigger === null) {
+        positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null
+        return; // Skip this iteration
+      }
 
       const curve = this.curveManager.curves[trigger.curveIndex];
       let position = trigger.position;
