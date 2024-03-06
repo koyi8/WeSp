@@ -8,6 +8,10 @@ class CurveManager {
     this.splineHelperObjects = [];
   }
 
+  getSplineHelperObjects() {
+    return this.splineHelperObjects;
+  }
+
   addSplineObject(position, curveIndex) {
     const geometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
     const material = new THREE.MeshBasicMaterial({
@@ -21,30 +25,10 @@ class CurveManager {
     return object;
   }
 
-  getSplineHelperObjects() {
-    return this.splineHelperObjects;
-  }
-
   createCurve(positions) {
     const curve = new THREE.CatmullRomCurve3(positions, this.settings.closed);
-    this.updateCurveGeometry(curve);
+    curve.needsUpdate = true;
     this.curves.push(curve);
-  }
-
-  updateCurveGeometry(curve) {
-    const points = curve.getPoints(this.settings.arcSegments);
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    if (curve.mesh) {
-      curve.mesh.geometry.dispose();
-      curve.mesh.geometry = geometry;
-    } else {
-      const material = new THREE.LineBasicMaterial({
-        color: Math.random() * 0xffffff,
-        opacity: 0.35,
-      });
-      curve.mesh = new THREE.Line(geometry, material);
-      this.scene.add(curve.mesh);
-    }
   }
 
   createCurves() {
@@ -71,8 +55,60 @@ class CurveManager {
     });
   }
 
+  deleteCurve(curveIndex) {
+    const curveToRemove = this.curves[curveIndex];
+    if (!curveToRemove) return;
+
+    this.scene.remove(curveToRemove.mesh);
+    curveToRemove.mesh.geometry.dispose();
+    curveToRemove.mesh.material.dispose();
+
+    this.splineHelperObjects = this.splineHelperObjects.filter((object) => {
+      if (object.curveIndex === curveIndex) {
+        this.scene.remove(object);
+        object.geometry.dispose();
+        object.material.dispose();
+        return false;
+      }
+      return true;
+    });
+
+    this.curves.splice(curveIndex, 1);
+  }
+
+  updateCurveGeometry(curve) {
+    const points = curve.getPoints(this.settings.arcSegments);
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    console.log(!curve.mesh);
+    if (curve.mesh) {
+      curve.mesh.geometry.dispose();
+      curve.mesh.geometry = geometry;
+    } else {
+      const material = new THREE.LineBasicMaterial({
+        color: Math.random() * 0xffffff,
+        opacity: 0.35,
+      });
+      curve.mesh = new THREE.Line(geometry, material);
+      this.scene.add(curve.mesh);
+    }
+  }
+
+  updateCurveFromControlPoint(object) {
+    const curve = this.curves[object.curveIndex];
+
+    if (curve) {
+      curve.needsUpdate = true;
+    }
+  }
+
   updateSplineOutline() {
-    this.curves.forEach((curve) => this.updateCurveGeometry(curve));
+    this.curves.forEach((curve) => {
+      // if (curve.needsUpdate) {
+      // console.log(curve.needsUpdate);
+      this.updateCurveGeometry(curve);
+      curve.needsUpdate = false;
+      // }
+    });
   }
 }
 

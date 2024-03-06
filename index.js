@@ -185,9 +185,15 @@ const onDocumentMouseDown = (event) => {
     const object = intersects[0].object;
 
     if (transformControl.object !== object) {
+      const curveIndex = selectedObject ? selectedObject.curveIndex : undefined;
+
       transformControl.detach();
       selectedObject = object;
       transformControl.attach(selectedObject);
+
+      if (curveIndex !== undefined) {
+        curveManager.curves[curveIndex].needsUpdate = true;
+      }
     }
   } else {
     if (!transformControl.dragging) {
@@ -215,6 +221,11 @@ const initListeners = () => {
   });
   transformControl.addEventListener('dragging-changed', (event) => {
     controls.enabled = !event.value;
+  });
+  transformControl.addEventListener('objectChange', () => {
+    if (selectedObject) {
+      curveManager.updateCurveFromControlPoint(selectedObject);
+    }
   });
 };
 
