@@ -79,7 +79,7 @@ class CurveManager {
   updateCurveGeometry(curve) {
     const points = curve.getPoints(this.settings.arcSegments);
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    console.log(!curve.mesh);
+
     if (curve.mesh) {
       curve.mesh.geometry.dispose();
       curve.mesh.geometry = geometry;
@@ -97,17 +97,26 @@ class CurveManager {
     const curve = this.curves[object.curveIndex];
 
     if (curve) {
-      curve.needsUpdate = true;
+      const newPositions = this.splineHelperObjects
+        .filter((obj) => obj.curveIndex === object.curveIndex)
+        .map((obj) => obj.position);
+
+      curve.curve = new THREE.CatmullRomCurve3(
+        newPositions,
+        this.settings.closed,
+      );
+
+      this.updateCurveGeometry(curve);
     }
   }
 
   updateSplineOutline() {
     this.curves.forEach((curve) => {
-      // if (curve.needsUpdate) {
-      // console.log(curve.needsUpdate);
-      this.updateCurveGeometry(curve);
-      curve.needsUpdate = false;
-      // }
+      if (curve.needsUpdate) {
+        // console.log(curve.needsUpdate);
+        this.updateCurveGeometry(curve);
+        curve.needsUpdate = false;
+      }
     });
   }
 }
