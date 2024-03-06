@@ -6,7 +6,7 @@ import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
 
 const cameraSettings = {
-  fov: 70, // Field of View
+  fov: 70, // field of view
   near: 1,
   far: 10000,
   position: { x: 30, y: 16, z: 0 },
@@ -182,24 +182,37 @@ const onDocumentMouseDown = (event) => {
   );
 
   if (intersects.length > 0) {
-    controls.enabled = false;
+    const object = intersects[0].object;
 
-    selectedObject = intersects[0].object;
-
-    transformControl.attach(selectedObject);
+    if (transformControl.object !== object) {
+      transformControl.detach();
+      selectedObject = object;
+      transformControl.attach(selectedObject);
+    }
+  } else {
+    if (!transformControl.dragging) {
+      transformControl.detach();
+      selectedObject = null;
+    }
   }
 };
 
-const onDocumentMouseUp = (event) => {
-  event.preventDefault();
-  if (controls) controls.enabled = true;
-  selectedObject = null;
-};
+// const onDocumentMouseUp = (event) => {
+//   event.preventDefault();
+//   if (controls) controls.enabled = true;
+//   selectedObject = null;
+// };
 
 const initListeners = () => {
   renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
-  renderer.domElement.addEventListener('mouseup', onDocumentMouseUp, false);
+  // renderer.domElement.addEventListener('mouseup', onDocumentMouseUp, false);
   window.addEventListener('resize', debounce(onWindowResize, 250), false);
+  transformControl.addEventListener('mouseDown', (event) => {
+    controls.enabled = false;
+  });
+  transformControl.addEventListener('mouseUp', (event) => {
+    controls.enabled = true;
+  });
   transformControl.addEventListener('dragging-changed', (event) => {
     controls.enabled = !event.value;
   });
