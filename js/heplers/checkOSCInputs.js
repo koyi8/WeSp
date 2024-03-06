@@ -17,6 +17,11 @@ export const checkPortNumberInput = (input) => {
   return number;
 };
 
+export const isValidIP = (ip) => {
+  let ipFormat = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+  return ipFormat.test(ip);
+};
+
 //Checks adress input and sets sendOSC flag for the corresponding triggerObject
 // also sets osc adress attribute for the triggerObject
 export const interpolateString = (input, triggerObjects) => {
@@ -70,4 +75,37 @@ export const interpolateString = (input, triggerObjects) => {
   }
 
   console.log(triggerObjects); // Logs the triggerObjects array
+};
+
+export const interpolateStringOscMessage = (input, triggerObjects) => {
+  // Determine if the $srcID placeholder is present in the input string
+  let idPlaceholderPresent = /\$srcID\b/.test(input);
+
+  // Iterate over the triggerObjects
+  for (let i = 0; i < triggerObjects.length; i++) {
+    let triggerObject = triggerObjects[i];
+
+    // Reset result to the original input value at the start of each iteration
+    let result = input;
+
+    // Replace $srcID placeholder
+    if (idPlaceholderPresent) {
+      result = result.replace(/\$srcID\b/g, i + 1);
+    }
+
+    // Apply the result of the string replacement to the address attribute of the triggerObject
+    triggerObject.oscMessage = result;
+  }
+  return triggerObjects;
+
+  //console.log(triggerObjects); // Logs the triggerObjects array
+};
+
+export const interpolateStringScaling = (input, row, scale) => {
+  let scalingExpression = input.match(/([*\/]-?\d+(\.\d+)?)/);
+  // If a scaling expression is found, store it as a string
+  if (scalingExpression) {
+    row[scale] = scalingExpression[0]; // Store the expression as a string
+  }
+  console.log(row); // Logs the row object
 };

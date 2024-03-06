@@ -37,6 +37,7 @@ const clients = {};
 
 const defaultLocalPort = 7400,
   defaultRemotePort = 7500,
+  defaultRemoteAddress = '127.0.0.1',
   udpPorts = []; // array of open UDP ports to send
 
 // Get current IP-Addresses for the local machine
@@ -56,11 +57,12 @@ const getIPAddresses = () => {
 const createUDPPort = (
   localPort = defaultLocalPort,
   remotePort = defaultRemotePort,
+  remoteAddress = defaultRemoteAddress,
 ) => {
   return new osc.UDPPort({
     localAddress: '0.0.0.0',
     localPort: localPort,
-    remoteAddress: '127.0.0.1',
+    remoteAddress: remoteAddress,
     remotePort: remotePort,
   });
 };
@@ -83,27 +85,24 @@ const setupReadyEvent = (udp) => {
 const setupUDPPort = (
   localPort = defaultLocalPort,
   remotePort = defaultRemotePort,
+  remoteAddress = defaultRemoteAddress,
 ) => {
   // Get all the local port numbers from the udpPorts array
   const localPorts = udpPorts.map((udp) => udp.options.localPort);
   // Get all the remote port numbers from the udpPorts array
-  const remotePorts = udpPorts.map((udp) => udp.options.remotePort);
+  //const remotePorts = udpPorts.map((udp) => udp.options.remotePort);
 
-  // If the provided localPort and remotePort are already in use, return without doing anything
-  if (localPorts.includes(localPort) && remotePorts.includes(remotePort)) {
+  // If the provided localPort is already in use, return without doing anything
+  if (localPorts.includes(localPort)) {
+    console.log('inPort already in use');
     return;
   }
 
-  // If the provided localPort is already in use, set it to one more than the highest port number
-  if (localPorts.includes(localPort)) {
-    const maxLocalPort = Math.max(...localPorts);
-    localPort = maxLocalPort + 1;
-  }
-
-  const udp = createUDPPort(localPort, remotePort);
+  const udp = createUDPPort(localPort, remotePort, remoteAddress);
   udpPorts.push(udp);
   setupReadyEvent(udp);
   udp.open();
+  console.log(udpPorts.length + ' udpPorts open');
   return udp;
 };
 
@@ -123,7 +122,7 @@ const closeUDPPort = (localPort, remotePort) => {
     udp.close();
     console.log('Closed udpPort port on', udp.options.remotePort);
     udpPorts.splice(index, 1);
-    console.log('udpPorts:', udpPorts.length);
+    console.log(udpPorts.length + ' udpPorts open');
   }
 };
 
@@ -150,8 +149,8 @@ io.on('connection', (socket) => {
 
   // Listening for AddUDPPort event from client
   // OpenPort message
-  socket.on('addUDPPort', (localPort, remotePort) => {
-    setupUDPPort(localPort, remotePort);
+  socket.on('addUDPPort', (localPort, remotePort, remoteAddress) => {
+    setupUDPPort(localPort, remotePort, remoteAddress);
   });
   // close port message
   socket.on('removeUDPPort', (localPort, remotePort) => {
@@ -159,10 +158,51 @@ io.on('connection', (socket) => {
     closeUDPPort(localPort, remotePort);
   });
 
+  let shouldSendMap = new Map();
+
   //receive triggerObjects from client
-  socket.on('triggerObjects', (triggerObjects) => {
-    console.log(triggerObjects);
-    //console.log('Trigger Objects received');
+  socket.on('sendOSC', (objectsToSend) => {
+    objectsToSend.forEach((object) => {
+      // If shouldSend flag for this row is false, return
+      let shouldSend = shouldSendMap.get(object.rowId);
+      if (shouldSend === false) return;
+      udpPorts.forEach((udp) => {
+        if (
+          udp.options.remotePort === object.outPort &&
+          udp.options.remoteAddress === object.outAddress
+        ) {
+          // Create an array of arguments
+          let args = [];
+
+          // Only add the values that are present
+          if (object.x !== undefined) args.push({ type: 'f', value: object.x });
+          if (object.y !== undefined) args.push({ type: 'f', value: object.y });
+          if (object.z !== undefined) args.push({ type: 'f', value: object.z });
+
+          udp.send({
+            address: object.oscMessage,
+            args: args,
+          });
+
+          // Log the final UDP send
+          console.log(
+            `Sent OSC message to ${object.outAddress}:${
+              object.outPort
+            } with address ${object.oscMessage} and arguments ${args.map(
+              (arg) => arg.value,
+            )}`,
+          );
+        }
+      });
+    });
+  });
+
+  socket.on('stopSendOSC', (rowId) => {
+    shouldSendMap.set(rowId, false);
+  });
+
+  socket.on('startSendOSC', (rowId) => {
+    shouldSendMap.set(rowId, true);
   });
 
   // SEND the coordinates via OSC

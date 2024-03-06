@@ -101,17 +101,35 @@
         <div id="Tab3" class="tabcontent">Content for Tab 3</div>
         <div id="Tab4" class="tabcontent">
           <h2>OSC_Config</h2>
-          <table id="portTable" class="oscConfigTable">
-            <tr class="oscConfigTableRow">
-              <th class="oscConfigTableHeader">In Port</th>
-              <th class="oscConfigTableHeader">Out Port</th>
-              <th class="oscConfigTableHeader">Address</th>
-              <th class="oscConfigTableHeader">Open/Close</th>
-              <th class="oscConfigTableHeader">Send</th>
-            </tr>
-          </table>
-          <button onclick="addRow()">Add Port</button>
-          <button onclick="deleteRow()">Delete Port</button>
+          <div class="osc-container">
+            <div class="item">
+              <h3>UDP_Ports</h3>
+              <table id="portTable" class="oscConfigTable">
+                <tr class="oscConfigTableRow">
+                  <th class="indexCell">Port-ID</th>
+                  <th class="portCell">inPort</th>
+                  <th class="portCell">outPort</th>
+                  <th class="ipCell">outAddress</th>
+                  <th class="checkboxCell">open/close</th>
+                </tr>
+              </table>
+              <button onclick="addRowUDPPorts()">Add</button>
+              <button onclick="deleteRowUDPPorts()">Delete</button>
+            </div>
+            <div class="item">
+              <h3>OSC_Messages</h3>
+              <table id="messageTable" class="oscConfigTable">
+                <tr class="oscConfigTableRow">
+                  <th class="portNumberCell">Port Sel</th>
+                  <th class="oscMessageCell">oscMessage</th>
+                  <th class="oscArgumentsCell">oscArguments</th>
+                  <th class="sendCell">Send</th>
+                </tr>
+              </table>
+              <button onclick="addRowOSCMessage()">Add</button>
+              <button onclick="deleteRowOSCMessage()">Delete</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
