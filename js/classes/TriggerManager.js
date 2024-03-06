@@ -4,6 +4,7 @@ import {
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
 import { createTriggerControlDiv } from '../createTriggerControlDiv';
+import { positionsArray } from '../..';
 
 class TriggerManager {
   constructor(scene, settings, curveManager, container) {
@@ -59,18 +60,24 @@ class TriggerManager {
     };
 
     const buttonID = button.id;
-    const index = this.triggers.length;
+    let index = this.triggers.indexOf(null);
+    if (index === -1) {
+      index = this.triggers.length;
+    }
 
-    this.triggers.push({
+    const newTrigger = {
       mesh: cube,
       label: labelElement,
       buttonID,
       ...triggerDefaults,
-    });
+    };
+
+    // Replace the null value in the array with the new trigger
+    this.triggers[index] = newTrigger;
 
     const triggerDiv = createTriggerControlDiv(
       index,
-      (index, updates) => this.updateTrigger(index, updates),
+      (index, updates) => this.updateTrigger(index, updates, positionsArray),
       this.curveManager.curves,
       triggerDefaults,
       () => this.updatePositionInput(index),
@@ -112,7 +119,9 @@ class TriggerManager {
       triggersContainer.replaceChild(addButton, triggerDiv);
     }
 
-    this.triggers.splice(index, 1);
+    //this.triggers.splice(index, 1);
+    // Replace the trigger in the array with null
+    this.triggers[index] = null;
   }
 
   createTriggers() {
@@ -145,7 +154,7 @@ class TriggerManager {
 
       const triggerDiv = createTriggerControlDiv(
         i,
-        (index, updates) => this.updateTrigger(index, updates),
+        (index, updates) => this.updateTrigger(index, updates, positionsArray),
         this.curveManager.curves,
         triggerDefaults,
         () => this.updatePositionInput(i),
@@ -159,6 +168,11 @@ class TriggerManager {
 
   animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
+      if (trigger === null) {
+        positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null
+        return; // Skip this iteration
+      }
+
       const curve = this.curveManager.curves[trigger.curveIndex];
       let position = trigger.position;
       if (trigger.animate) {
@@ -193,7 +207,7 @@ class TriggerManager {
     });
   }
 
-  updateTrigger(index, updates) {
+  updateTrigger(index, updates, positionsArray) {
     const trigger = this.triggers[index];
 
     if (!trigger) return;
@@ -206,6 +220,7 @@ class TriggerManager {
       if (key === 'delete' && updates[key] === true) {
         // Handle trigger deletion
         this.deleteTrigger(index, trigger.buttonID);
+        positionsArray.splice(index, 1);
       } else if (key === 'speed') {
         // Update speed magnitude but preserve direction
         const newSpeed = Math.abs(updates[key]);
