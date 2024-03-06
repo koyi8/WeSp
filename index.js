@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { debounce } from './js/heplers/debounce';
+import {
+  updateTrajectoriesHTML,
+  updateControlPointsHTML,
+} from './js/updateTrajectoriesHTML';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
 
@@ -72,6 +76,7 @@ const init = () => {
   triggerManager.setupAddTriggerListeners();
   initListeners();
   render();
+  updateTrajectoriesHTML(curveManager);
 };
 
 const setupScene = () => {
@@ -209,6 +214,10 @@ const onDocumentMouseDown = (event) => {
 //   selectedObject = null;
 // };
 
+const debouncedUpdateControlPointsHTML = debounce(() => {
+  updateControlPointsHTML(curveManager);
+}, 300);
+
 const initListeners = () => {
   renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
   // renderer.domElement.addEventListener('mouseup', onDocumentMouseUp, false);
@@ -225,6 +234,7 @@ const initListeners = () => {
   transformControl.addEventListener('objectChange', () => {
     if (selectedObject) {
       curveManager.updateCurveFromControlPoint(selectedObject);
+      debouncedUpdateControlPointsHTML();
     }
   });
 };

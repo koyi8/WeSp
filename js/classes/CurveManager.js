@@ -25,8 +25,28 @@ class CurveManager {
     return object;
   }
 
-  createCurve(positions) {
-    const curve = new THREE.CatmullRomCurve3(positions, this.settings.closed);
+  addNewSplineObject(curveIndex, position = new THREE.Vector3()) {
+    this.addSplineObject(position, curveIndex);
+    this.updateCurveFromControlPoint({ curveIndex });
+  }
+
+  deleteSplineObject(objectIndex) {
+    const objectToRemove = this.splineHelperObjects[objectIndex];
+    if (!objectToRemove) return;
+
+    const { curveIndex } = objectToRemove;
+
+    this.scene.remove(objectToRemove);
+    objectToRemove.geometry.dispose();
+    objectToRemove.material.dispose();
+
+    this.splineHelperObjects.splice(objectIndex, 1);
+
+    this.updateCurveFromControlPoint({ curveIndex });
+  }
+
+  createCurve(positions, isClosed) {
+    const curve = new THREE.CatmullRomCurve3(positions, isClosed);
     curve.needsUpdate = true;
     this.curves.push(curve);
   }
@@ -48,10 +68,13 @@ class CurveManager {
     ];
 
     curvesPositions.forEach((positions, index) => {
-      const curveObjects = positions.map((pos, idx) =>
+      const curveObjects = positions.map((pos) =>
         this.addSplineObject(pos, index),
       );
-      this.createCurve(curveObjects.map((obj) => obj.position));
+      this.createCurve(
+        curveObjects.map((obj) => obj.position),
+        this.settings.closed,
+      );
     });
   }
 
@@ -76,6 +99,14 @@ class CurveManager {
     this.curves.splice(curveIndex, 1);
   }
 
+  toggleCurveClosed(curveIndex, isClosed) {
+    const curve = this.curves[curveIndex];
+    if (curve) {
+      curve.closed = isClosed;
+      this.updateCurveFromControlPoint({ curveIndex });
+    }
+  }
+
   updateCurveGeometry(curve) {
     const points = curve.getPoints(this.settings.arcSegments);
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -93,6 +124,25 @@ class CurveManager {
     }
   }
 
+  updateCurveTension(curveIndex, tension) {
+    const curve = this.curves[curveIndex];
+    if (curve) {
+      const points = this.splineHelperObjects
+        .filter((object) => object.curveIndex === curveIndex)
+        .map((object) => object.position.clone());
+
+      const newCurve = new THREE.CatmullRomCurve3(
+        points,
+        curve.closed,
+        'catmullrom',
+        tension,
+      );
+
+      this.curves[curveIndex] = newCurve;
+      this.updateCurveGeometry(newCurve);
+    }
+  }
+
   updateCurveFromControlPoint(object) {
     const curve = this.curves[object.curveIndex];
 
@@ -101,10 +151,8 @@ class CurveManager {
         .filter((obj) => obj.curveIndex === object.curveIndex)
         .map((obj) => obj.position);
 
-      curve.curve = new THREE.CatmullRomCurve3(
-        newPositions,
-        this.settings.closed,
-      );
+      curve.points = newPositions;
+      curve.needsUpdate = true;
 
       this.updateCurveGeometry(curve);
     }
