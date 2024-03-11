@@ -204,9 +204,8 @@ button {
 
 // trajectories
 .trajectories {
-  .trajectory-tabs {
-    padding: 0 10px 15px;
-  }
+  height: 100%;
+  overflow-y: scroll;
 
   .header {
     padding: 15px 10px;
@@ -216,12 +215,20 @@ button {
     column-gap: 20px;
   }
 
-  .item {
-    display: flex;
-    flex-direction: row;
+  .trajectory {
     column-gap: 15px;
     border-bottom: 1px solid #f1f1f1;
     padding: 10px;
+  }
+
+  .point {
+    display: flex;
+    flex-direction: row;
+    column-gap: 15px;
+
+    input {
+      width: 100%;
+    }
   }
 }
 
