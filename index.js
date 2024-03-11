@@ -8,6 +8,7 @@ import {
 } from './js/updateTrajectoriesHTML';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
+import { createOCSTables } from './js/createOCSTables';
 
 const cameraSettings = {
   fov: 70, // field of view
@@ -77,6 +78,7 @@ const init = () => {
   initListeners();
   render();
   updateTrajectoriesHTML(curveManager);
+  createOCSTables();
 };
 
 const setupScene = () => {
