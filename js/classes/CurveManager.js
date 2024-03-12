@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { updateTrajectoriesHTML } from '../updateTrajectoriesHTML';
 
 class CurveManager {
   constructor(scene, settings) {
@@ -45,13 +46,38 @@ class CurveManager {
     this.updateCurveFromControlPoint({ curveIndex });
   }
 
+  addRandomCurve() {
+    const randomPositions = [];
+
+    for (let i = 0; i < 4; i++) {
+      randomPositions.push(
+        new THREE.Vector3(
+          THREE.MathUtils.randFloatSpread(20), // x between -10 and 10
+          THREE.MathUtils.randFloat(0, 10), // y between 0 and 10
+          THREE.MathUtils.randFloatSpread(20), // z between -10 and 10
+        ),
+      );
+    }
+
+    const curveIndex = this.curves.length;
+    const curveObjects = randomPositions.map((pos) =>
+      this.addSplineObject(pos, curveIndex),
+    );
+    this.createCurve(
+      curveObjects.map((obj) => obj.position),
+      this.settings.closed,
+    );
+
+    updateTrajectoriesHTML(this);
+  }
+
   createCurve(positions, isClosed) {
     const curve = new THREE.CatmullRomCurve3(positions, isClosed);
     curve.needsUpdate = true;
     this.curves.push(curve);
   }
 
-  createCurves() {
+  initCurves() {
     const curvesPositions = [
       [
         new THREE.Vector3(-10, 1, -10),
@@ -80,11 +106,11 @@ class CurveManager {
 
   deleteCurve(curveIndex) {
     const curveToRemove = this.curves[curveIndex];
-    if (!curveToRemove) return;
-
-    this.scene.remove(curveToRemove.mesh);
-    curveToRemove.mesh.geometry.dispose();
-    curveToRemove.mesh.material.dispose();
+    if (curveToRemove && curveToRemove.mesh) {
+      this.scene.remove(curveToRemove.mesh);
+      curveToRemove.mesh.geometry.dispose();
+      curveToRemove.mesh.material.dispose();
+    }
 
     this.splineHelperObjects = this.splineHelperObjects.filter((object) => {
       if (object.curveIndex === curveIndex) {
@@ -97,6 +123,18 @@ class CurveManager {
     });
 
     this.curves.splice(curveIndex, 1);
+
+    this.splineHelperObjects.forEach((object) => {
+      if (object.curveIndex > curveIndex) {
+        object.curveIndex--;
+      }
+    });
+
+    for (let i = curveIndex; i < this.curves.length; i++) {
+      if (this.curves[i].mesh) {
+        this.curves[i].mesh.curveIndex--;
+      }
+    }
   }
 
   toggleCurveClosed(curveIndex, isClosed) {
@@ -167,7 +205,6 @@ class CurveManager {
   updateSplineOutline() {
     this.curves.forEach((curve) => {
       if (curve.needsUpdate) {
-        // console.log(curve.needsUpdate);
         this.updateCurveGeometry(curve);
         curve.needsUpdate = false;
       }
