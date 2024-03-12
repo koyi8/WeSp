@@ -44,6 +44,14 @@ export const updateTrajectoriesHTML = (curveManager) => {
     tensionLabel.appendChild(tensionInput);
     headerDiv.appendChild(tensionLabel);
 
+    const deleteCurveButton = document.createElement('button');
+    deleteCurveButton.textContent = 'x';
+    deleteCurveButton.addEventListener('click', () => {
+      curveManager.deleteCurve(curveIndex);
+      updateTrajectoriesHTML(curveManager);
+    });
+    headerDiv.appendChild(deleteCurveButton);
+
     trajectoryDiv.appendChild(headerDiv);
 
     const pointsDiv = document.createElement('div');

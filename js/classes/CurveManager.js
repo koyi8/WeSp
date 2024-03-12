@@ -106,11 +106,11 @@ class CurveManager {
 
   deleteCurve(curveIndex) {
     const curveToRemove = this.curves[curveIndex];
-    if (!curveToRemove) return;
-
-    this.scene.remove(curveToRemove.mesh);
-    curveToRemove.mesh.geometry.dispose();
-    curveToRemove.mesh.material.dispose();
+    if (curveToRemove && curveToRemove.mesh) {
+      this.scene.remove(curveToRemove.mesh);
+      curveToRemove.mesh.geometry.dispose();
+      curveToRemove.mesh.material.dispose();
+    }
 
     this.splineHelperObjects = this.splineHelperObjects.filter((object) => {
       if (object.curveIndex === curveIndex) {
@@ -123,6 +123,18 @@ class CurveManager {
     });
 
     this.curves.splice(curveIndex, 1);
+
+    this.splineHelperObjects.forEach((object) => {
+      if (object.curveIndex > curveIndex) {
+        object.curveIndex--;
+      }
+    });
+
+    for (let i = curveIndex; i < this.curves.length; i++) {
+      if (this.curves[i].mesh) {
+        this.curves[i].mesh.curveIndex--;
+      }
+    }
   }
 
   toggleCurveClosed(curveIndex, isClosed) {
