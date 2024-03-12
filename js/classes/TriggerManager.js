@@ -204,6 +204,7 @@ class TriggerManager {
       )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
 
       positionsArray[index] = trigPos.clone();
+      curve.updateArcLengths();
     });
   }
 
