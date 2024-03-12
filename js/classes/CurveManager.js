@@ -107,19 +107,29 @@ class CurveManager {
     }
   }
 
+  toggleCurveSelected(curveIndex, isSelected) {
+    const curve = this.curves[curveIndex];
+    if (curve) {
+      if (curve.mesh) {
+        curve.mesh.geometry.dispose();
+      }
+      const radius = isSelected ? 0.1 : 0.03;
+      const geometry = new THREE.TubeGeometry(curve, 100, radius, 8, false);
+      curve.mesh.geometry = geometry;
+    }
+  }
+
   updateCurveGeometry(curve) {
-    const points = curve.getPoints(this.settings.arcSegments);
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const geometry = new THREE.TubeGeometry(curve, 100, 0.03, 8, false);
 
     if (curve.mesh) {
       curve.mesh.geometry.dispose();
       curve.mesh.geometry = geometry;
     } else {
-      const material = new THREE.LineBasicMaterial({
+      const material = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
-        opacity: 0.35,
       });
-      curve.mesh = new THREE.Line(geometry, material);
+      curve.mesh = new THREE.Mesh(geometry, material);
       this.scene.add(curve.mesh);
     }
   }

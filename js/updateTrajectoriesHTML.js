@@ -5,6 +5,8 @@ export const updateTrajectoriesHTML = (curveManager) => {
   container.innerHTML = '';
 
   curveManager.curves.forEach((curve, curveIndex) => {
+    let selectPointIndex = 0;
+
     const trajectoryDiv = document.createElement('div');
     trajectoryDiv.className = 'trajectory';
     trajectoryDiv.id = `trajectory-${curveIndex}`;
@@ -23,6 +25,17 @@ export const updateTrajectoriesHTML = (curveManager) => {
     closedCheckbox.addEventListener('change', (e) => {
       curveManager.toggleCurveClosed(curveIndex, e.target.checked);
     });
+
+    const selectCheckbox = document.createElement('input');
+    selectCheckbox.type = 'checkbox';
+    selectCheckbox.checked = curve.selected;
+    selectCheckbox.addEventListener('change', (e) => {
+      curveManager.toggleCurveSelected(curveIndex, e.target.checked);
+    });
+    const selectLabel = document.createElement('label');
+    selectLabel.textContent = 'Select';
+    selectLabel.appendChild(selectCheckbox);
+    headerDiv.appendChild(selectLabel);
 
     const closedLabel = document.createElement('label');
     closedLabel.textContent = 'Closed';
@@ -56,6 +69,12 @@ export const updateTrajectoriesHTML = (curveManager) => {
       const pointDiv = document.createElement('div');
       pointDiv.className = 'point';
       pointDiv.id = `trajectory-point-${objectIndex}`;
+
+      //selectPointListener
+      pointDiv.addEventListener(
+        'click',
+        selectPointListener(curveIndex, selectPointIndex),
+      );
 
       ['x', 'y', 'z'].forEach((axis) => {
         const controlDiv = document.createElement('div');
@@ -93,10 +112,12 @@ export const updateTrajectoriesHTML = (curveManager) => {
       pointDiv.appendChild(addButton);
 
       pointsDiv.appendChild(pointDiv);
+      selectPointIndex++;
     });
 
     trajectoryDiv.appendChild(pointsDiv);
     container.appendChild(trajectoryDiv);
+    //selectPointIndex++;
   });
 };
 
@@ -109,6 +130,14 @@ const addControlPoint = (curveIndex, curveManager) => {
   const defaultPosition = new THREE.Vector3(0, 0, 0);
   curveManager.addNewSplineObject(curveIndex, defaultPosition);
   updateTrajectoriesHTML(curveManager);
+};
+
+// Create a function that returns the event listener function
+const selectPointListener = (curveIndex, pointIndex) => {
+  return () => {
+    console.log(`Trajectory ${curveIndex}, Point ${pointIndex} clicked`);
+    // Call the function with the curve's index and the point's index
+  };
 };
 
 export const updateControlPointsHTML = (curveManager) => {

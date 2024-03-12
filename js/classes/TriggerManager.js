@@ -169,16 +169,16 @@ class TriggerManager {
   animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
       if (trigger === null) {
-        positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null
+        positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
         return; // Skip this iteration
       }
 
       const curve = this.curveManager.curves[trigger.curveIndex];
       let position = trigger.position;
       if (trigger.animate) {
+        let arclength = curve.getLength();
         let directionFactor = trigger.direction === 'rtl' ? -1 : 1;
-        let speedAdjustment =
-          (trigger.speed / curve.getLength()) * directionFactor;
+        let speedAdjustment = (trigger.speed / arclength) * directionFactor;
 
         position += speedAdjustment;
 
@@ -204,6 +204,7 @@ class TriggerManager {
       )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
 
       positionsArray[index] = trigPos.clone();
+      curve.updateArcLengths();
     });
   }
 
