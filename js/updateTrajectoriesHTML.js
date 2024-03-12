@@ -44,6 +44,14 @@ export const updateTrajectoriesHTML = (curveManager) => {
     tensionLabel.appendChild(tensionInput);
     headerDiv.appendChild(tensionLabel);
 
+    const deleteCurveButton = document.createElement('button');
+    deleteCurveButton.textContent = 'x';
+    deleteCurveButton.addEventListener('click', () => {
+      curveManager.deleteCurve(curveIndex);
+      updateTrajectoriesHTML(curveManager);
+    });
+    headerDiv.appendChild(deleteCurveButton);
+
     trajectoryDiv.appendChild(headerDiv);
 
     const pointsDiv = document.createElement('div');
@@ -66,7 +74,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
 
         const input = document.createElement('input');
         input.type = 'number';
-        input.name = axis; // Add this line
+        input.name = axis;
         input.value = object.position[axis].toFixed(2);
         input.addEventListener('change', (e) => {
           object.position[axis] = parseFloat(e.target.value);
@@ -88,7 +96,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
       const addButton = document.createElement('button');
       addButton.textContent = 'add';
       addButton.addEventListener('click', () =>
-        addControlPoint(curveIndex, curveManager),
+        addControlPoint(curveIndex, curveManager, objectIndex),
       );
       pointDiv.appendChild(addButton);
 
@@ -105,9 +113,31 @@ const deleteControlPoint = (objectIndex, curveManager) => {
   updateTrajectoriesHTML(curveManager);
 };
 
-const addControlPoint = (curveIndex, curveManager) => {
-  const defaultPosition = new THREE.Vector3(0, 0, 0);
-  curveManager.addNewSplineObject(curveIndex, defaultPosition);
+const addControlPoint = (curveIndex, curveManager, objectIndex) => {
+  const currentPoint = curveManager.splineHelperObjects[objectIndex].position;
+  const nextPointIndex =
+    (objectIndex + 1) % curveManager.splineHelperObjects.length;
+  const nextPoint = curveManager.splineHelperObjects[nextPointIndex].position;
+
+  const midPoint = new THREE.Vector3()
+    .addVectors(currentPoint, nextPoint)
+    .multiplyScalar(0.5);
+
+  console.log(curveManager.curves[curveIndex].tension);
+
+  const newControlPoint = curveManager.addSplineObject(midPoint, curveIndex);
+
+  const actualNextIndex =
+    objectIndex + 1 === curveManager.splineHelperObjects.length &&
+    !curveManager.curves[curveIndex].closed
+      ? objectIndex
+      : objectIndex + 1;
+
+  curveManager.splineHelperObjects.splice(actualNextIndex, 0, newControlPoint);
+  curveManager.splineHelperObjects.pop();
+
+  curveManager.updateCurveFromControlPoint(newControlPoint);
+
   updateTrajectoriesHTML(curveManager);
 };
 

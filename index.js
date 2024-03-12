@@ -71,7 +71,7 @@ const init = () => {
   setupGeometry();
   setupControls();
   curveManager = new CurveManager(scene, settings);
-  curveManager.createCurves();
+  curveManager.initCurves();
   triggerManager = new TriggerManager(scene, settings, curveManager, container);
   triggerManager.setupAddTriggerListeners();
   initListeners();
@@ -236,6 +236,9 @@ const initListeners = () => {
       curveManager.updateCurveFromControlPoint(selectedObject);
       debouncedUpdateControlPointsHTML();
     }
+  });
+  document.getElementById('create-curve').addEventListener('click', () => {
+    curveManager.addRandomCurve();
   });
 };
 
