@@ -131,15 +131,11 @@ class CurveManager {
         .filter((object) => object.curveIndex === curveIndex)
         .map((object) => object.position.clone());
 
-      const newCurve = new THREE.CatmullRomCurve3(
-        points,
-        curve.closed,
-        'catmullrom',
-        tension,
-      );
+      curve.curveType = 'catmullrom';
+      curve.tension = tension;
+      curve.points = points;
 
-      this.curves[curveIndex] = newCurve;
-      this.updateCurveGeometry(newCurve);
+      this.updateCurveGeometry(curve);
     }
   }
 
