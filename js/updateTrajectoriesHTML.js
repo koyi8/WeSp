@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+let selectedPointIndex;
+
 export const updateTrajectoriesHTML = (curveManager) => {
   const container = document.getElementById('trajectories-container');
   container.innerHTML = '';
@@ -81,7 +83,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
       //selectPointListener
       pointDiv.addEventListener(
         'click',
-        selectPointListener(curveIndex, selectPointIndex),
+        selectPointListener(curveIndex, selectPointIndex, curveManager),
       );
 
       ['x', 'y', 'z'].forEach((axis) => {
@@ -162,11 +164,15 @@ const addControlPoint = (curveIndex, curveManager, objectIndex) => {
   updateTrajectoriesHTML(curveManager);
 };
 
-// Create a function that returns the event listener function
-const selectPointListener = (curveIndex, pointIndex) => {
+const selectPointListener = (curveIndex, pointIndex, curveManager) => {
   return () => {
     console.log(`Trajectory ${curveIndex}, Point ${pointIndex} clicked`);
-    // Call the function with the curve's index and the point's index
+    selectedPointIndex = pointIndex;
+    for (let i = 0; i < curveIndex; i++) {
+      selectedPointIndex += curveManager.curves[i].points.length;
+    }
+    console.log(curveManager.splineHelperObjects[selectedPointIndex]);
+    console.log(curveManager.splineHelperObjects);
   };
 };
 
