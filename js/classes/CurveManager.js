@@ -74,6 +74,7 @@ class CurveManager {
   createCurve(positions, isClosed) {
     const curve = new THREE.CatmullRomCurve3(positions, isClosed);
     curve.needsUpdate = true;
+    curve.selected = false;
     this.curves.push(curve);
   }
 
@@ -148,17 +149,19 @@ class CurveManager {
   toggleCurveSelected(curveIndex, isSelected) {
     const curve = this.curves[curveIndex];
     if (curve) {
+      curve.selected = isSelected;
       if (curve.mesh) {
         curve.mesh.geometry.dispose();
       }
-      const radius = isSelected ? 0.1 : 0.03;
+      const radius = isSelected ? 0.1 : 0.02;
       const geometry = new THREE.TubeGeometry(curve, 100, radius, 8, false);
       curve.mesh.geometry = geometry;
     }
   }
 
   updateCurveGeometry(curve) {
-    const geometry = new THREE.TubeGeometry(curve, 100, 0.03, 8, false);
+    const radius = curve.selected ? 0.1 : 0.02;
+    const geometry = new THREE.TubeGeometry(curve, 100, radius, 8, false);
 
     if (curve.mesh) {
       curve.mesh.geometry.dispose();
