@@ -1,10 +1,14 @@
 import * as THREE from 'three';
 
+let selectedPointIndex;
+
 export const updateTrajectoriesHTML = (curveManager) => {
   const container = document.getElementById('trajectories-container');
   container.innerHTML = '';
 
   curveManager.curves.forEach((curve, curveIndex) => {
+    let selectPointIndex = 0;
+
     const trajectoryDiv = document.createElement('div');
     trajectoryDiv.className = 'trajectory';
     trajectoryDiv.id = `trajectory-${curveIndex}`;
@@ -23,6 +27,17 @@ export const updateTrajectoriesHTML = (curveManager) => {
     closedCheckbox.addEventListener('change', (e) => {
       curveManager.toggleCurveClosed(curveIndex, e.target.checked);
     });
+
+    const selectCheckbox = document.createElement('input');
+    selectCheckbox.type = 'checkbox';
+    selectCheckbox.checked = curve.selected;
+    selectCheckbox.addEventListener('change', (e) => {
+      curveManager.toggleCurveSelected(curveIndex, e.target.checked);
+    });
+    const selectLabel = document.createElement('label');
+    selectLabel.textContent = 'Select';
+    selectLabel.appendChild(selectCheckbox);
+    headerDiv.appendChild(selectLabel);
 
     const closedLabel = document.createElement('label');
     closedLabel.textContent = 'Closed';
@@ -65,6 +80,12 @@ export const updateTrajectoriesHTML = (curveManager) => {
       pointDiv.className = 'point';
       pointDiv.id = `trajectory-point-${objectIndex}`;
 
+      //selectPointListener
+      pointDiv.addEventListener(
+        'click',
+        selectPointListener(curveIndex, selectPointIndex, curveManager),
+      );
+
       ['x', 'y', 'z'].forEach((axis) => {
         const controlDiv = document.createElement('div');
         controlDiv.className = 'control';
@@ -101,10 +122,12 @@ export const updateTrajectoriesHTML = (curveManager) => {
       pointDiv.appendChild(addButton);
 
       pointsDiv.appendChild(pointDiv);
+      selectPointIndex++;
     });
 
     trajectoryDiv.appendChild(pointsDiv);
     container.appendChild(trajectoryDiv);
+    //selectPointIndex++;
   });
 };
 
@@ -139,6 +162,18 @@ const addControlPoint = (curveIndex, curveManager, objectIndex) => {
   curveManager.updateCurveFromControlPoint(newControlPoint);
 
   updateTrajectoriesHTML(curveManager);
+};
+
+const selectPointListener = (curveIndex, pointIndex, curveManager) => {
+  return () => {
+    console.log(`Trajectory ${curveIndex}, Point ${pointIndex} clicked`);
+    selectedPointIndex = pointIndex;
+    for (let i = 0; i < curveIndex; i++) {
+      selectedPointIndex += curveManager.curves[i].points.length;
+    }
+    console.log(curveManager.splineHelperObjects[selectedPointIndex]);
+    console.log(curveManager.splineHelperObjects);
+  };
 };
 
 export const updateControlPointsHTML = (curveManager) => {

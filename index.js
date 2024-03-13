@@ -8,12 +8,14 @@ import {
 } from './js/updateTrajectoriesHTML';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
+import { createOCSTables } from './js/createOCSTables';
 
 const cameraSettings = {
   fov: 70, // field of view
   near: 1,
   far: 10000,
-  position: { x: 30, y: 16, z: 0 },
+  position: { x: 3, y: 0, z: 1.6 },
+  up: { x: 0, y: 0, z: 1 },
 };
 
 const lightSettings = {
@@ -21,25 +23,25 @@ const lightSettings = {
   directional: {
     color: 0xffffff,
     intensity: 4.5,
-    position: { x: 0, y: 30, z: 4 },
+    position: { x: 0, y: 0.4, z: 3 },
     angle: Math.PI * 0.2,
   },
 };
 
 const geometrySettings = {
   plane: {
-    width: 20,
-    height: 20,
-    color: 0x000000,
+    width: 10,
+    height: 10,
+    color: 0xff0000,
     opacity: 1.0,
-    rotationX: -Math.PI / 2,
+    //rotationX: Math.PI / 2,
   },
   gridHelper: {
-    size: 20,
+    size: 2,
     divisions: 20,
   },
   axesHelper: {
-    size: 20,
+    size: 2,
   },
 };
 
@@ -77,6 +79,7 @@ const init = () => {
   initListeners();
   render();
   updateTrajectoriesHTML(curveManager);
+  createOCSTables();
 };
 
 const setupScene = () => {
@@ -95,6 +98,7 @@ const setupScene = () => {
     cameraSettings.position.y,
     cameraSettings.position.z,
   );
+  camera.up.set(cameraSettings.up.x, cameraSettings.up.y, cameraSettings.up.z);
 
   scene.add(camera);
 
@@ -129,18 +133,20 @@ const setupGeometry = () => {
   const planeGeometry = new THREE.PlaneGeometry(
     geometrySettings.plane.width,
     geometrySettings.plane.height,
-  ).rotateX(geometrySettings.plane.rotationX);
+  );
   const planeMaterial = new THREE.ShadowMaterial({
     color: geometrySettings.plane.color,
     opacity: geometrySettings.plane.opacity,
   });
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+
   scene.add(plane);
 
   const gridHelper = new THREE.GridHelper(
     geometrySettings.gridHelper.size,
     geometrySettings.gridHelper.divisions,
   );
+  gridHelper.rotation.x = -Math.PI / 2;
   scene.add(gridHelper);
 };
 

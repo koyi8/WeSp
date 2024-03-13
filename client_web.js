@@ -14,7 +14,6 @@ import { positionsArray } from '/index.js';
 // include error handling for the input fields
 import {
   checkPortNumberInput,
-  interpolateString,
   isValidIP,
   interpolateStringOscMessage,
   interpolateStringScaling,
@@ -44,12 +43,8 @@ let udpPortObjects = [], // Array to store the udpPortRow objects
 let labels = ['X', 'Y', 'Z'],
   scales = ['scaleX', 'scaleY', 'scaleZ'];
 
-window.udpPortObjects = udpPortObjects; // Make udpPortObjects globally accessible
-window.oscMessageObjects = oscMessageObjects; // Make oscMessageObjects globally accessible
-
 // array to store all the SourceObject -> Javascript objects
 let triggerObjects = [],
-  previousTriggerObjects = [], // Deep copy of triggerObjects
   triggerObject = {
     clientID: '',
     outPort: '',
@@ -60,13 +55,13 @@ let triggerObjects = [],
     z: '',
   };
 
-// updates the triggerObjects array based on the positionsArray and keeps track of x,y,z values
+// updates the triggerObjects, keeps track of x,y,z values
 setInterval(() => {
   updateTriggerObjectsLength(positionsArray);
   updateTriggerObjectsPositions(positionsArray);
 }, 17); // ~16.67 ms (1 second / 60) for 60 fps
 
-window.addRowUDPPorts = (
+export const addRowUDPPorts = (
   inPortValue = '5001',
   outPortValue = '7001',
   outAddressValue = '127.0.0.1',
@@ -133,7 +128,7 @@ window.addRowUDPPorts = (
 };
 
 // Define the deletePort function in the global scope
-window.deleteRowUDPPorts = () => {
+export const deleteRowUDPPorts = () => {
   const table = document.querySelector('#portTable');
   const rows = table.querySelectorAll('tr');
   // Ensure there's at least one row to delete
@@ -148,7 +143,7 @@ window.deleteRowUDPPorts = () => {
 };
 
 // Define the addRowOSCMessage function in the global scope
-window.addRowOSCMessage = () => {
+export const addRowOSCMessage = () => {
   let row = {}; // New object for the row
 
   let table = document.getElementById('messageTable');
@@ -159,7 +154,7 @@ window.addRowOSCMessage = () => {
       <select id="portNumberSelect" class="portNumberSelect"></select>
     </td>
     <td>
-      <input class="addressInput" value="/source/xyz $srcID" />
+      <input class="addressInput" value="/demo/$srcID" />
     </td>
     <td class="oscArgumentsInput"></td>
     <td>
@@ -180,7 +175,7 @@ window.addRowOSCMessage = () => {
     // Update rowrObject
     row['outPort'] = selectedUdpPortObject.outPort;
     row['outAddress'] = selectedUdpPortObject.outAddress;
-    console.log(row);
+    //console.log(row);
   });
 
   let addressInput = newRow.querySelector('.addressInput');
@@ -245,6 +240,8 @@ window.addRowOSCMessage = () => {
     let rowIndex = oscMessageObjects.indexOf(row);
     if (sendInput.checked) {
       socket.emit('startSendOSC', rowIndex);
+      console.log('Start sending Coordinates');
+
       //assign the row variables outport, outaddress, oscMessage
       sendingIntervals[rowIndex] = setInterval(() => {
         let triggerObjectsCopy = triggerObjects.map((triggerObject, index) => {
@@ -271,7 +268,10 @@ window.addRowOSCMessage = () => {
           row.sendY === 'allY' &&
           row.sendZ === 'allZ'
         ) {
-          objectsToSend = triggerObjectsCopy;
+          //objectsToSend = triggerObjectsCopy;
+          objectsToSend = triggerObjectsCopy.filter(
+            (obj) => !(obj.x === 0 && obj.y === 0 && obj.z === 0),
+          );
         } else {
           let xObject = triggerObjectsCopy[row.sendX.slice(1) - 1];
           let yObject = triggerObjectsCopy[row.sendY.slice(1) - 1];
@@ -288,7 +288,7 @@ window.addRowOSCMessage = () => {
           ];
         }
 
-        console.log(objectsToSend);
+        //console.log(objectsToSend);
         socket.emit('sendOSC', objectsToSend);
       }, sendingInterval);
     } else {
@@ -305,7 +305,7 @@ window.addRowOSCMessage = () => {
 };
 
 // Define the deletePort function in the global scope
-window.deleteRowOSCMessage = () => {
+export const deleteRowOSCMessage = () => {
   let table = document.getElementById('messageTable');
   let rowCount = table.rows.length;
 

@@ -14,7 +14,7 @@ class CurveManager {
   }
 
   addSplineObject(position, curveIndex) {
-    const geometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+    const geometry = new THREE.BoxGeometry(0.04, 0.04, 0.04);
     const material = new THREE.MeshBasicMaterial({
       color: Math.random() * 0xffffff,
     });
@@ -52,9 +52,9 @@ class CurveManager {
     for (let i = 0; i < 4; i++) {
       randomPositions.push(
         new THREE.Vector3(
-          THREE.MathUtils.randFloatSpread(20), // x between -10 and 10
-          THREE.MathUtils.randFloat(0, 10), // y between 0 and 10
-          THREE.MathUtils.randFloatSpread(20), // z between -10 and 10
+          THREE.MathUtils.randFloatSpread(1), // x between -1 and 1
+          THREE.MathUtils.randFloatSpread(1), // y between -1 and 1
+          THREE.MathUtils.randFloat(0, 1), // z between 0 and 1
         ),
       );
     }
@@ -74,22 +74,23 @@ class CurveManager {
   createCurve(positions, isClosed) {
     const curve = new THREE.CatmullRomCurve3(positions, isClosed);
     curve.needsUpdate = true;
+    curve.selected = false;
     this.curves.push(curve);
   }
 
   initCurves() {
     const curvesPositions = [
       [
-        new THREE.Vector3(-10, 1, -10),
-        new THREE.Vector3(10, 1, -10),
-        new THREE.Vector3(10, 1, 10),
-        new THREE.Vector3(-10, 1, 10),
+        new THREE.Vector3(-1, -1, 0.1),
+        new THREE.Vector3(1, -1, 0.1),
+        new THREE.Vector3(1, 1, 0.1),
+        new THREE.Vector3(-1, 1, 0.1),
       ],
       [
-        new THREE.Vector3(-10, 4, -10),
-        new THREE.Vector3(10, 4, -10),
-        new THREE.Vector3(10, 4, 10),
-        new THREE.Vector3(-10, 4, 10),
+        new THREE.Vector3(-1, -1, 0.4),
+        new THREE.Vector3(1, -1, 0.4),
+        new THREE.Vector3(1, 1, 0.4),
+        new THREE.Vector3(-1, 1, 0.4),
       ],
     ];
 
@@ -145,19 +146,31 @@ class CurveManager {
     }
   }
 
+  toggleCurveSelected(curveIndex, isSelected) {
+    const curve = this.curves[curveIndex];
+    if (curve) {
+      curve.selected = isSelected;
+      if (curve.mesh) {
+        curve.mesh.geometry.dispose();
+      }
+      const radius = isSelected ? 0.01 : 0.004;
+      const geometry = new THREE.TubeGeometry(curve, 500, radius, 8, false);
+      curve.mesh.geometry = geometry;
+    }
+  }
+
   updateCurveGeometry(curve) {
-    const points = curve.getPoints(this.settings.arcSegments);
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const radius = curve.selected ? 0.01 : 0.004;
+    const geometry = new THREE.TubeGeometry(curve, 100, radius, 8, false);
 
     if (curve.mesh) {
       curve.mesh.geometry.dispose();
       curve.mesh.geometry = geometry;
     } else {
-      const material = new THREE.LineBasicMaterial({
+      const material = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
-        opacity: 0.35,
       });
-      curve.mesh = new THREE.Line(geometry, material);
+      curve.mesh = new THREE.Mesh(geometry, material);
       this.scene.add(curve.mesh);
     }
   }

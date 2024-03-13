@@ -37,14 +37,14 @@ class TriggerManager {
   createTrigger(button) {
     const colors = [0x000000, 0xff0000, 0x0000ff, 0x808080];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
     const cubeMaterial = new THREE.MeshBasicMaterial({ color: randomColor });
     const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
     const labelElement = document.createElement('div');
     labelElement.className = 'label';
     const cubeLabel = new CSS2DObject(labelElement);
-    cubeLabel.position.set(0, 1.5, 0);
+    cubeLabel.position.set(0, 0.2, 0);
     cube.add(cubeLabel);
 
     this.scene.add(cube);
@@ -53,7 +53,7 @@ class TriggerManager {
     const triggerDefaults = {
       animate: true,
       loop: true,
-      speed: Math.random() * 0.2,
+      speed: Math.random() * 0.02,
       position: Math.random(),
       curveIndex: 0,
       direction: 'ltr',
@@ -133,7 +133,7 @@ class TriggerManager {
       const triggerDefaults = {
         animate: true,
         loop: true,
-        speed: Math.random() * 0.2,
+        speed: Math.random() * 0.02,
         position: Math.random(),
         curveIndex: 0,
         direction: 'ltr',
@@ -142,7 +142,7 @@ class TriggerManager {
       const labelElement = document.createElement('div');
       labelElement.className = 'label';
       const cubeLabel = new CSS2DObject(labelElement);
-      cubeLabel.position.set(0, 1.5, 0);
+      cubeLabel.position.set(0, 0.2, 0);
       cube.add(cubeLabel);
       this.scene.add(cube);
 
@@ -169,16 +169,16 @@ class TriggerManager {
   animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
       if (trigger === null) {
-        positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null
+        positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
         return; // Skip this iteration
       }
 
       const curve = this.curveManager.curves[trigger.curveIndex];
       let position = trigger.position;
       if (trigger.animate) {
+        let arclength = curve.getLength();
         let directionFactor = trigger.direction === 'rtl' ? -1 : 1;
-        let speedAdjustment =
-          (trigger.speed / curve.getLength()) * directionFactor;
+        let speedAdjustment = (trigger.speed / arclength) * directionFactor;
 
         position += speedAdjustment;
 
