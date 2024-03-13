@@ -154,7 +154,7 @@ export const addRowOSCMessage = () => {
       <select id="portNumberSelect" class="portNumberSelect"></select>
     </td>
     <td>
-      <input class="addressInput" value="/source/xyz $srcID" />
+      <input class="addressInput" value="/demo/$srcID" />
     </td>
     <td class="oscArgumentsInput"></td>
     <td>

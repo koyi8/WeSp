@@ -53,8 +53,8 @@ class CurveManager {
       randomPositions.push(
         new THREE.Vector3(
           THREE.MathUtils.randFloatSpread(20), // x between -10 and 10
-          THREE.MathUtils.randFloat(0, 10), // y between 0 and 10
-          THREE.MathUtils.randFloatSpread(20), // z between -10 and 10
+          THREE.MathUtils.randFloatSpread(20), // y between -10 and 10
+          THREE.MathUtils.randFloat(0, 10), // z between 0 and 10
         ),
       );
     }
@@ -81,16 +81,16 @@ class CurveManager {
   initCurves() {
     const curvesPositions = [
       [
-        new THREE.Vector3(-10, 1, -10),
-        new THREE.Vector3(10, 1, -10),
-        new THREE.Vector3(10, 1, 10),
-        new THREE.Vector3(-10, 1, 10),
+        new THREE.Vector3(-10, -10, 1),
+        new THREE.Vector3(10, -10, 1),
+        new THREE.Vector3(10, 10, 1),
+        new THREE.Vector3(-10, 10, 1),
       ],
       [
-        new THREE.Vector3(-10, 4, -10),
-        new THREE.Vector3(10, 4, -10),
-        new THREE.Vector3(10, 4, 10),
-        new THREE.Vector3(-10, 4, 10),
+        new THREE.Vector3(-10, -10, 4),
+        new THREE.Vector3(10, -10, 4),
+        new THREE.Vector3(10, 10, 4),
+        new THREE.Vector3(-10, 10, 4),
       ],
     ];
 
