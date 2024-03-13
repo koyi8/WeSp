@@ -14,7 +14,7 @@ const cameraSettings = {
   fov: 70, // field of view
   near: 1,
   far: 10000,
-  position: { x: 30, y: 0, z: 16 },
+  position: { x: 3, y: 0, z: 1.6 },
   up: { x: 0, y: 0, z: 1 },
 };
 
@@ -23,25 +23,25 @@ const lightSettings = {
   directional: {
     color: 0xffffff,
     intensity: 4.5,
-    position: { x: 0, y: 4, z: 30 },
+    position: { x: 0, y: 0.4, z: 3 },
     angle: Math.PI * 0.2,
   },
 };
 
 const geometrySettings = {
   plane: {
-    width: 20,
-    height: 20,
+    width: 10,
+    height: 10,
     color: 0xff0000,
     opacity: 1.0,
     //rotationX: Math.PI / 2,
   },
   gridHelper: {
-    size: 20,
+    size: 2,
     divisions: 20,
   },
   axesHelper: {
-    size: 20,
+    size: 2,
   },
 };
 

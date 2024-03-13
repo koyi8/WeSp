@@ -14,7 +14,7 @@ class CurveManager {
   }
 
   addSplineObject(position, curveIndex) {
-    const geometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+    const geometry = new THREE.BoxGeometry(0.04, 0.04, 0.04);
     const material = new THREE.MeshBasicMaterial({
       color: Math.random() * 0xffffff,
     });
@@ -52,9 +52,9 @@ class CurveManager {
     for (let i = 0; i < 4; i++) {
       randomPositions.push(
         new THREE.Vector3(
-          THREE.MathUtils.randFloatSpread(20), // x between -10 and 10
-          THREE.MathUtils.randFloatSpread(20), // y between -10 and 10
-          THREE.MathUtils.randFloat(0, 10), // z between 0 and 10
+          THREE.MathUtils.randFloatSpread(1), // x between -1 and 1
+          THREE.MathUtils.randFloatSpread(1), // y between -1 and 1
+          THREE.MathUtils.randFloat(0, 1), // z between 0 and 1
         ),
       );
     }
@@ -81,16 +81,16 @@ class CurveManager {
   initCurves() {
     const curvesPositions = [
       [
-        new THREE.Vector3(-10, -10, 1),
-        new THREE.Vector3(10, -10, 1),
-        new THREE.Vector3(10, 10, 1),
-        new THREE.Vector3(-10, 10, 1),
+        new THREE.Vector3(-1, -1, 0.1),
+        new THREE.Vector3(1, -1, 0.1),
+        new THREE.Vector3(1, 1, 0.1),
+        new THREE.Vector3(-1, 1, 0.1),
       ],
       [
-        new THREE.Vector3(-10, -10, 4),
-        new THREE.Vector3(10, -10, 4),
-        new THREE.Vector3(10, 10, 4),
-        new THREE.Vector3(-10, 10, 4),
+        new THREE.Vector3(-1, -1, 0.4),
+        new THREE.Vector3(1, -1, 0.4),
+        new THREE.Vector3(1, 1, 0.4),
+        new THREE.Vector3(-1, 1, 0.4),
       ],
     ];
 
@@ -153,14 +153,14 @@ class CurveManager {
       if (curve.mesh) {
         curve.mesh.geometry.dispose();
       }
-      const radius = isSelected ? 0.1 : 0.02;
-      const geometry = new THREE.TubeGeometry(curve, 100, radius, 8, false);
+      const radius = isSelected ? 0.01 : 0.004;
+      const geometry = new THREE.TubeGeometry(curve, 500, radius, 8, false);
       curve.mesh.geometry = geometry;
     }
   }
 
   updateCurveGeometry(curve) {
-    const radius = curve.selected ? 0.1 : 0.02;
+    const radius = curve.selected ? 0.01 : 0.004;
     const geometry = new THREE.TubeGeometry(curve, 100, radius, 8, false);
 
     if (curve.mesh) {
