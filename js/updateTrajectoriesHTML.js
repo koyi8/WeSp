@@ -12,6 +12,13 @@ export const updateTrajectoriesHTML = (curveManager) => {
     const trajectoryDiv = document.createElement('div');
     trajectoryDiv.className = 'trajectory';
     trajectoryDiv.id = `trajectory-${curveIndex}`;
+    trajectoryDiv.addEventListener('click', (event) => {
+      // Deselect all curves
+      curveManager.curves.forEach((_, index) => {
+        curveManager.toggleCurveSelected(index, false);
+      });
+      curveManager.toggleCurveSelected(curveIndex, true);
+    });
 
     const headerDiv = document.createElement('div');
     headerDiv.className = 'header';
@@ -27,17 +34,6 @@ export const updateTrajectoriesHTML = (curveManager) => {
     closedCheckbox.addEventListener('change', (e) => {
       curveManager.toggleCurveClosed(curveIndex, e.target.checked);
     });
-
-    const selectCheckbox = document.createElement('input');
-    selectCheckbox.type = 'checkbox';
-    selectCheckbox.checked = curve.selected;
-    selectCheckbox.addEventListener('change', (e) => {
-      curveManager.toggleCurveSelected(curveIndex, e.target.checked);
-    });
-    const selectLabel = document.createElement('label');
-    selectLabel.textContent = 'Select';
-    selectLabel.appendChild(selectCheckbox);
-    headerDiv.appendChild(selectLabel);
 
     const closedLabel = document.createElement('label');
     closedLabel.textContent = 'Closed';

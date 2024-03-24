@@ -41,10 +41,7 @@ class CurveManager {
     // Create a div for the label
     const labelDiv = document.createElement('div');
     labelDiv.className = 'label';
-
-    // Create a CSS2DObject with the label div
     const label = new CSS2DObject(labelDiv);
-    // Position the label at the same position as the object
     label.position.set(0, 0.2, 0);
 
     // Add the label to the object
