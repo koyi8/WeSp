@@ -2,6 +2,13 @@ import * as THREE from 'three';
 
 let selectedPointIndex;
 
+let pointControlSettings = {
+  cpRangeMin: -1,
+  cpRangeMax: 1,
+  cpStepSlider: 0.01,
+  cpStepNumber: 0.05,
+};
+
 export const updateTrajectoriesHTML = (curveManager) => {
   const container = document.getElementById('trajectories-container');
   container.innerHTML = '';
@@ -12,7 +19,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
     const trajectoryDiv = document.createElement('div');
     trajectoryDiv.className = 'trajectory';
     trajectoryDiv.id = `trajectory-${curveIndex}`;
-    trajectoryDiv.addEventListener('click', (event) => {
+    trajectoryDiv.addEventListener('click', () => {
       // Deselect all curves
       curveManager.curves.forEach((_, index) => {
         curveManager.toggleCurveSelected(index, false);
@@ -103,14 +110,32 @@ export const updateTrajectoriesHTML = (curveManager) => {
         const input = document.createElement('input');
         input.type = 'number';
         input.name = axis;
+        input.min = pointControlSettings.cpRangeMin;
+        input.max = pointControlSettings.cpRangeMax;
+        input.step = pointControlSettings.cpStepNumber;
         input.value = object.position[axis].toFixed(2);
-        input.addEventListener('change', (e) => {
-          object.position[axis] = parseFloat(e.target.value);
+
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.name = `${axis}Slider`;
+        slider.min = pointControlSettings.cpRangeMin;
+        slider.max = pointControlSettings.cpRangeMax;
+        slider.step = pointControlSettings.cpStepSlider;
+        slider.value = object.position[axis].toFixed(2);
+
+        const updatePosition = (value) => {
+          object.position[axis] = parseFloat(value);
           curveManager.updateCurveFromControlPoint(object);
-        });
+          input.value = value;
+          slider.value = value;
+        };
+
+        input.addEventListener('change', (e) => updatePosition(e.target.value));
+        slider.addEventListener('input', (e) => updatePosition(e.target.value));
 
         controlDiv.appendChild(label);
         controlDiv.appendChild(input);
+        controlDiv.appendChild(slider);
         pointDiv.appendChild(controlDiv);
       });
 
