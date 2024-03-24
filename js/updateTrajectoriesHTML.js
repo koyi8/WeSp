@@ -76,9 +76,20 @@ export const updateTrajectoriesHTML = (curveManager) => {
     curveManager.splineHelperObjects.forEach((object, objectIndex) => {
       if (object.curveIndex !== curveIndex) return;
 
+      //calc LabelIndex for each curve
+      let pointLabelIndex = objectIndex;
+      for (let i = 0; i < curveIndex; i++) {
+        pointLabelIndex -= curveManager.curves[i].points.length;
+      }
+
       const pointDiv = document.createElement('div');
       pointDiv.className = 'point';
       pointDiv.id = `trajectory-point-${objectIndex}`;
+
+      // Create a label for the point with the objectIndex
+      const pointLabel = document.createElement('label');
+      pointLabel.textContent = `P ${pointLabelIndex + 1}: `;
+      pointDiv.appendChild(pointLabel);
 
       //selectPointListener
       pointDiv.addEventListener(
@@ -109,15 +120,19 @@ export const updateTrajectoriesHTML = (curveManager) => {
 
       const deleteButton = document.createElement('button');
       deleteButton.textContent = 'delete';
-      deleteButton.addEventListener('click', () =>
-        deleteControlPoint(objectIndex, curveManager),
+      deleteButton.addEventListener(
+        'click',
+        () => deleteControlPoint(objectIndex, curveManager),
+        curveManager.updateControlPointLabels(curveIndex),
       );
       pointDiv.appendChild(deleteButton);
 
       const addButton = document.createElement('button');
       addButton.textContent = 'add';
-      addButton.addEventListener('click', () =>
-        addControlPoint(curveIndex, curveManager, objectIndex),
+      addButton.addEventListener(
+        'click',
+        () => addControlPoint(curveIndex, curveManager, objectIndex),
+        curveManager.updateControlPointLabels(curveIndex),
       );
       pointDiv.appendChild(addButton);
 

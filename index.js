@@ -72,7 +72,7 @@ const init = () => {
   setupLights();
   setupGeometry();
   setupControls();
-  curveManager = new CurveManager(scene, settings);
+  curveManager = new CurveManager(scene, settings, container);
   curveManager.initCurves();
   triggerManager = new TriggerManager(scene, settings, curveManager, container);
   triggerManager.setupAddTriggerListeners();
@@ -168,6 +168,7 @@ const animate = () => {
 const render = () => {
   renderer.render(scene, camera);
   triggerManager.renderLabels(camera);
+  //curveManager.renderTrajectoryLabels(camera);
 };
 
 const onWindowResize = () => {
