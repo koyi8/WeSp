@@ -18,6 +18,9 @@ class CurveManager {
   getSplineHelperObjects() {
     return this.splineHelperObjects;
   }
+  getCurves() {
+    return this.curves;
+  }
 
   initTrajectoryLabelRenderer() {
     this.trajectoryLabelRenderer = new CSS2DRenderer();

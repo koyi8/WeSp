@@ -9,6 +9,7 @@ import {
 } from './js/updateTrajectoriesHTML';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
+import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/createOCSTables';
 
 const cameraSettings = {
@@ -63,12 +64,15 @@ const mouse = new THREE.Vector2();
 let camera, scene, renderer;
 let curveManager;
 let triggerManager;
+let multiPlayerManager;
 let positionsArray = [];
 let selectedObject = null;
 let controls;
 let transformControl;
+let socket;
 
 const init = () => {
+  setupSocket();
   setupScene();
   setupLights();
   setupGeometry();
@@ -77,10 +81,23 @@ const init = () => {
   curveManager.initCurves();
   triggerManager = new TriggerManager(scene, settings, curveManager, container);
   triggerManager.setupAddTriggerListeners();
+  multiPlayerManager = new MultiPlayerManager(
+    scene,
+    curveManager,
+    triggerManager,
+    socket,
+  );
   initListeners();
   render();
   updateTrajectoriesHTML(curveManager);
   createOCSTables();
+  multiPlayerManager.toggleDummyState();
+};
+
+const setupSocket = () => {
+  const serverURL = 'http://:8081/'; //
+  // Client Initialization
+  socket = io(serverURL);
 };
 
 const setupScene = () => {
@@ -254,4 +271,4 @@ const initListeners = () => {
 init();
 animate();
 
-export { positionsArray };
+export { positionsArray, socket };
