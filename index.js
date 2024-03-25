@@ -5,6 +5,7 @@ import { debounce } from './js/heplers/debounce';
 import {
   updateTrajectoriesHTML,
   updateControlPointsHTML,
+  selectedCurveIndex,
 } from './js/updateTrajectoriesHTML';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
@@ -34,7 +35,7 @@ const geometrySettings = {
     height: 10,
     color: 0xff0000,
     opacity: 1.0,
-    //rotationX: Math.PI / 2,
+    rotationX: Math.PI / 2,
   },
   gridHelper: {
     size: 2,
@@ -134,6 +135,7 @@ const setupGeometry = () => {
     geometrySettings.plane.width,
     geometrySettings.plane.height,
   );
+  planeGeometry.rotateX(-Math.PI / 2);
   const planeMaterial = new THREE.ShadowMaterial({
     color: geometrySettings.plane.color,
     opacity: geometrySettings.plane.opacity,
@@ -168,7 +170,6 @@ const animate = () => {
 const render = () => {
   renderer.render(scene, camera);
   triggerManager.renderLabels(camera);
-  //curveManager.renderTrajectoryLabels(camera);
 };
 
 const onWindowResize = () => {
@@ -182,6 +183,7 @@ const onWindowResize = () => {
 
 const onDocumentMouseDown = (event) => {
   event.preventDefault();
+  console.log(selectedCurveIndex);
 
   mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;

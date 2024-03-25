@@ -209,18 +209,11 @@ class CurveManager {
 
       // Update the labels of the helper objects associated with this curve
       this.splineHelperObjects.slice(start, end).forEach((object, index) => {
-        // Find the label among the children of the object
         const label = object.children.find(
           (child) => child instanceof CSS2DObject,
         );
-
-        // If a label was found, update its text content
         if (label) {
-          if (curve.selected) {
-            label.element.textContent = `P${index + 1} `;
-          } else {
-            label.element.textContent = '';
-          }
+          label.element.textContent = curve.selected ? `P${index + 1} ` : '';
         }
       });
     }

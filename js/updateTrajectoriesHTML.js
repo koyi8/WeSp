@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
-let selectedPointIndex;
+//let selectedPointIndex;
+
+export let selectedCurveIndex;
 
 let pointControlSettings = {
   cpRangeMin: -1,
@@ -25,6 +27,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
         curveManager.toggleCurveSelected(index, false);
       });
       curveManager.toggleCurveSelected(curveIndex, true);
+      selectedCurveIndex = curveIndex; // update selectedCurveIndex
     });
 
     const headerDiv = document.createElement('div');
