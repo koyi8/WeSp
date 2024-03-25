@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-//let selectedPointIndex;
+let selectedPointIndex;
 
 export let selectedCurveIndex;
 

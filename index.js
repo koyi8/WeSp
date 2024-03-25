@@ -92,6 +92,8 @@ const init = () => {
   updateTrajectoriesHTML(curveManager);
   createOCSTables();
   multiPlayerManager.toggleDummyState();
+  multiPlayerManager.getSceneOnClientConnected();
+  multiPlayerManager.setSceneOnClientConnected();
 };
 
 const setupSocket = () => {

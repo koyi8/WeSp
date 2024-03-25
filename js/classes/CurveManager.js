@@ -87,6 +87,28 @@ class CurveManager {
     this.updateCurveFromControlPoint({ curveIndex });
   }
 
+  deleteSplineObjectforSync(objectIndex) {
+    const objectToRemove = this.splineHelperObjects[objectIndex];
+    if (!objectToRemove) return;
+
+    // Find the label among the children of the object
+    const label = objectToRemove.children.find(
+      (child) => child instanceof CSS2DObject,
+    );
+
+    // If a label was found, remove it
+    if (label) {
+      label.element.remove(); // Remove label from the DOM
+      this.scene.remove(label); // Remove CSS2DObject from scene graph
+    }
+
+    this.scene.remove(objectToRemove);
+    objectToRemove.geometry.dispose();
+    objectToRemove.material.dispose();
+
+    this.splineHelperObjects.splice(objectIndex, 1);
+  }
+
   addRandomCurve() {
     const randomPositions = [];
 

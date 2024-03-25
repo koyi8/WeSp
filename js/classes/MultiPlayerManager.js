@@ -18,6 +18,28 @@ class MultiPlayerManager {
     this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
   }
 
+  setSceneOnClientConnected() {
+    // Send the scene data to the server when a client connects
+    this.socket.on('requestScene', () => {
+      // Get the current state of the curves UI
+      console.log('requestScene received');
+      const state = this.getCurvesUIState();
+      // Send the state to the server
+      this.socket.emit('syncScene', state);
+    });
+  }
+
+  getSceneOnClientConnected() {
+    // Listen for the 'syncScene' event from the server
+    this.socket.on('syncScene', (state) => {
+      // Clear the current scene
+      console.log('syncScene received');
+
+      // Set the state of the curves UI
+      this.setCurvesUIState(state);
+    });
+  }
+
   getCurvesUIState() {
     const state = {
       curves: this.curves.map((curve, index) => ({
@@ -25,15 +47,9 @@ class MultiPlayerManager {
         closed: curve.closed,
         points: curve.points.map(({ x, y, z }) => ({ x, y, z })),
       })),
-      splineHelperObjects: this.splineHelperObjects.map((helperObject) => ({
-        position: {
-          x: helperObject.position.x,
-          y: helperObject.position.y,
-          z: helperObject.position.z,
-        },
-        // Include any other properties of the helper object that you want to save
-      })),
+      splineHelperObjects: this.splineHelperObjects,
     };
+    console.log(this.curveManager.splineHelperObjects);
     return JSON.stringify(state);
   }
 
@@ -42,24 +58,35 @@ class MultiPlayerManager {
     const state = JSON.parse(json);
 
     const curves = this.curveManager.getCurves();
+    let splineHelperObjects = this.curveManager.getSplineHelperObjects();
+
     state.curves.forEach((curveData, index) => {
       if (index < curves.length) {
         const curve = curves[index];
         // Clear the existing points
         curve.points.length = 0;
+
+        let i = splineHelperObjects.length;
+        while (i--) {
+          if (splineHelperObjects[i].curveIndex === index) {
+            this.curveManager.deleteSplineObjectforSync(i);
+          }
+        }
+
         // Add the new points
         curveData.points.forEach((point) => {
-          curve.points.push(new THREE.Vector3(point.x, point.y, point.z));
+          const position = new THREE.Vector3(point.x, point.y, point.z);
+          this.curveManager.addNewSplineObject(index, position);
         });
 
-        curve.closed = false;
+        curve.closed = curveData.closed;
         curve.tension = curveData.tension;
         curve.needsUpdate = true;
       }
     });
-    // Replace the splineHelperObjects with the ones from the state
-    this.splineHelperObjects = state.splineHelperObjects;
 
+    console.log(this.curveManager.getSplineHelperObjects());
+    console.log(this.curveManager.curves);
     updateTrajectoriesHTML(this.curveManager);
   }
 

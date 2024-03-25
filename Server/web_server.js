@@ -31,6 +31,7 @@ const io = new Server(httpServer, {
 
 // object to store connected clients
 const clients = {};
+let firstClientSocket = null;
 
 // Opening UDP-Port for OSC communication
 //--------------------------------------------------
@@ -132,10 +133,30 @@ io.on('connection', (socket) => {
 
   //Store client id and source (browser or max) in clients object
   clients[socket.id] = { clientID: socket.id, clientSource: null };
+
+  // If this is the first client, store its socket and set up the 'syncScene' listener
+  if (!firstClientSocket) {
+    firstClientSocket = socket;
+
+    // Listen for the 'syncScene' event from the first client
+    firstClientSocket.on('syncScene', (sceneData) => {
+      // Forward the scene data to all connected clients
+      firstClientSocket.broadcast.emit('syncScene', sceneData);
+    });
+  } else {
+    // If this is not the first client, ask the first client for its scene data
+
+    firstClientSocket.emit('requestScene');
+  }
+
   // Remove client from clients object when they disconnect
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
     delete clients[socket.id];
+    // If the first client disconnected, clear the firstClientSocket
+    if (socket === firstClientSocket) {
+      firstClientSocket = null;
+    }
   });
 
   // RECIEVE
