@@ -1,6 +1,15 @@
 import * as THREE from 'three';
 
-let selectedPointIndex;
+//let selectedPointIndex;
+
+export let selectedCurveIndex;
+
+let pointControlSettings = {
+  cpRangeMin: -1,
+  cpRangeMax: 1,
+  cpStepSlider: 0.01,
+  cpStepNumber: 0.05,
+};
 
 export const updateTrajectoriesHTML = (curveManager) => {
   const container = document.getElementById('trajectories-container');
@@ -12,6 +21,14 @@ export const updateTrajectoriesHTML = (curveManager) => {
     const trajectoryDiv = document.createElement('div');
     trajectoryDiv.className = 'trajectory';
     trajectoryDiv.id = `trajectory-${curveIndex}`;
+    trajectoryDiv.addEventListener('click', () => {
+      // Deselect all curves
+      curveManager.curves.forEach((_, index) => {
+        curveManager.toggleCurveSelected(index, false);
+      });
+      curveManager.toggleCurveSelected(curveIndex, true);
+      selectedCurveIndex = curveIndex; // update selectedCurveIndex
+    });
 
     const headerDiv = document.createElement('div');
     headerDiv.className = 'header';
@@ -27,17 +44,6 @@ export const updateTrajectoriesHTML = (curveManager) => {
     closedCheckbox.addEventListener('change', (e) => {
       curveManager.toggleCurveClosed(curveIndex, e.target.checked);
     });
-
-    const selectCheckbox = document.createElement('input');
-    selectCheckbox.type = 'checkbox';
-    selectCheckbox.checked = curve.selected;
-    selectCheckbox.addEventListener('change', (e) => {
-      curveManager.toggleCurveSelected(curveIndex, e.target.checked);
-    });
-    const selectLabel = document.createElement('label');
-    selectLabel.textContent = 'Select';
-    selectLabel.appendChild(selectCheckbox);
-    headerDiv.appendChild(selectLabel);
 
     const closedLabel = document.createElement('label');
     closedLabel.textContent = 'Closed';
@@ -76,9 +82,20 @@ export const updateTrajectoriesHTML = (curveManager) => {
     curveManager.splineHelperObjects.forEach((object, objectIndex) => {
       if (object.curveIndex !== curveIndex) return;
 
+      //calc LabelIndex for each curve
+      let pointLabelIndex = objectIndex;
+      for (let i = 0; i < curveIndex; i++) {
+        pointLabelIndex -= curveManager.curves[i].points.length;
+      }
+
       const pointDiv = document.createElement('div');
       pointDiv.className = 'point';
       pointDiv.id = `trajectory-point-${objectIndex}`;
+
+      // Create a label for the point with the objectIndex
+      const pointLabel = document.createElement('label');
+      pointLabel.textContent = `P ${pointLabelIndex + 1}: `;
+      pointDiv.appendChild(pointLabel);
 
       //selectPointListener
       pointDiv.addEventListener(
@@ -96,28 +113,50 @@ export const updateTrajectoriesHTML = (curveManager) => {
         const input = document.createElement('input');
         input.type = 'number';
         input.name = axis;
+        input.min = pointControlSettings.cpRangeMin;
+        input.max = pointControlSettings.cpRangeMax;
+        input.step = pointControlSettings.cpStepNumber;
         input.value = object.position[axis].toFixed(2);
-        input.addEventListener('change', (e) => {
-          object.position[axis] = parseFloat(e.target.value);
+
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.name = `${axis}Slider`;
+        slider.min = pointControlSettings.cpRangeMin;
+        slider.max = pointControlSettings.cpRangeMax;
+        slider.step = pointControlSettings.cpStepSlider;
+        slider.value = object.position[axis].toFixed(2);
+
+        const updatePosition = (value) => {
+          object.position[axis] = parseFloat(value);
           curveManager.updateCurveFromControlPoint(object);
-        });
+          input.value = value;
+          slider.value = value;
+        };
+
+        input.addEventListener('change', (e) => updatePosition(e.target.value));
+        slider.addEventListener('input', (e) => updatePosition(e.target.value));
 
         controlDiv.appendChild(label);
         controlDiv.appendChild(input);
+        controlDiv.appendChild(slider);
         pointDiv.appendChild(controlDiv);
       });
 
       const deleteButton = document.createElement('button');
       deleteButton.textContent = 'delete';
-      deleteButton.addEventListener('click', () =>
-        deleteControlPoint(objectIndex, curveManager),
+      deleteButton.addEventListener(
+        'click',
+        () => deleteControlPoint(objectIndex, curveManager),
+        curveManager.updateControlPointLabels(curveIndex),
       );
       pointDiv.appendChild(deleteButton);
 
       const addButton = document.createElement('button');
       addButton.textContent = 'add';
-      addButton.addEventListener('click', () =>
-        addControlPoint(curveIndex, curveManager, objectIndex),
+      addButton.addEventListener(
+        'click',
+        () => addControlPoint(curveIndex, curveManager, objectIndex),
+        curveManager.updateControlPointLabels(curveIndex),
       );
       pointDiv.appendChild(addButton);
 
