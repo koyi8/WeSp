@@ -135,8 +135,16 @@ export const updateTrajectoriesHTML = (curveManager) => {
           slider.value = value;
         };
 
-        input.addEventListener('change', (e) => updatePosition(e.target.value));
+        input.addEventListener('input', (e) => updatePosition(e.target.value));
+        input.addEventListener('change', (e) => {
+          const event = new Event('uiUpdated');
+          window.dispatchEvent(event);
+        });
         slider.addEventListener('input', (e) => updatePosition(e.target.value));
+        slider.addEventListener('change', (e) => {
+          const event = new Event('uiUpdated');
+          window.dispatchEvent(event);
+        });
 
         controlDiv.appendChild(label);
         controlDiv.appendChild(input);

@@ -71,6 +71,9 @@ let controls;
 let transformControl;
 let socket;
 
+let isUpdateFromUI = false;
+let isDragging = false;
+
 const init = () => {
   setupSocket();
   setupScene();
@@ -256,6 +259,7 @@ const initListeners = () => {
   });
   transformControl.addEventListener('dragging-changed', (event) => {
     controls.enabled = !event.value;
+    isDragging = event.value;
   });
   transformControl.addEventListener('objectChange', () => {
     if (selectedObject) {
@@ -265,6 +269,9 @@ const initListeners = () => {
   });
   document.getElementById('create-curve').addEventListener('click', () => {
     curveManager.addRandomCurve();
+  });
+  window.addEventListener('uiUpdated', () => {
+    debouncedUpdateControlPointsHTML();
   });
 };
 
