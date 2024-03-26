@@ -121,16 +121,18 @@ class CurveManager {
         ),
       );
     }
+    this.addPointsCurve(randomPositions);
+  }
 
+  addPointsCurve(points) {
     const curveIndex = this.curves.length;
-    const curveObjects = randomPositions.map((pos) =>
+    const curveObjects = points.map((pos) =>
       this.addSplineObject(pos, curveIndex),
     );
     this.createCurve(
       curveObjects.map((obj) => obj.position),
       this.settings.closed,
     );
-
     updateTrajectoriesHTML(this);
   }
 
@@ -291,7 +293,12 @@ class CurveManager {
   }
 
   updateSplineOutline() {
-    this.curves.forEach((curve) => {
+    this.curves.forEach((curve, index) => {
+      if (!curve) {
+        console.warn(`Curve at index ${index} is undefined`);
+        return; // Skip this iteration
+      }
+
       if (curve.needsUpdate) {
         this.updateCurveGeometry(curve);
         curve.needsUpdate = false;

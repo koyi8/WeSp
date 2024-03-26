@@ -50,20 +50,34 @@ class MultiPlayerManager {
       splineHelperObjects: this.splineHelperObjects,
     };
     console.log(this.curveManager.splineHelperObjects);
+    console.log(state.curves.length);
     return JSON.stringify(state);
   }
 
   setCurvesUIState(json) {
     // Parse the JSON string back into an object
     const state = JSON.parse(json);
+    console.log(state.curves);
 
-    const curves = this.curveManager.getCurves();
     let splineHelperObjects = this.curveManager.getSplineHelperObjects();
 
+    // If there are more curves in curveManager than in state, remove the extra curves
+    while (this.curveManager.curves.length > state.curves.length) {
+      this.curveManager.deleteCurve(this.curveManager.curves.length - 1);
+    }
+
     state.curves.forEach((curveData, index) => {
-      if (index < curves.length) {
-        const curve = curves[index];
-        // Clear the existing points
+      let curve;
+      console.log(`Processing curve at index ${index}`);
+
+      // Convert the points to THREE.Vector3 objects
+      const positions = curveData.points.map(
+        (point) => new THREE.Vector3(point.x, point.y, point.z),
+      );
+
+      if (index < this.curveManager.curves.length) {
+        // Replace the existing curve
+        curve = this.curveManager.curves[index];
         curve.points.length = 0;
 
         let i = splineHelperObjects.length;
@@ -72,21 +86,21 @@ class MultiPlayerManager {
             this.curveManager.deleteSplineObjectforSync(i);
           }
         }
-
         // Add the new points
-        curveData.points.forEach((point) => {
-          const position = new THREE.Vector3(point.x, point.y, point.z);
-          this.curveManager.addNewSplineObject(index, position);
+        curveData.points.forEach((point, pointIndex) => {
+          this.curveManager.addNewSplineObject(index, positions[pointIndex]);
         });
-
-        curve.closed = curveData.closed;
-        curve.tension = curveData.tension;
-        curve.needsUpdate = true;
+      } else {
+        // Add a new curve
+        this.curveManager.addPointsCurve(positions);
+        curve = this.curveManager.curves[this.curveManager.curves.length - 1];
+        //this.curveManager.curves.push(curve);
       }
-    });
 
-    console.log(this.curveManager.getSplineHelperObjects());
-    console.log(this.curveManager.curves);
+      curve.closed = curveData.closed;
+      curve.tension = curveData.tension;
+      curve.needsUpdate = true;
+    });
     updateTrajectoriesHTML(this.curveManager);
   }
 
