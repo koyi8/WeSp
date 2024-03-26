@@ -4,6 +4,7 @@ import {
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
 import { updateTrajectoriesHTML } from '../updateTrajectoriesHTML';
+import MultiPlayerManager from './MultiPlayerManager';
 
 class CurveManager {
   constructor(scene, settings, container) {
@@ -20,6 +21,9 @@ class CurveManager {
   }
   getCurves() {
     return this.curves;
+  }
+  setMultiPlayerManager(multiPlayerManager) {
+    this.multiPlayerManager = multiPlayerManager;
   }
 
   initTrajectoryLabelRenderer() {
@@ -296,7 +300,7 @@ class CurveManager {
     this.curves.forEach((curve, index) => {
       if (!curve) {
         console.warn(`Curve at index ${index} is undefined`);
-        return; // Skip this iteration
+        return;
       }
 
       if (curve.needsUpdate) {

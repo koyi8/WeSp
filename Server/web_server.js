@@ -32,6 +32,7 @@ const io = new Server(httpServer, {
 // object to store connected clients
 const clients = {};
 let firstClientSocket = null;
+const previousStates = new Map();
 
 // Opening UDP-Port for OSC communication
 //--------------------------------------------------
@@ -145,9 +146,13 @@ io.on('connection', (socket) => {
     });
   } else {
     // If this is not the first client, ask the first client for its scene data
-
     firstClientSocket.emit('requestScene');
   }
+  // Listen for the 'updateScene' event from the client
+  socket.on('updateScene', (state) => {
+    // Broadcast the new state to all connected clients
+    socket.broadcast.emit('updateScene', state);
+  });
 
   // Remove client from clients object when they disconnect
   socket.on('disconnect', () => {

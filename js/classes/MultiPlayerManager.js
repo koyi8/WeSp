@@ -40,24 +40,44 @@ class MultiPlayerManager {
     });
   }
 
+  updateSceneOnChanges() {
+    // Listen for the 'updateScene' event from the server
+    this.socket.on('updateScene', (state) => {
+      // Update the state of the curves UI
+      this.setCurvesUIState(state);
+    });
+  }
+
+  sendStatetoServer = () => {
+    const state = this.getCurvesUIState();
+    this.socket.emit('updateScene', state);
+  };
+
   getCurvesUIState() {
     const state = {
       curves: this.curves.map((curve, index) => ({
         tension: curve.tension,
         closed: curve.closed,
+        color: {
+          r: curve.mesh.material.color.r,
+          g: curve.mesh.material.color.g,
+          b: curve.mesh.material.color.b,
+        },
+        selected: curve.selected,
         points: curve.points.map(({ x, y, z }) => ({ x, y, z })),
       })),
       splineHelperObjects: this.splineHelperObjects,
     };
-    console.log(this.curveManager.splineHelperObjects);
-    console.log(state.curves.length);
+    //console.log(this.curveManager.splineHelperObjects);
+    //console.log(this.curves);
+    //console.log(state.curves);
     return JSON.stringify(state);
   }
 
   setCurvesUIState(json) {
     // Parse the JSON string back into an object
     const state = JSON.parse(json);
-    console.log(state.curves);
+    //console.log(state.curves);
 
     let splineHelperObjects = this.curveManager.getSplineHelperObjects();
 
@@ -68,7 +88,7 @@ class MultiPlayerManager {
 
     state.curves.forEach((curveData, index) => {
       let curve;
-      console.log(`Processing curve at index ${index}`);
+      //console.log(`Processing curve at index ${index}`);
 
       // Convert the points to THREE.Vector3 objects
       const positions = curveData.points.map(
@@ -94,12 +114,21 @@ class MultiPlayerManager {
         // Add a new curve
         this.curveManager.addPointsCurve(positions);
         curve = this.curveManager.curves[this.curveManager.curves.length - 1];
-        //this.curveManager.curves.push(curve);
+        this.curveManager.updateCurveGeometry(curve);
       }
 
       curve.closed = curveData.closed;
       curve.tension = curveData.tension;
+      if (curve.mesh && curve.mesh.material) {
+        curve.mesh.material.color.set(
+          curveData.color.r,
+          curveData.color.g,
+          curveData.color.b,
+        );
+      }
+      curve.selected = curveData.selected;
       curve.needsUpdate = true;
+      //console.log(curve.mesh.material.color);
     });
     updateTrajectoriesHTML(this.curveManager);
   }

@@ -87,6 +87,7 @@ const init = () => {
     triggerManager,
     socket,
   );
+  curveManager.setMultiPlayerManager(multiPlayerManager);
   initListeners();
   render();
   updateTrajectoriesHTML(curveManager);
@@ -94,6 +95,7 @@ const init = () => {
   multiPlayerManager.toggleDummyState();
   multiPlayerManager.getSceneOnClientConnected();
   multiPlayerManager.setSceneOnClientConnected();
+  multiPlayerManager.updateSceneOnChanges();
 };
 
 const setupSocket = () => {
@@ -183,6 +185,7 @@ const animate = () => {
   requestAnimationFrame(animate);
   triggerManager.animateTriggers(positionsArray);
   curveManager.updateSplineOutline();
+  //throttleSendToServer();
   render();
 };
 
@@ -236,14 +239,9 @@ const onDocumentMouseDown = (event) => {
   }
 };
 
-// const onDocumentMouseUp = (event) => {
-//   event.preventDefault();
-//   if (controls) controls.enabled = true;
-//   selectedObject = null;
-// };
-
 const debouncedUpdateControlPointsHTML = debounce(() => {
   updateControlPointsHTML(curveManager);
+  multiPlayerManager.sendStatetoServer();
 }, 300);
 
 const initListeners = () => {
