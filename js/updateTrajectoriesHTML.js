@@ -168,6 +168,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
         () => addControlPoint(curveIndex, curveManager, objectIndex),
         curveManager.updateControlPointLabels(curveIndex),
       );
+
       pointDiv.appendChild(addButton);
 
       pointsDiv.appendChild(pointDiv);

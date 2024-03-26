@@ -269,6 +269,7 @@ const initListeners = () => {
   });
   document.getElementById('create-curve').addEventListener('click', () => {
     curveManager.addRandomCurve();
+    debouncedUpdateControlPointsHTML();
   });
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();

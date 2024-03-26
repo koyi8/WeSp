@@ -63,7 +63,6 @@ class MultiPlayerManager {
           g: curve.mesh.material.color.g,
           b: curve.mesh.material.color.b,
         },
-        selected: curve.selected,
         points: curve.points.map(({ x, y, z }) => ({ x, y, z })),
       })),
       splineHelperObjects: this.splineHelperObjects,
@@ -126,7 +125,6 @@ class MultiPlayerManager {
           curveData.color.b,
         );
       }
-      curve.selected = curveData.selected;
       curve.needsUpdate = true;
       //console.log(curve.mesh.material.color);
     });
