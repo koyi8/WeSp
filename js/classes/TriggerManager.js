@@ -172,9 +172,14 @@ class TriggerManager {
         positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
         return; // Skip this iteration
       }
+      const curves = this.curveManager.getCurves();
 
-      const curve = this.curveManager.curves[trigger.curveIndex];
+      const curve = curves[trigger.curveIndex];
       let position = trigger.position;
+      if (!curve) {
+        console.warn(`Curve ${trigger.curveIndex} not found`);
+        return; // Skip this iteration
+      }
       if (trigger.animate) {
         let arclength = curve.getLength();
         let directionFactor = trigger.direction === 'rtl' ? -1 : 1;

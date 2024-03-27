@@ -9,6 +9,7 @@ import {
 } from './js/updateTrajectoriesHTML';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
+import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/createOCSTables';
 
 const cameraSettings = {
@@ -63,12 +64,18 @@ const mouse = new THREE.Vector2();
 let camera, scene, renderer;
 let curveManager;
 let triggerManager;
+let multiPlayerManager;
 let positionsArray = [];
 let selectedObject = null;
 let controls;
 let transformControl;
+let socket;
+
+let isUpdateFromUI = false;
+let isDragging = false;
 
 const init = () => {
+  setupSocket();
   setupScene();
   setupLights();
   setupGeometry();
@@ -77,10 +84,27 @@ const init = () => {
   curveManager.initCurves();
   triggerManager = new TriggerManager(scene, settings, curveManager, container);
   triggerManager.setupAddTriggerListeners();
+  multiPlayerManager = new MultiPlayerManager(
+    scene,
+    curveManager,
+    triggerManager,
+    socket,
+  );
+  curveManager.setMultiPlayerManager(multiPlayerManager);
   initListeners();
   render();
   updateTrajectoriesHTML(curveManager);
   createOCSTables();
+  multiPlayerManager.toggleDummyState();
+  multiPlayerManager.getSceneOnClientConnected();
+  multiPlayerManager.setSceneOnClientConnected();
+  multiPlayerManager.updateSceneOnChanges();
+};
+
+const setupSocket = () => {
+  const serverURL = 'http://:8081/'; //
+  // Client Initialization
+  socket = io(serverURL);
 };
 
 const setupScene = () => {
@@ -164,6 +188,7 @@ const animate = () => {
   requestAnimationFrame(animate);
   triggerManager.animateTriggers(positionsArray);
   curveManager.updateSplineOutline();
+  //throttleSendToServer();
   render();
 };
 
@@ -217,14 +242,9 @@ const onDocumentMouseDown = (event) => {
   }
 };
 
-// const onDocumentMouseUp = (event) => {
-//   event.preventDefault();
-//   if (controls) controls.enabled = true;
-//   selectedObject = null;
-// };
-
 const debouncedUpdateControlPointsHTML = debounce(() => {
   updateControlPointsHTML(curveManager);
+  multiPlayerManager.sendStatetoServer();
 }, 300);
 
 const initListeners = () => {
@@ -239,6 +259,7 @@ const initListeners = () => {
   });
   transformControl.addEventListener('dragging-changed', (event) => {
     controls.enabled = !event.value;
+    isDragging = event.value;
   });
   transformControl.addEventListener('objectChange', () => {
     if (selectedObject) {
@@ -248,10 +269,14 @@ const initListeners = () => {
   });
   document.getElementById('create-curve').addEventListener('click', () => {
     curveManager.addRandomCurve();
+    debouncedUpdateControlPointsHTML();
+  });
+  window.addEventListener('uiUpdated', () => {
+    debouncedUpdateControlPointsHTML();
   });
 };
 
 init();
 animate();
 
-export { positionsArray };
+export { positionsArray, socket };

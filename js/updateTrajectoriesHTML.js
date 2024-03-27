@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-//let selectedPointIndex;
+let selectedPointIndex;
 
 export let selectedCurveIndex;
 
@@ -117,6 +117,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
         input.max = pointControlSettings.cpRangeMax;
         input.step = pointControlSettings.cpStepNumber;
         input.value = object.position[axis].toFixed(2);
+        input.className = 'number-input-class';
 
         const slider = document.createElement('input');
         slider.type = 'range';
@@ -125,6 +126,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
         slider.max = pointControlSettings.cpRangeMax;
         slider.step = pointControlSettings.cpStepSlider;
         slider.value = object.position[axis].toFixed(2);
+        slider.className = 'slider-input-class';
 
         const updatePosition = (value) => {
           object.position[axis] = parseFloat(value);
@@ -133,8 +135,16 @@ export const updateTrajectoriesHTML = (curveManager) => {
           slider.value = value;
         };
 
-        input.addEventListener('change', (e) => updatePosition(e.target.value));
+        input.addEventListener('input', (e) => updatePosition(e.target.value));
+        input.addEventListener('change', (e) => {
+          const event = new Event('uiUpdated');
+          window.dispatchEvent(event);
+        });
         slider.addEventListener('input', (e) => updatePosition(e.target.value));
+        slider.addEventListener('change', (e) => {
+          const event = new Event('uiUpdated');
+          window.dispatchEvent(event);
+        });
 
         controlDiv.appendChild(label);
         controlDiv.appendChild(input);
@@ -158,6 +168,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
         () => addControlPoint(curveIndex, curveManager, objectIndex),
         curveManager.updateControlPointLabels(curveIndex),
       );
+
       pointDiv.appendChild(addButton);
 
       pointsDiv.appendChild(pointDiv);
@@ -219,12 +230,23 @@ export const updateControlPointsHTML = (curveManager) => {
   curveManager.splineHelperObjects.forEach((object, objectIndex) => {
     const pointDiv = document.getElementById(`trajectory-point-${objectIndex}`);
     if (pointDiv) {
-      pointDiv.querySelector(`input[name='x']`).value =
-        object.position.x.toFixed(2);
-      pointDiv.querySelector(`input[name='y']`).value =
-        object.position.y.toFixed(2);
-      pointDiv.querySelector(`input[name='z']`).value =
-        object.position.z.toFixed(2);
+      ['x', 'y', 'z'].forEach((axis) => {
+        const value = object.position[axis].toFixed(2);
+        const input = pointDiv.querySelector(
+          `input[name='${axis}'][type='number']`,
+        );
+        const slider = pointDiv.querySelector(
+          `input[name='${axis}Slider'][type='range']`,
+        );
+        if (input) {
+          input.value = value;
+          input.dispatchEvent(new Event('input'));
+        }
+        if (slider) {
+          slider.value = value;
+          slider.dispatchEvent(new Event('input'));
+        }
+      });
     }
   });
 };

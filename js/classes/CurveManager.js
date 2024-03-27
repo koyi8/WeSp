@@ -4,6 +4,7 @@ import {
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
 import { updateTrajectoriesHTML } from '../updateTrajectoriesHTML';
+import MultiPlayerManager from './MultiPlayerManager';
 
 class CurveManager {
   constructor(scene, settings, container) {
@@ -17,6 +18,12 @@ class CurveManager {
 
   getSplineHelperObjects() {
     return this.splineHelperObjects;
+  }
+  getCurves() {
+    return this.curves;
+  }
+  setMultiPlayerManager(multiPlayerManager) {
+    this.multiPlayerManager = multiPlayerManager;
   }
 
   initTrajectoryLabelRenderer() {
@@ -84,6 +91,28 @@ class CurveManager {
     this.updateCurveFromControlPoint({ curveIndex });
   }
 
+  deleteSplineObjectforSync(objectIndex) {
+    const objectToRemove = this.splineHelperObjects[objectIndex];
+    if (!objectToRemove) return;
+
+    // Find the label among the children of the object
+    const label = objectToRemove.children.find(
+      (child) => child instanceof CSS2DObject,
+    );
+
+    // If a label was found, remove it
+    if (label) {
+      label.element.remove(); // Remove label from the DOM
+      this.scene.remove(label); // Remove CSS2DObject from scene graph
+    }
+
+    this.scene.remove(objectToRemove);
+    objectToRemove.geometry.dispose();
+    objectToRemove.material.dispose();
+
+    this.splineHelperObjects.splice(objectIndex, 1);
+  }
+
   addRandomCurve() {
     const randomPositions = [];
 
@@ -96,16 +125,18 @@ class CurveManager {
         ),
       );
     }
+    this.addPointsCurve(randomPositions);
+  }
 
+  addPointsCurve(points) {
     const curveIndex = this.curves.length;
-    const curveObjects = randomPositions.map((pos) =>
+    const curveObjects = points.map((pos) =>
       this.addSplineObject(pos, curveIndex),
     );
     this.createCurve(
       curveObjects.map((obj) => obj.position),
       this.settings.closed,
     );
-
     updateTrajectoriesHTML(this);
   }
 
@@ -266,7 +297,12 @@ class CurveManager {
   }
 
   updateSplineOutline() {
-    this.curves.forEach((curve) => {
+    this.curves.forEach((curve, index) => {
+      if (!curve) {
+        console.warn(`Curve at index ${index} is undefined`);
+        return;
+      }
+
       if (curve.needsUpdate) {
         this.updateCurveGeometry(curve);
         curve.needsUpdate = false;

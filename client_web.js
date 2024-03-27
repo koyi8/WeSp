@@ -1,15 +1,15 @@
 // add CDN for socket.io and link to this file in index.html header
 
 // Variables
-const serverURL = 'http://:8081/'; //
+//const serverURL = 'http://:8081/'; //
 let socketID = '',
   clientSource = '';
 
 // Client Initialization
-const socket = io(serverURL);
+//const socket = io(serverURL);
 
 // Inlcude data from main_copy.js
-import { positionsArray } from '/index.js';
+import { positionsArray, socket } from '/index.js';
 
 // include error handling for the input fields
 import {
