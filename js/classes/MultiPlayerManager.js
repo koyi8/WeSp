@@ -15,28 +15,30 @@ class MultiPlayerManager {
     this.socket = socket;
     // curves and splineobjects
     this.curves = this.curveManager.getCurves();
+    this.triggers = this.triggerManager.getTriggers();
     this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
   }
 
   setSceneOnClientConnected() {
     // Send the scene data to the server when a client connects
     this.socket.on('requestScene', () => {
-      // Get the current state of the curves UI
       console.log('requestScene received');
-      const state = this.getCurvesUIState();
-      // Send the state to the server
-      this.socket.emit('syncScene', state);
+      // Get the current state of the curves and triggers UI
+      const curvesState = this.getCurvesUIState();
+      const triggersState = this.getTriggersUIState();
+      // Send the states to the server
+      this.socket.emit('syncScene', { curvesState, triggersState });
     });
   }
 
   getSceneOnClientConnected() {
     // Listen for the 'syncScene' event from the server
-    this.socket.on('syncScene', (state) => {
-      // Clear the current scene
+    this.socket.on('syncScene', ({ curvesState, triggersState }) => {
       console.log('syncScene received');
-
-      // Set the state of the curves UI
-      this.setCurvesUIState(state);
+      // Clear the current scene
+      // Set the state of the curves and triggers UI
+      this.setCurvesUIState(curvesState);
+      this.setTriggersUIState(triggersState);
     });
   }
 
@@ -67,9 +69,6 @@ class MultiPlayerManager {
       })),
       splineHelperObjects: this.splineHelperObjects,
     };
-    //console.log(this.curveManager.splineHelperObjects);
-    //console.log(this.curves);
-    //console.log(state.curves);
     return JSON.stringify(state);
   }
 
@@ -131,6 +130,66 @@ class MultiPlayerManager {
     updateTrajectoriesHTML(this.curveManager);
   }
 
+  getTriggersUIState() {
+    const state = {
+      triggers: this.triggers.map((trigger) => {
+        if (trigger === null) return null;
+        return {
+          buttonID: trigger.buttonID,
+          animate: trigger.animate,
+          loop: trigger.loop,
+          speed: trigger.speed,
+          position: trigger.position,
+          curveIndex: trigger.curveIndex,
+          direction: trigger.direction,
+          color: {
+            r: trigger.mesh.material.color.r,
+            g: trigger.mesh.material.color.g,
+            b: trigger.mesh.material.color.b,
+          },
+        };
+      }),
+    };
+    return JSON.stringify(state);
+  }
+
+  setTriggersUIState(stateString) {
+    const state = JSON.parse(stateString);
+    const nullIndices = [];
+
+    // Create a new trigger for each element in state.triggers
+    state.triggers.forEach((triggerState, index) => {
+      if (triggerState !== null) {
+        const button = document.getElementById(triggerState.buttonID);
+        this.triggerManager.createTrigger(button);
+        const newTrigger = this.triggerManager.triggers[index];
+        if (newTrigger !== undefined) {
+          newTrigger.animate = triggerState.animate;
+          newTrigger.loop = triggerState.loop;
+          newTrigger.speed = triggerState.speed;
+          newTrigger.position = triggerState.position;
+          newTrigger.curveIndex = triggerState.curveIndex;
+          newTrigger.direction = triggerState.direction;
+          newTrigger.mesh.material.color.r = triggerState.color.r;
+          newTrigger.mesh.material.color.g = triggerState.color.g;
+          newTrigger.mesh.material.color.b = triggerState.color.b;
+        }
+      } else {
+        nullIndices.push(index);
+      }
+    });
+
+    nullIndices.forEach((index) => {
+      if (this.triggerManager.triggers[index] !== undefined) {
+        this.triggerManager.deleteTrigger(this.triggerManager.triggers[index]);
+        this.triggerManager.triggers[index] = null;
+      }
+    });
+
+    // Update this.triggers to match triggerManager.triggers
+    this.triggers = this.triggerManager.triggers;
+  }
+
   toggleDummyState() {
     const container = document.getElementById('settings-container');
     container.innerHTML = '';
@@ -146,8 +205,11 @@ class MultiPlayerManager {
     checkbox.addEventListener('change', () => {
       if (checkbox.checked) {
         // Call getUIStateAsJSON when the checkbox is checked
-        json = this.getCurvesUIState();
-        console.log(json); // You can replace this with code to send the JSON to the server
+
+        const button = document.getElementById('create-trigger-0');
+        this.triggerManager.createTrigger(button);
+        json = this.getTriggersUIState();
+        console.log(json);
       }
     });
     // Create a new label

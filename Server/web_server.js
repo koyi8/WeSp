@@ -133,21 +133,25 @@ io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
 
   //Store client id and source (browser or max) in clients object
-  clients[socket.id] = { clientID: socket.id, clientSource: null };
+  clients[socket.id] = { clientID: socket.id };
 
   // If this is the first client, store its socket and set up the 'syncScene' listener
   if (!firstClientSocket) {
     firstClientSocket = socket;
 
     // Listen for the 'syncScene' event from the first client
-    firstClientSocket.on('syncScene', (sceneData) => {
+    firstClientSocket.on('syncScene', ({ curvesState, triggersState }) => {
       // Forward the scene data to all connected clients
-      firstClientSocket.broadcast.emit('syncScene', sceneData);
+      firstClientSocket.broadcast.emit('syncScene', {
+        curvesState,
+        triggersState,
+      });
     });
   } else {
     // If this is not the first client, ask the first client for its scene data
     firstClientSocket.emit('requestScene');
   }
+
   // Listen for the 'updateScene' event from the client
   socket.on('updateScene', (state) => {
     // Broadcast the new state to all connected clients
@@ -164,16 +168,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // RECIEVE
-
-  //Receive Client ID and Source (Browser or Max)
-  socket.on('clientSource', (data) => {
-    console.log('Client source: ' + data.source);
-    //update client source in clients object
-    clients[data.id].clientSource = data.source;
-  });
-
-  // Listening for AddUDPPort event from client
+  // Setup UDP PORTS
   // OpenPort message
   socket.on('addUDPPort', (localPort, remotePort, remoteAddress) => {
     setupUDPPort(localPort, remotePort, remoteAddress);
@@ -183,6 +178,8 @@ io.on('connection', (socket) => {
     //console.log('Remove UDP Port');
     closeUDPPort(localPort, remotePort);
   });
+
+  // SEND OSC MESSAGES
 
   let shouldSendMap = new Map();
 
@@ -231,22 +228,6 @@ io.on('connection', (socket) => {
     shouldSendMap.set(rowId, true);
   });
 
-  // SEND the coordinates via OSC
-
-  socket.on('coordinates', (coordinates) => {
-    //console.log(coordinates);
-    /*initialUDPPort.send({
-      address: '/coordinates',
-      args: [
-        { type: 's', value: coordinates.id },
-        { type: 's', value: coordinates.TriggerID },
-        { type: 'f', value: coordinates.x },
-        { type: 'f', value: coordinates.y },
-        { type: 'f', value: coordinates.z },
-      ],
-    });*/
-  });
-
   //LATENCY TEST
 
   // Measure RTT
@@ -259,13 +240,6 @@ io.on('connection', (socket) => {
     io.emit('message', message); // send to all clients
   });
 });
-
-/*
-// Log the clients object every 20 seconds
-setInterval(() => {
-    console.log(clients);
-}, 2000);
-*/
 
 // Launch server
 const myPort = process.env.PORT || 8081; // let Glitch choose port OR use 3000

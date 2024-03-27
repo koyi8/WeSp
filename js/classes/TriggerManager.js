@@ -16,6 +16,10 @@ class TriggerManager {
     this.initLabelRenderer();
   }
 
+  getTriggers() {
+    return this.triggers;
+  }
+
   initLabelRenderer() {
     this.labelRenderer = new CSS2DRenderer();
     this.labelRenderer.setSize(
@@ -168,7 +172,7 @@ class TriggerManager {
 
   animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
-      if (trigger === null) {
+      if (trigger === null || trigger === undefined) {
         positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
         return; // Skip this iteration
       }

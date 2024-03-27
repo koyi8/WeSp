@@ -14,8 +14,8 @@ import { createOCSTables } from './js/createOCSTables';
 
 const cameraSettings = {
   fov: 70, // field of view
-  near: 1,
-  far: 10000,
+  near: 0.1,
+  far: 5000,
   position: { x: 3, y: 0, z: 1.6 },
   up: { x: 0, y: 0, z: 1 },
 };
