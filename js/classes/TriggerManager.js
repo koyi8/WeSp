@@ -256,6 +256,51 @@ class TriggerManager {
   updateLabelRendererSize(width, height) {
     this.labelRenderer.setSize(width, height);
   }
+
+  updateTriggerControlDiv(index) {
+    const trigger = this.triggers[index];
+    const div = document.getElementById(`trigger${index}`);
+    if (div) {
+      // Update the animate checkbox
+      const animateCheckbox = div.querySelector(`#animate${index}`);
+      animateCheckbox.checked = trigger.animate;
+
+      const speedControl = div.querySelector(`div.control:has(#speed${index})`);
+      const positionControl = div.querySelector(
+        `div.control:has(#position${index})`,
+      );
+      // Show or hide the speed and position controls based on the animate checkbox
+      if (animateCheckbox.checked) {
+        positionControl.style.display = 'none'; // Hide position control when animated
+        speedControl.style.display = ''; // Show speed control (use default or '' to reset)
+      } else {
+        positionControl.style.display = ''; // Show position control when not animated
+        speedControl.style.display = 'none'; // Hide speed control
+      }
+
+      const speedRange = div.querySelector(`#speed${index}`);
+      speedRange.value = trigger.speed;
+
+      const positionRange = div.querySelector(`#position${index}`);
+      positionRange.value = trigger.position;
+
+      const trajectorySelect = div.querySelector(`#trajectory${index}`);
+      trajectorySelect.value = trigger.curveIndex;
+
+      const loopCheckbox = div.querySelector(`#loop${index}`);
+      loopCheckbox.checked = trigger.loop;
+
+      const ltrButton = div.querySelector(`#ltr${index}`);
+      const rtlButton = div.querySelector(`#rtl${index}`);
+      if (trigger.direction === 'ltr') {
+        ltrButton.classList.add('selected');
+        rtlButton.classList.remove('selected');
+      } else if (trigger.direction === 'rtl') {
+        rtlButton.classList.add('selected');
+        ltrButton.classList.remove('selected');
+      }
+    }
+  }
 }
 
 export default TriggerManager;

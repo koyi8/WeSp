@@ -155,36 +155,39 @@ class MultiPlayerManager {
 
   setTriggersUIState(stateString) {
     const state = JSON.parse(stateString);
-    const nullIndices = [];
-
-    // Create a new trigger for each element in state.triggers
+    console.log('State of trigger is:', state.triggers);
+    // Create a placeholder for each element in state.triggers
     state.triggers.forEach((triggerState, index) => {
-      if (triggerState !== null) {
-        const button = document.getElementById(triggerState.buttonID);
-        this.triggerManager.createTrigger(button);
-        const newTrigger = this.triggerManager.triggers[index];
-        if (newTrigger !== undefined) {
-          newTrigger.animate = triggerState.animate;
-          newTrigger.loop = triggerState.loop;
-          newTrigger.speed = triggerState.speed;
-          newTrigger.position = triggerState.position;
-          newTrigger.curveIndex = triggerState.curveIndex;
-          newTrigger.direction = triggerState.direction;
-          newTrigger.mesh.material.color.r = triggerState.color.r;
-          newTrigger.mesh.material.color.g = triggerState.color.g;
-          newTrigger.mesh.material.color.b = triggerState.color.b;
-        }
-      } else {
-        nullIndices.push(index);
+      const button = document.getElementById(`create-trigger-${index}`); // use default id for button on initial creation
+      this.triggerManager.createTrigger(button);
+      const newTrigger = this.triggerManager.triggers[index];
+      if (triggerState !== null && newTrigger !== undefined) {
+        newTrigger.animate = triggerState.animate;
+        newTrigger.loop = triggerState.loop;
+        newTrigger.speed = triggerState.speed;
+        newTrigger.position = triggerState.position;
+        newTrigger.curveIndex = triggerState.curveIndex;
+        newTrigger.direction = triggerState.direction;
+        newTrigger.mesh.material.color.r = triggerState.color.r;
+        newTrigger.mesh.material.color.g = triggerState.color.g;
+        newTrigger.mesh.material.color.b = triggerState.color.b;
+        this.triggerManager.updateTriggerControlDiv(index);
       }
     });
 
-    nullIndices.forEach((index) => {
-      if (this.triggerManager.triggers[index] !== undefined) {
-        this.triggerManager.deleteTrigger(this.triggerManager.triggers[index]);
-        this.triggerManager.triggers[index] = null;
+    console.log('Triggers:', this.triggerManager.triggers);
+
+    // Delete the placeholders that correspond to nulls in state.triggers
+    state.triggers.forEach((triggerState, index) => {
+      if (
+        triggerState === null &&
+        this.triggerManager.triggers[index] !== undefined
+      ) {
+        this.triggerManager.deleteTrigger(index);
       }
     });
+
+    console.log('TriggersAFTErDEL:', this.triggerManager.triggers);
 
     // Update this.triggers to match triggerManager.triggers
     this.triggers = this.triggerManager.triggers;
