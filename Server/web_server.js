@@ -31,7 +31,7 @@ const io = new Server(httpServer, {
 
 // object to store connected clients
 const clients = {};
-let sockets = [];
+let sockets = {};
 let firstClientSocket = null;
 let currentSceneState = null;
 const previousStates = new Map();
@@ -169,13 +169,28 @@ io.on('connection', (socket) => {
   // Remove client from clients object when they disconnect
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
-    console.log(sockets);
+    console.log(Object.keys(sockets).length);
     //delete clients[socket.id];
     // If the first client disconnected, clear the firstClientSocket
+    const socketKeys = Object.keys(sockets);
+    console.log(socketKeys);
     if (socket === firstClientSocket) {
-      firstClientSocket = null;
+      const socketKeys = Object.keys(sockets);
+      if (socketKeys.length > 1) {
+        firstClientSocket = sockets[socketKeys[1]];
+        firstClientSocket.on('syncScene', ({ curvesState, triggersState }) => {
+          // Forward the scene data to all connected clients
+          firstClientSocket.broadcast.emit('syncScene', {
+            curvesState,
+            triggersState,
+          });
+        });
+      } else {
+        firstClientSocket = null;
+      }
     }
     delete clients[socket.id];
+    delete sockets[socket.id];
 
     io.emit('clientList', clients);
     io.emit('syncClientsDiv', clients);
