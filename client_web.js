@@ -5,9 +5,6 @@
 let socketID = '',
   clientSource = '';
 
-// Client Initialization
-//const socket = io(serverURL);
-
 // Inlcude data from main_copy.js
 import { positionsArray, socket } from '/index.js';
 
@@ -18,18 +15,6 @@ import {
   interpolateStringOscMessage,
   interpolateStringScaling,
 } from './js/heplers/checkOSCInputs.js';
-
-// RECEIVE
-
-socket.on('connect', () => {
-  console.log('Connected to server!');
-  socketID = socket.id; // unique random 20-character id is given to client from server
-  console.log(`Your socket id is  ${socketID}`);
-  clientSource = 'Browser';
-
-  // Emit an event to the server with the clientSource
-  socket.emit('clientSource', { id: socketID, source: clientSource });
-});
 
 // Make OSC GUI::::
 // Define the addPort function in the global scope
@@ -376,7 +361,6 @@ const updateDropdownSelect = (triggerObjects, labels) => {
       dropdown.value = selectedValue;
     }
   }
-  console.log(triggerObjects);
 };
 
 // functions to process the trigger objects Object

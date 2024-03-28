@@ -17,6 +17,66 @@ class MultiPlayerManager {
     this.curves = this.curveManager.getCurves();
     this.triggers = this.triggerManager.getTriggers();
     this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
+    this.socketID = '';
+    this.clients = {};
+  }
+
+  // RECEIVE
+
+  initSocketID() {
+    this.socket.on('connect', () => {
+      console.log('Connected to server!');
+      this.socketID = this.socket.id; // unique random 20-character id is given to client from server
+      console.log(`Your socket id is  ${this.socketID}`);
+    });
+  }
+
+  receiveClientList() {
+    this.socket.on('clientList', (clients) => {
+      console.log('Client list received:', clients);
+      this.clients = clients;
+      this.setClientsDiv(clients);
+    });
+  }
+
+  setClientsDiv(clients) {
+    let html = '<div id="clients">';
+
+    Object.keys(clients).forEach((clientId, index) => {
+      // Highlight the client if it matches the client id
+      const highlight =
+        clientId === this.socket.id ? 'style="background-color: yellow;"' : '';
+
+      html += `<div ${highlight}>Client ${index + 1}: ${clientId}</div>`;
+
+      // Add a checkbox for each trigger
+      this.triggers.forEach((trigger, triggerIndex) => {
+        if (trigger !== null) {
+          const checked =
+            clients[clientId].triggers &&
+            clients[clientId].triggers[triggerIndex]
+              ? 'checked'
+              : '';
+          html += `<div><input type="checkbox" id="trigger${triggerIndex}" ${checked}> Trigger ${
+            triggerIndex + 1
+          }</div>`;
+        }
+      });
+    });
+
+    html += '</div>';
+
+    // Update the settings-container div
+    const container = document.getElementById('settings-container');
+    container.innerHTML = html;
+  }
+
+  updateClientsDiv() {
+    this.socket.on('syncClientsDiv', (clients) => {
+      console.log('syncClientsDiv received');
+      this.setClientsDiv(clients);
+      console.log(this.clients);
+    });
   }
 
   setSceneOnClientConnected() {
@@ -39,6 +99,7 @@ class MultiPlayerManager {
       // Set the state of the curves and triggers UI
       this.setCurvesUIState(curvesState);
       this.setTriggersUIState(triggersState);
+      this.socket.emit('updateClientsDiv');
     });
   }
 
@@ -175,8 +236,6 @@ class MultiPlayerManager {
       }
     });
 
-    console.log('Triggers:', this.triggerManager.triggers);
-
     // Delete the placeholders that correspond to nulls in state.triggers
     state.triggers.forEach((triggerState, index) => {
       if (
@@ -187,9 +246,6 @@ class MultiPlayerManager {
       }
     });
 
-    console.log('TriggersAFTErDEL:', this.triggerManager.triggers);
-
-    // Update this.triggers to match triggerManager.triggers
     this.triggers = this.triggerManager.triggers;
   }
 

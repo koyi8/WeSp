@@ -70,8 +70,6 @@ let selectedObject = null;
 let controls;
 let transformControl;
 let socket;
-
-let isUpdateFromUI = false;
 let isDragging = false;
 
 const init = () => {
@@ -95,10 +93,13 @@ const init = () => {
   render();
   updateTrajectoriesHTML(curveManager);
   createOCSTables();
+  multiPlayerManager.initSocketID();
   multiPlayerManager.toggleDummyState();
   multiPlayerManager.getSceneOnClientConnected();
   multiPlayerManager.setSceneOnClientConnected();
   multiPlayerManager.updateSceneOnChanges();
+  multiPlayerManager.receiveClientList();
+  multiPlayerManager.updateClientsDiv();
 };
 
 const setupSocket = () => {

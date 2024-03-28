@@ -31,7 +31,9 @@ const io = new Server(httpServer, {
 
 // object to store connected clients
 const clients = {};
+let sockets = [];
 let firstClientSocket = null;
+let currentSceneState = null;
 const previousStates = new Map();
 
 // Opening UDP-Port for OSC communication
@@ -134,12 +136,14 @@ io.on('connection', (socket) => {
 
   //Store client id and source (browser or max) in clients object
   clients[socket.id] = { clientID: socket.id };
+  sockets[socket.id] = socket;
+
+  io.emit('clientList', clients);
+  console.log('sending client list');
 
   // If this is the first client, store its socket and set up the 'syncScene' listener
   if (!firstClientSocket) {
     firstClientSocket = socket;
-
-    // Listen for the 'syncScene' event from the first client
     firstClientSocket.on('syncScene', ({ curvesState, triggersState }) => {
       // Forward the scene data to all connected clients
       firstClientSocket.broadcast.emit('syncScene', {
@@ -148,9 +152,13 @@ io.on('connection', (socket) => {
       });
     });
   } else {
-    // If this is not the first client, ask the first client for its scene data
     firstClientSocket.emit('requestScene');
+    console.log('requestScene sent to first client');
   }
+
+  socket.on('updateClientsDiv', () => {
+    io.emit('syncClientsDiv', clients);
+  });
 
   // Listen for the 'updateScene' event from the client
   socket.on('updateScene', (state) => {
@@ -161,11 +169,16 @@ io.on('connection', (socket) => {
   // Remove client from clients object when they disconnect
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
-    delete clients[socket.id];
+    console.log(sockets);
+    //delete clients[socket.id];
     // If the first client disconnected, clear the firstClientSocket
     if (socket === firstClientSocket) {
       firstClientSocket = null;
     }
+    delete clients[socket.id];
+
+    io.emit('clientList', clients);
+    io.emit('syncClientsDiv', clients);
   });
 
   // Setup UDP PORTS
