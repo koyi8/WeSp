@@ -145,6 +145,15 @@ class CurveManager {
     curve.needsUpdate = true;
     curve.selected = false;
     this.curves.push(curve);
+
+    // TODO refactor
+    const selects = document.querySelectorAll('.trajectory-select');
+    selects.forEach((select) => {
+      const option = document.createElement('option');
+      option.value = this.curves.length - 1;
+      option.textContent = this.curves.length;
+      select.appendChild(option);
+    });
   }
 
   initCurves() {
@@ -205,6 +214,26 @@ class CurveManager {
         this.curves[i].mesh.curveIndex--;
       }
     }
+
+    // TODO refactor
+    const selects = document.querySelectorAll('.trajectory-select');
+    selects.forEach((select) => {
+      const isLastOptionSelected =
+        select.options[select.options.length - 1].selected;
+
+      select.remove(select.options.length - 1);
+
+      if (isLastOptionSelected && select.options.length > 0) {
+        select.options[select.options.length - 1].selected = true;
+
+        const changeEvent = new Event('change', {
+          bubbles: true,
+          cancelable: true,
+        });
+
+        select.dispatchEvent(changeEvent);
+      }
+    });
   }
 
   toggleCurveClosed(curveIndex, isClosed) {
