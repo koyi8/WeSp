@@ -24,7 +24,7 @@ export const createTriggerControlDiv = (
   </div>
   <div class="control inline">
     <label for="trajectory${index}" class="label">Trajectory</label>
-    <select name="trajectory" id="trajectory${index}">
+    <select name="trajectory" id="trajectory${index}" class="trajectory-select">
       ${selectOptions}
     </select>
   </div>

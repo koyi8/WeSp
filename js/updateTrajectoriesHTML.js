@@ -107,7 +107,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
         const controlDiv = document.createElement('div');
         controlDiv.className = 'control';
 
-        const label = document.createElement('label');
+        const label = document.createElement('div');
         label.textContent = `${axis.toUpperCase()}: `;
 
         const input = document.createElement('input');
