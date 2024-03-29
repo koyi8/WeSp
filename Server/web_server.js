@@ -135,7 +135,7 @@ io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
 
   //Store client id and source (browser or max) in clients object
-  clients[socket.id] = { clientID: socket.id };
+  clients[socket.id] = { clientID: socket.id, Triggers: [] };
   sockets[socket.id] = socket;
 
   io.emit('clientList', clients);

@@ -48,20 +48,6 @@ class MultiPlayerManager {
         clientId === this.socket.id ? 'style="background-color: yellow;"' : '';
 
       html += `<div ${highlight}>Client ${index + 1}: ${clientId}</div>`;
-
-      // Add a checkbox for each trigger
-      this.triggers.forEach((trigger, triggerIndex) => {
-        if (trigger !== null) {
-          const checked =
-            clients[clientId].triggers &&
-            clients[clientId].triggers[triggerIndex]
-              ? 'checked'
-              : '';
-          html += `<div><input type="checkbox" id="trigger${triggerIndex}" ${checked}> Trigger ${
-            triggerIndex + 1
-          }</div>`;
-        }
-      });
     });
 
     html += '</div>';
@@ -193,28 +179,75 @@ class MultiPlayerManager {
 
   getTriggersUIState() {
     const state = {
-      triggers: this.triggers.map((trigger) => {
-        if (trigger === null) return null;
-        return {
-          buttonID: trigger.buttonID,
-          animate: trigger.animate,
-          loop: trigger.loop,
-          speed: trigger.speed,
-          position: trigger.position,
-          curveIndex: trigger.curveIndex,
-          direction: trigger.direction,
-          color: {
-            r: trigger.mesh.material.color.r,
-            g: trigger.mesh.material.color.g,
-            b: trigger.mesh.material.color.b,
-          },
-        };
-      }),
+      clients: {},
     };
+
+    for (const clientID in this.clients) {
+      if (clientID === this.socket.id) {
+        // Update the Triggers array of the corresponding client with this.triggers
+        this.clients[clientID].Triggers = [...this.triggers];
+      }
+
+      state.clients[clientID] = {
+        triggers: this.clients[clientID].Triggers.map((trigger) => {
+          if (trigger === null) return null;
+          return {
+            buttonID: trigger.buttonID,
+            animate: trigger.animate,
+            loop: trigger.loop,
+            speed: trigger.speed,
+            position: trigger.position,
+            curveIndex: trigger.curveIndex,
+            direction: trigger.direction,
+            color: {
+              r: trigger.mesh.material.color.r,
+              g: trigger.mesh.material.color.g,
+              b: trigger.mesh.material.color.b,
+            },
+          };
+        }),
+      };
+    }
+    console.log('State of trigger is:', state.clients);
     return JSON.stringify(state);
   }
 
   setTriggersUIState(stateString) {
+    const state = JSON.parse(stateString);
+
+    for (const clientID in state.clients) {
+      const clientState = state.clients[clientID];
+
+      // Check for added triggers
+      clientState.triggers.forEach((triggerState, index) => {
+        if (
+          triggerState !== null &&
+          this.clients[clientID].Triggers[index] === undefined
+        ) {
+          // A trigger was added
+          this.triggerManager.createTriggerFromClient(
+            clientID,
+            this.clients,
+            triggerState,
+          );
+          console.log('Trigger added');
+        }
+      });
+
+      // Check for deleted triggers
+      this.clients[clientID].Triggers.forEach((trigger, index) => {
+        if (
+          state.clients[clientID].triggers[index] === null &&
+          trigger !== undefined
+        ) {
+          // A trigger was deleted
+          this.triggerManager.deleteTriggerFromClient(clientID, index);
+        }
+      });
+    }
+  }
+
+  OLDsetTriggersUIState(stateString) {
     const state = JSON.parse(stateString);
     console.log('State of trigger is:', state.triggers);
     // Create a placeholder for each element in state.triggers

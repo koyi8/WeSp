@@ -14,6 +14,7 @@ class TriggerManager {
     this.container = container;
     this.triggers = [];
     this.initLabelRenderer();
+    this.triggerColor = this.setTriggerColor();
   }
 
   getTriggers() {
@@ -38,11 +39,18 @@ class TriggerManager {
     });
   }
 
-  createTrigger(button) {
+  setTriggerColor() {
     const colors = [0x000000, 0xff0000, 0x0000ff, 0x808080];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    this.triggerColor = randomColor;
+    return this.triggerColor;
+  }
+
+  createTrigger(button) {
     const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-    const cubeMaterial = new THREE.MeshBasicMaterial({ color: randomColor });
+    const cubeMaterial = new THREE.MeshBasicMaterial({
+      color: this.triggerColor,
+    });
     const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
     const labelElement = document.createElement('div');
@@ -88,6 +96,68 @@ class TriggerManager {
     );
 
     button.replaceWith(triggerDiv);
+  }
+
+  createTriggerFromClient(clientID, clients, triggerState) {
+    const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const cubeMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(
+        triggerState.color.r,
+        triggerState.color.g,
+        triggerState.color.b,
+      ),
+      wireframe: true,
+    });
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    this.scene.add(cube);
+
+    const labelElement = document.createElement('div');
+    labelElement.className = 'label';
+    const cubeLabel = new CSS2DObject(labelElement);
+    cubeLabel.position.set(0, 0.2, 0);
+    cube.add(cubeLabel);
+
+    // default properties for the new trigger
+    const triggerDefaults = {
+      animate: triggerState.animate,
+      loop: triggerState.loop,
+      speed: triggerState.speed,
+      position: triggerState.position,
+      curveIndex: triggerState.curveIndex,
+      direction: triggerState.direction,
+    };
+
+    const newTrigger = {
+      mesh: cube,
+      label: labelElement,
+      ...triggerDefaults,
+    };
+
+    // Store Trigger in the corresponding clients object
+    clients[clientID].Triggers.push(newTrigger);
+  }
+
+  deleteTriggerFromClient(clientID, index, clients) {
+    const triggerToRemove = clients[clientID].Triggers[index];
+    if (!triggerToRemove) return;
+
+    this.scene.remove(triggerToRemove.mesh);
+
+    triggerToRemove.mesh.geometry.dispose();
+    triggerToRemove.mesh.material.dispose();
+
+    if (triggerToRemove.mesh.children.length > 0) {
+      const labelObject = triggerToRemove.mesh.children.find(
+        (child) => child instanceof CSS2DObject,
+      );
+      if (labelObject) {
+        labelObject.element.remove(); // Remove label from the DOM
+        this.scene.remove(labelObject); // Remove CSS2DObject from scene graph
+      }
+    }
+
+    // Remove the trigger from the array
+    clients[clientID].Triggers.splice(index, 1);
   }
 
   deleteTrigger(index) {
