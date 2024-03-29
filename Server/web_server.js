@@ -134,28 +134,52 @@ const closeUDPPort = (localPort, remotePort) => {
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
 
-  //Store client id and source (browser or max) in clients object
+  //Store client id and initialize triggers array for each client
   clients[socket.id] = { clientID: socket.id, Triggers: [] };
   sockets[socket.id] = socket;
 
   io.emit('clientList', clients);
-  console.log('sending client list');
+  //console.log('sending client list');
 
-  // If this is the first client, store its socket and set up the 'syncScene' listener
+  // SYNC CURVES
+  // If this is the first client, store its socket and set up the 'syncCurves' listener
   if (!firstClientSocket) {
     firstClientSocket = socket;
-    firstClientSocket.on('syncScene', ({ curvesState, triggersState }) => {
+    firstClientSocket.on('syncCurves', ({ curvesState }) => {
       // Forward the scene data to all connected clients
-      firstClientSocket.broadcast.emit('syncScene', {
+      firstClientSocket.broadcast.emit('syncCurves', {
         curvesState,
-        triggersState,
       });
     });
   } else {
-    firstClientSocket.emit('requestScene');
+    firstClientSocket.emit('requestCurveState');
     console.log('requestScene sent to first client');
   }
 
+  // SYNC TRIGGERS
+  io.emit('requestTriggersState');
+
+  socket.on('syncTriggers', ({ triggersState }) => {
+    // Parse the received triggers state
+    let parsedTriggersState = JSON.parse(triggersState);
+
+    // Update the triggers state for this client in the clients object
+    clients[socket.id].Triggers = parsedTriggersState.triggers;
+
+    // Check if all clients have updated their triggers state
+    if (Object.keys(clients).every((clientID) => clients[clientID].Triggers)) {
+      // Combine all triggers states
+      let combinedTriggersState = Object.values(clients)
+        .map((client) => client.Triggers)
+        .flat();
+
+      console.log(clients);
+      // Forward triggers state to all connected clients
+      io.emit('syncTriggers', { triggersState: JSON.stringify(clients) });
+    }
+  });
+
+  //update the client divs for Curves
   socket.on('updateClientsDiv', () => {
     io.emit('syncClientsDiv', clients);
   });
@@ -170,25 +194,23 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
     console.log(Object.keys(sockets).length);
-    //delete clients[socket.id];
-    // If the first client disconnected, clear the firstClientSocket
     const socketKeys = Object.keys(sockets);
     console.log(socketKeys);
     if (socket === firstClientSocket) {
       const socketKeys = Object.keys(sockets);
       if (socketKeys.length > 1) {
         firstClientSocket = sockets[socketKeys[1]];
-        firstClientSocket.on('syncScene', ({ curvesState, triggersState }) => {
+        firstClientSocket.on('syncCurves', ({ curvesState }) => {
           // Forward the scene data to all connected clients
-          firstClientSocket.broadcast.emit('syncScene', {
+          firstClientSocket.broadcast.emit('syncCurves', {
             curvesState,
-            triggersState,
           });
         });
       } else {
         firstClientSocket = null;
       }
     }
+
     delete clients[socket.id];
     delete sockets[socket.id];
 

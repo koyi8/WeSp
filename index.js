@@ -95,10 +95,12 @@ const init = () => {
   createOCSTables();
   multiPlayerManager.initSocketID();
   multiPlayerManager.toggleDummyState();
-  multiPlayerManager.getSceneOnClientConnected();
-  multiPlayerManager.setSceneOnClientConnected();
-  multiPlayerManager.updateSceneOnChanges();
   multiPlayerManager.receiveClientList();
+  multiPlayerManager.getCurvesOnClientConnected();
+  multiPlayerManager.getTriggersOnClientConnected();
+  multiPlayerManager.setCurvesOnClientConnected();
+  multiPlayerManager.setTriggersOnClientConnected();
+  multiPlayerManager.updateSceneOnChanges();
   multiPlayerManager.updateClientsDiv();
 };
 

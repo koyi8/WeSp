@@ -65,27 +65,40 @@ class MultiPlayerManager {
     });
   }
 
-  setSceneOnClientConnected() {
-    // Send the scene data to the server when a client connects
-    this.socket.on('requestScene', () => {
-      console.log('requestScene received');
-      // Get the current state of the curves and triggers UI
-      const curvesState = this.getCurvesUIState();
-      const triggersState = this.getTriggersUIState();
-      // Send the states to the server
-      this.socket.emit('syncScene', { curvesState, triggersState });
+  getCurvesOnClientConnected() {
+    let curvesState;
+    this.socket.on('requestCurveState', () => {
+      console.log('requestCurveState received');
+      // Get the current state of the curves UI
+      curvesState = this.getCurvesUIState();
+
+      this.socket.emit('syncCurves', { curvesState });
     });
   }
 
-  getSceneOnClientConnected() {
-    // Listen for the 'syncScene' event from the server
-    this.socket.on('syncScene', ({ curvesState, triggersState }) => {
-      console.log('syncScene received');
-      // Clear the current scene
-      // Set the state of the curves and triggers UI
+  getTriggersOnClientConnected() {
+    let triggersState;
+    this.socket.on('requestTriggersState', () => {
+      // Get the current state of the triggers
+      triggersState = this.getTriggersClientState();
+      this.socket.emit('syncTriggers', { triggersState });
+    });
+  }
+
+  setCurvesOnClientConnected() {
+    // Listen for the 'syncCurves' event from the server
+    this.socket.on('syncCurves', ({ curvesState }) => {
+      // Set the state of the curves
       this.setCurvesUIState(curvesState);
-      this.setTriggersUIState(triggersState);
       this.socket.emit('updateClientsDiv');
+    });
+  }
+
+  setTriggersOnClientConnected() {
+    // Listen for the 'syncTriggers' event from the server
+    this.socket.on('syncTriggers', ({ triggersState }) => {
+      // Set the state of the triggers
+      this.setTriggersClientState(triggersState);
     });
   }
 
@@ -177,49 +190,38 @@ class MultiPlayerManager {
     updateTrajectoriesHTML(this.curveManager);
   }
 
-  getTriggersUIState() {
+  getTriggersClientState() {
     const state = {
-      clients: {},
+      triggers: this.triggers.map((trigger) => {
+        if (trigger === null) return null;
+        return {
+          animate: trigger.animate,
+          loop: trigger.loop,
+          speed: trigger.speed,
+          position: trigger.position,
+          curveIndex: trigger.curveIndex,
+          direction: trigger.direction,
+          color: {
+            r: trigger.mesh.material.color.r,
+            g: trigger.mesh.material.color.g,
+            b: trigger.mesh.material.color.b,
+          },
+        };
+      }),
     };
 
-    for (const clientID in this.clients) {
-      if (clientID === this.socket.id) {
-        // Update the Triggers array of the corresponding client with this.triggers
-        this.clients[clientID].Triggers = [...this.triggers];
-      }
-
-      state.clients[clientID] = {
-        triggers: this.clients[clientID].Triggers.map((trigger) => {
-          if (trigger === null) return null;
-          return {
-            buttonID: trigger.buttonID,
-            animate: trigger.animate,
-            loop: trigger.loop,
-            speed: trigger.speed,
-            position: trigger.position,
-            curveIndex: trigger.curveIndex,
-            direction: trigger.direction,
-            color: {
-              r: trigger.mesh.material.color.r,
-              g: trigger.mesh.material.color.g,
-              b: trigger.mesh.material.color.b,
-            },
-          };
-        }),
-      };
-    }
-    console.log('State of trigger is:', state.clients);
+    console.log('State of trigger is:', state);
     return JSON.stringify(state);
   }
 
-  setTriggersUIState(stateString) {
+  setTriggersClientState(stateString) {
     const state = JSON.parse(stateString);
+    console.log('State of trigger is:', state);
 
-    for (const clientID in state.clients) {
-      const clientState = state.clients[clientID];
-
+    for (const clientID in state) {
+      const clientState = state[clientID];
       // Check for added triggers
-      clientState.triggers.forEach((triggerState, index) => {
+      clientState.Triggers.forEach((triggerState, index) => {
         if (
           triggerState !== null &&
           this.clients[clientID].Triggers[index] === undefined
@@ -236,10 +238,7 @@ class MultiPlayerManager {
 
       // Check for deleted triggers
       this.clients[clientID].Triggers.forEach((trigger, index) => {
-        if (
-          state.clients[clientID].triggers[index] === null &&
-          trigger !== undefined
-        ) {
+        if (state[clientID].Triggers[index] === null && trigger !== undefined) {
           // A trigger was deleted
           this.triggerManager.deleteTriggerFromClient(clientID, index);
         }
@@ -247,7 +246,7 @@ class MultiPlayerManager {
     }
   }
 
-  OLDsetTriggersUIState(stateString) {
+  OLDsetTriggersClientState(stateString) {
     const state = JSON.parse(stateString);
     console.log('State of trigger is:', state.triggers);
     // Create a placeholder for each element in state.triggers
@@ -300,7 +299,7 @@ class MultiPlayerManager {
 
         const button = document.getElementById('create-trigger-0');
         this.triggerManager.createTrigger(button);
-        json = this.getTriggersUIState();
+        json = this.getTriggersClientState();
         console.log(json);
       }
     });
