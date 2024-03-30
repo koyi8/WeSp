@@ -96,6 +96,10 @@ class TriggerManager {
     );
 
     button.replaceWith(triggerDiv);
+
+    // event for Server to update the trigger
+    const event = new Event('addedTrigger');
+    window.dispatchEvent(event);
   }
 
   createTriggerFromClient(clientID, clients, triggerState) {
@@ -132,12 +136,13 @@ class TriggerManager {
       label: labelElement,
       ...triggerDefaults,
     };
+    this.triggers.push(newTrigger);
 
     // Store Trigger in the corresponding clients object
     clients[clientID].Triggers.push(newTrigger);
   }
 
-  deleteTriggerFromClient(clientID, index, clients) {
+  deleteTriggerFromClient(clientID, clients, index) {
     const triggerToRemove = clients[clientID].Triggers[index];
     if (!triggerToRemove) return;
 
@@ -158,6 +163,8 @@ class TriggerManager {
 
     // Remove the trigger from the array
     clients[clientID].Triggers.splice(index, 1);
+    //remove the trigger from the scene
+    this.triggers.splice(index, 1);
   }
 
   deleteTrigger(index) {
@@ -196,6 +203,10 @@ class TriggerManager {
     //this.triggers.splice(index, 1);
     // Replace the trigger in the array with null
     this.triggers[index] = null;
+
+    // Event for Server to update the trigger
+    const event = new Event('deletedTrigger');
+    window.dispatchEvent(event);
   }
 
   createTriggers() {

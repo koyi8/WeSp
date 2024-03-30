@@ -140,7 +140,7 @@ io.on('connection', (socket) => {
   sockets[socket.id] = socket;
 
   io.emit('clientList', clients);
-  console.log('clients on new connection', clients);
+  //console.log('clients on new connection', clients);
 
   // SYNC CURVES
   // If this is the first client, store its socket and set up the 'syncCurves' listener
@@ -157,19 +157,43 @@ io.on('connection', (socket) => {
     //('requestScene sent to first client');
   }
 
-  io.emit('requestTriggersState');
+  socket.emit('requestTriggersState');
 
   socket.on('syncTriggers', ({ triggersState }) => {
+    let counter = 0;
     // Parse the received triggers state
     let parsedTriggersState = JSON.parse(triggersState);
 
     // Update the triggers state for this client in the clients object
     clients[socket.id].Triggers = parsedTriggersState.triggers;
 
+    // Forward forward the updated triggers state to all clients
+    socket.emit('syncTriggers', { triggersState: JSON.stringify(clients) });
+    console.log('syncedTriggers', counter++);
+
+    // Emit the 'clientList' event with the updated clients object
+    io.emit('clientList', clients);
+  });
+
+  socket.on('updateTriggersLength', ({ triggersState }) => {
+    // Parse the received triggers state
+    let parsedTriggersState = JSON.parse(triggersState);
+    console.log('we HERE?');
+
+    // Only create new triggers if they don't already exist
+    parsedTriggersState.triggers.forEach((trigger, index) => {
+      if (
+        clients[socket.id].Triggers[index] === undefined &&
+        trigger !== null
+      ) {
+        clients[socket.id].Triggers[index] = trigger;
+      }
+    });
+
     // Always forward the updated triggers state to all clients
-    io.emit('syncTriggers', { triggersState: JSON.stringify(clients) });
-    console.log('triggersState', clients);
-    console.log('updated triggers state');
+    io.emit('updateTriggersLenght', {
+      triggersState: JSON.stringify(clients),
+    });
     // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   });
@@ -208,7 +232,7 @@ io.on('connection', (socket) => {
 
     delete clients[socket.id];
     delete sockets[socket.id];
-    console.log('clientAfterDeletion', clients);
+    //console.log('clientAfterDeletion', clients);
   });
 
   // Setup UDP PORTS

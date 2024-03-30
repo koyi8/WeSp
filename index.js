@@ -102,6 +102,7 @@ const init = () => {
   multiPlayerManager.setTriggersOnClientConnected();
   multiPlayerManager.updateSceneOnChanges();
   multiPlayerManager.updateClientsDiv();
+  multiPlayerManager.updateTriggersClientOnChange();
 };
 
 const setupSocket = () => {
@@ -276,6 +277,13 @@ const initListeners = () => {
   });
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();
+  });
+  window.addEventListener('addedTrigger', () => {
+    multiPlayerManager.sendTriggersClientsLengthToServer();
+  });
+  window.addEventListener('deletedTrigger', () => {
+    multiPlayerManager.sendTriggersClientsLengthToServer();
+    console.log('deletedTrigger');
   });
 };
 

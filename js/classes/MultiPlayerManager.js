@@ -33,7 +33,7 @@ class MultiPlayerManager {
 
   receiveClientList() {
     this.socket.on('clientList', (clients) => {
-      console.log('Client list received:', clients);
+      //console.log('Client list received:', clients);
       this.clients = clients;
       this.setClientsDiv(clients);
     });
@@ -59,7 +59,7 @@ class MultiPlayerManager {
 
   updateClientsDiv() {
     this.socket.on('syncClientsDiv', (clients) => {
-      console.log('syncClientsDiv received');
+      //console.log('syncClientsDiv received');
       this.setClientsDiv(clients);
       //console.log(this.clients);
     });
@@ -95,12 +95,26 @@ class MultiPlayerManager {
   }
 
   setTriggersOnClientConnected() {
+    let counter = 0;
     // Listen for the 'syncTriggers' event from the server
     this.socket.on('syncTriggers', ({ triggersState }) => {
-      console.log('syncTriggers');
+      console.log('syncTriggers', counter++);
       // Set the state of the triggers
       this.setTriggersClientState(triggersState);
     });
+  }
+
+  updateTriggersClientOnChange() {
+    // Listen for 'updateTriggersLenght' event from the server
+    this.socket.on('updateTriggersLength', ({ triggersState }) => {
+      // Update the triggers state
+      this.updateTriggersClientLength(triggersState);
+    });
+  }
+
+  sendTriggersClientsLengthToServer() {
+    const state = this.getTriggersClientState();
+    this.socket.emit('updateTriggersLength', { triggersState: state });
   }
 
   updateSceneOnChanges() {
@@ -226,6 +240,37 @@ class MultiPlayerManager {
             clientID,
             this.clients,
             triggerState,
+          );
+        }
+      });
+    }
+  }
+
+  updateTriggersClientLength(stateString) {
+    const state = JSON.parse(stateString);
+    for (const clientID in state) {
+      const clientState = state[clientID];
+      // Update the Triggers array for each client
+      clientState.Triggers.forEach((triggerState, index) => {
+        if (
+          triggerState !== null &&
+          this.clients[clientID].Triggers[index] === undefined
+        ) {
+          // A trigger was added, create it
+          this.triggerManager.createTriggerFromClient(
+            clientID,
+            this.clients,
+            triggerState,
+          );
+        } else if (
+          triggerState === null &&
+          this.clients[clientID].Triggers[index] !== undefined
+        ) {
+          // A trigger was deleted, delete it
+          this.triggerManager.deleteTriggerFromClient(
+            clientID,
+            this.clients,
+            index,
           );
         }
       });
