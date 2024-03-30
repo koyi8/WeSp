@@ -33,6 +33,7 @@ const io = new Server(httpServer, {
 const clients = {};
 let sockets = {};
 let firstClientSocket = null;
+let clientCounter = 0;
 let currentSceneState = null;
 const previousStates = new Map();
 
@@ -139,7 +140,7 @@ io.on('connection', (socket) => {
   sockets[socket.id] = socket;
 
   io.emit('clientList', clients);
-  //console.log('sending client list');
+  console.log('clients on new connection', clients);
 
   // SYNC CURVES
   // If this is the first client, store its socket and set up the 'syncCurves' listener
@@ -153,10 +154,9 @@ io.on('connection', (socket) => {
     });
   } else {
     firstClientSocket.emit('requestCurveState');
-    console.log('requestScene sent to first client');
+    //('requestScene sent to first client');
   }
 
-  // SYNC TRIGGERS
   io.emit('requestTriggersState');
 
   socket.on('syncTriggers', ({ triggersState }) => {
@@ -166,17 +166,12 @@ io.on('connection', (socket) => {
     // Update the triggers state for this client in the clients object
     clients[socket.id].Triggers = parsedTriggersState.triggers;
 
-    // Check if all clients have updated their triggers state
-    if (Object.keys(clients).every((clientID) => clients[clientID].Triggers)) {
-      // Combine all triggers states
-      let combinedTriggersState = Object.values(clients)
-        .map((client) => client.Triggers)
-        .flat();
-
-      console.log(clients);
-      // Forward triggers state to all connected clients
-      io.emit('syncTriggers', { triggersState: JSON.stringify(clients) });
-    }
+    // Always forward the updated triggers state to all clients
+    io.emit('syncTriggers', { triggersState: JSON.stringify(clients) });
+    console.log('triggersState', clients);
+    console.log('updated triggers state');
+    // Emit the 'clientList' event with the updated clients object
+    io.emit('clientList', clients);
   });
 
   //update the client divs for Curves
@@ -193,9 +188,9 @@ io.on('connection', (socket) => {
   // Remove client from clients object when they disconnect
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
-    console.log(Object.keys(sockets).length);
+    //console.log(Object.keys(sockets).length);
     const socketKeys = Object.keys(sockets);
-    console.log(socketKeys);
+    //console.log(socketKeys);
     if (socket === firstClientSocket) {
       const socketKeys = Object.keys(sockets);
       if (socketKeys.length > 1) {
@@ -213,9 +208,7 @@ io.on('connection', (socket) => {
 
     delete clients[socket.id];
     delete sockets[socket.id];
-
-    io.emit('clientList', clients);
-    io.emit('syncClientsDiv', clients);
+    console.log('clientAfterDeletion', clients);
   });
 
   // Setup UDP PORTS
