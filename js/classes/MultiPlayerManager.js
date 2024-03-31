@@ -36,7 +36,6 @@ class MultiPlayerManager {
 
   receiveClientList() {
     this.socket.on('clientList', (clients) => {
-      //console.log('Client list received:', clients);
       this.clients = clients;
       this.setClientsDiv(clients);
     });
@@ -62,9 +61,7 @@ class MultiPlayerManager {
 
   updateClientsDiv() {
     this.socket.on('syncClientsDiv', (clients) => {
-      //console.log('syncClientsDiv received');
       this.setClientsDiv(clients);
-      //console.log(this.clients);
     });
   }
 
@@ -86,6 +83,11 @@ class MultiPlayerManager {
     });
   }
 
+  sendTriggersClientsLengthToServer() {
+    let triggersState = this.getTriggersClientState();
+    this.socket.emit('updateTriggersLength', { triggersState });
+  }
+
   setCurvesOnClientConnected() {
     // Listen for the 'syncCurves' event from the server
     this.socket.on('syncCurves', ({ curvesState }) => {
@@ -98,7 +100,8 @@ class MultiPlayerManager {
   setTriggersOnClientConnected() {
     // Listen for the 'syncTriggers' event from the server
     this.socket.on('syncTriggers', ({ triggersState }) => {
-      console.log('syncTriggers');
+      console.log('syncTriggersOnclientConnected');
+      console.log(this.clients);
       // Set the state of the triggers
       this.setTriggersClientState(triggersState);
     });
@@ -107,17 +110,8 @@ class MultiPlayerManager {
   updateTriggersClientOnChange() {
     // Listen for 'updateTriggersLenght' event from the server
     this.socket.on('updateTriggersLength', ({ triggersState }) => {
-      //console.log(this.clients);
-      // Update the triggers state
       this.updateTriggersClientLength(triggersState);
-      console.log(this.clients);
     });
-  }
-
-  sendTriggersClientsLengthToServer() {
-    const state = this.getTriggersClientState();
-    this.socket.emit('updateTriggersLength', { triggersState: state });
-    console.log('updateTriggersLength sent');
   }
 
   updateSceneOnChanges() {
@@ -203,7 +197,6 @@ class MultiPlayerManager {
         );
       }
       curve.needsUpdate = true;
-      //console.log(curve.mesh.material.color);
     });
     updateTrajectoriesHTML(this.curveManager);
   }
@@ -229,6 +222,10 @@ class MultiPlayerManager {
   setTriggersClientState(stateString) {
     const state = JSON.parse(stateString);
     for (const clientID in state) {
+      // skip for local client
+      if (clientID === this.socketID) {
+        continue;
+      }
       const clientState = state[clientID];
       // Create triggers for all triggers in the clients object
       clientState.Triggers.forEach((triggerState, index) => {
@@ -242,18 +239,24 @@ class MultiPlayerManager {
         }
       });
     }
+    this.clients = state;
   }
 
   updateTriggersClientLength(stateString) {
-    const state = JSON.parse(stateString);
-    for (const clientID in state) {
-      const clientState = state[clientID];
+    const newState = JSON.parse(stateString);
+    for (const clientID in newState) {
+      // skip for local client
+      if (clientID === this.socketID) {
+        continue;
+      }
+      const newClientState = newState[clientID];
+      const oldClientState = this.clients[clientID];
       // Update the Triggers array for each client
-      clientState.Triggers.forEach((triggerState, index) => {
+      newClientState.Triggers.forEach((triggerState, index) => {
         if (
           triggerState !== null &&
-          this.clients[clientID].Triggers[index] === undefined &&
-          clientID === state.clientID
+          (oldClientState.Triggers[index] === undefined ||
+            oldClientState.Triggers[index] === null)
         ) {
           // A trigger was added, create it
           this.triggerManager.createTriggerFromClient(
@@ -262,9 +265,10 @@ class MultiPlayerManager {
             triggerState,
           );
         } else if (
-          triggerState === null &&
-          this.clients[clientID].Triggers[index] !== undefined &&
-          clientID === state.clientID
+          (triggerState === null ||
+            newState[clientID].Triggers.length <
+              oldClientState.Triggers.length) &&
+          oldClientState.Triggers[index] !== undefined
         ) {
           // A trigger was deleted, delete it
           this.triggerManager.deleteTriggerFromClient(
@@ -275,6 +279,8 @@ class MultiPlayerManager {
         }
       });
     }
+    // Update the previous state
+    this.clients = newState;
   }
 
   OLDsetTriggersClientState(stateString) {

@@ -166,9 +166,12 @@ io.on('connection', (socket) => {
 
     // Update the triggers state for this client in the clients object
     clients[socket.id].Triggers = parsedTriggersState.triggers;
+    console.log(clients[socket.id].Triggers);
 
     // Forward forward the updated triggers state to all clients
-    socket.emit('syncTriggers', { triggersState: JSON.stringify(clients) });
+    socket.emit('syncTriggers', {
+      triggersState: JSON.stringify(clients),
+    });
     console.log('syncedTriggers', counter++);
 
     // Emit the 'clientList' event with the updated clients object
@@ -179,13 +182,9 @@ io.on('connection', (socket) => {
     // Parse the received triggers state
     let parsedTriggersState = JSON.parse(triggersState);
 
-    // Only create new triggers if they don't already exist
-    parsedTriggersState.triggers.forEach((trigger, index) => {
-      if (clients[socket.id].Triggers[index] === undefined) {
-        clients[socket.id].Triggers[index] = trigger;
-      }
-    });
-    console.log('we HERE?');
+    clients[socket.id].Triggers = parsedTriggersState.triggers;
+
+    console.log(clients);
 
     // Always forward the updated triggers state to all clients
     io.emit('updateTriggersLength', {

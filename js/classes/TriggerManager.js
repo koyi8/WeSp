@@ -142,15 +142,20 @@ class TriggerManager {
     if (!this.clientTriggers[clientID]) {
       this.clientTriggers[clientID] = [];
     }
+    let index = this.clientTriggers[clientID].indexOf(null);
+    if (index === -1) {
+      index = this.clientTriggers[clientID].length;
+    }
     // Add the new trigger to the array
-    this.clientTriggers[clientID].push(newTrigger);
+    this.clientTriggers[clientID][index] = newTrigger;
+    console.log('clientTriggers', this.clientTriggers);
 
     // Store Trigger in the corresponding clients object
-    clients[clientID].Triggers.push(newTrigger);
+    clients[clientID].Triggers[index] = newTrigger;
   }
 
   deleteTriggerFromClient(clientID, clients, index) {
-    const triggerToRemove = clients[clientID].Triggers[index];
+    const triggerToRemove = this.clientTriggers[clientID][index];
     if (!triggerToRemove) return;
 
     this.scene.remove(triggerToRemove.mesh);
@@ -167,10 +172,11 @@ class TriggerManager {
         this.scene.remove(labelObject); // Remove CSS2DObject from scene graph
       }
     }
-    // Remove from local ClientTriggers array
-    this.clientTriggers[clientID].splice(index, 1);
-    // Remove the trigger from the array
-    clients[clientID].Triggers.splice(index, 1);
+    // Set the trigger to null in the clientTriggers array
+    this.clientTriggers[clientID][index] = null;
+
+    // Set the trigger to null in the clients object
+    clients[clientID].Triggers[index] = null;
   }
 
   deleteTrigger(index) {
