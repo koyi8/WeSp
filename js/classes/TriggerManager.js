@@ -302,7 +302,6 @@ class TriggerManager {
 
     if (positionsArray) {
       positionsArray[index] = trigPos.clone();
-      console.log('positionsArray', positionsArray);
     }
     curve.updateArcLengths();
   }
