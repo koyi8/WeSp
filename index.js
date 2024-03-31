@@ -70,6 +70,7 @@ let selectedObject = null;
 let controls;
 let transformControl;
 let socket;
+
 let isDragging = false;
 
 const init = () => {
@@ -190,9 +191,9 @@ const setupControls = () => {
 
 const animate = () => {
   requestAnimationFrame(animate);
-  triggerManager.animateTriggers(positionsArray);
+  //triggerManager.animateTriggers(positionsArray);
+  triggerManager.animateAllTriggers();
   curveManager.updateSplineOutline();
-  //throttleSendToServer();
   render();
 };
 
@@ -249,6 +250,9 @@ const onDocumentMouseDown = (event) => {
 const debouncedUpdateControlPointsHTML = debounce(() => {
   updateControlPointsHTML(curveManager);
   multiPlayerManager.sendStatetoServer();
+  // console.log(multiPlayerManager.clients);
+  //console.log(triggerManager.triggers);
+  console.log(positionsArray);
 }, 300);
 
 const initListeners = () => {
@@ -283,7 +287,6 @@ const initListeners = () => {
   });
   window.addEventListener('deletedTrigger', () => {
     multiPlayerManager.sendTriggersClientsLengthToServer();
-    console.log('deletedTrigger');
   });
 };
 

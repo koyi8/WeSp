@@ -24,10 +24,13 @@ class MultiPlayerManager {
   // RECEIVE
 
   initSocketID() {
-    this.socket.on('connect', () => {
-      console.log('Connected to server!');
-      this.socketID = this.socket.id; // unique random 20-character id is given to client from server
-      console.log(`Your socket id is  ${this.socketID}`);
+    return new Promise((resolve) => {
+      this.socket.on('connect', () => {
+        console.log('Connected to server!');
+        this.socketID = this.socket.id; // unique random 20-character id is given to client from server
+        console.log(`Your socket id is  ${this.socketID}`);
+        resolve(this.socketID);
+      });
     });
   }
 
@@ -68,8 +71,6 @@ class MultiPlayerManager {
   getCurvesOnClientConnected() {
     let curvesState;
     this.socket.on('requestCurveState', () => {
-      //console.log('requestCurveState received');
-      // Get the current state of the curves UI
       curvesState = this.getCurvesUIState();
 
       this.socket.emit('syncCurves', { curvesState });
@@ -95,10 +96,9 @@ class MultiPlayerManager {
   }
 
   setTriggersOnClientConnected() {
-    let counter = 0;
     // Listen for the 'syncTriggers' event from the server
     this.socket.on('syncTriggers', ({ triggersState }) => {
-      console.log('syncTriggers', counter++);
+      console.log('syncTriggers');
       // Set the state of the triggers
       this.setTriggersClientState(triggersState);
     });
@@ -107,14 +107,17 @@ class MultiPlayerManager {
   updateTriggersClientOnChange() {
     // Listen for 'updateTriggersLenght' event from the server
     this.socket.on('updateTriggersLength', ({ triggersState }) => {
+      //console.log(this.clients);
       // Update the triggers state
       this.updateTriggersClientLength(triggersState);
+      console.log(this.clients);
     });
   }
 
   sendTriggersClientsLengthToServer() {
     const state = this.getTriggersClientState();
     this.socket.emit('updateTriggersLength', { triggersState: state });
+    console.log('updateTriggersLength sent');
   }
 
   updateSceneOnChanges() {
@@ -210,16 +213,11 @@ class MultiPlayerManager {
       triggers: this.triggers.map((trigger) => {
         if (trigger === null) return null;
         return {
-          animate: trigger.animate,
-          loop: trigger.loop,
-          speed: trigger.speed,
-          position: trigger.position,
-          curveIndex: trigger.curveIndex,
-          direction: trigger.direction,
+          ...trigger,
           color: {
-            r: trigger.mesh.material.color.r,
-            g: trigger.mesh.material.color.g,
-            b: trigger.mesh.material.color.b,
+            r: trigger.mesh?.material.color.r,
+            g: trigger.mesh?.material.color.g,
+            b: trigger.mesh?.material.color.b,
           },
         };
       }),
@@ -254,7 +252,8 @@ class MultiPlayerManager {
       clientState.Triggers.forEach((triggerState, index) => {
         if (
           triggerState !== null &&
-          this.clients[clientID].Triggers[index] === undefined
+          this.clients[clientID].Triggers[index] === undefined &&
+          clientID === state.clientID
         ) {
           // A trigger was added, create it
           this.triggerManager.createTriggerFromClient(
@@ -264,7 +263,8 @@ class MultiPlayerManager {
           );
         } else if (
           triggerState === null &&
-          this.clients[clientID].Triggers[index] !== undefined
+          this.clients[clientID].Triggers[index] !== undefined &&
+          clientID === state.clientID
         ) {
           // A trigger was deleted, delete it
           this.triggerManager.deleteTriggerFromClient(
