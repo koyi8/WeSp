@@ -105,6 +105,7 @@ const init = () => {
   multiPlayerManager.updateClientsDiv();
   multiPlayerManager.updateTriggersClientOnChange();
   multiPlayerManager.updateTriggersClientsStateFromServer();
+  multiPlayerManager.setTriggersOnClientDisconnected();
 };
 
 const setupSocket = () => {

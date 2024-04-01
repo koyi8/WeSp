@@ -118,6 +118,12 @@ class MultiPlayerManager {
     });
   }
 
+  setTriggersOnClientDisconnected() {
+    this.socket.on('syncTriggersOnClientDisconnected', ({ triggersState }) => {
+      this.deleteTriggersClientOnDisconnect(triggersState);
+    });
+  }
+
   updateTriggersClientOnChange() {
     // Listen for 'updateTriggersLenght' event from the server
     this.socket.on('updateTriggersLength', ({ triggersState }) => {
@@ -239,6 +245,11 @@ class MultiPlayerManager {
       const clientState = state[clientID];
       clientState.Triggers.forEach((triggerState, index) => {
         if (triggerState !== null) {
+          // not defined
+          if (!this.triggerManager.clientTriggers[clientID]) {
+            return;
+          }
+
           const trigger = this.triggerManager.clientTriggers[clientID][index];
           if (trigger !== undefined) {
             trigger.animate = triggerState.animate;
@@ -315,6 +326,31 @@ class MultiPlayerManager {
     }
     // Update the previous state
     this.clients = newState;
+  }
+
+  deleteTriggersClientOnDisconnect(stateString) {
+    const newState = JSON.parse(stateString);
+    for (const clientID in this.clients) {
+      const newClientState = newState[clientID];
+      const oldClientState = this.clients[clientID];
+      if (
+        !newClientState &&
+        oldClientState &&
+        this.triggerManager.clientTriggers[clientID]
+      ) {
+        for (
+          let i = 0;
+          i < this.triggerManager.clientTriggers[clientID].length;
+          i++
+        ) {
+          this.triggerManager.deleteTriggerFromClient(
+            clientID,
+            this.clients,
+            i,
+          );
+        }
+      }
+    }
   }
 
   OLDsetTriggersClientState(stateString) {

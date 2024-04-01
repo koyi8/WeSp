@@ -224,7 +224,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
     //console.log(Object.keys(sockets).length);
-    const socketKeys = Object.keys(sockets);
     //console.log(socketKeys);
     if (socket === firstClientSocket) {
       const socketKeys = Object.keys(sockets);
@@ -243,7 +242,10 @@ io.on('connection', (socket) => {
 
     delete clients[socket.id];
     delete sockets[socket.id];
-    //console.log('clientAfterDeletion', clients);
+
+    io.emit('syncTriggersOnClientDisconnected', {
+      triggersState: JSON.stringify(clients),
+    });
   });
 
   // Setup UDP PORTS
