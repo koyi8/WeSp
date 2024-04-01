@@ -194,6 +194,21 @@ io.on('connection', (socket) => {
     io.emit('clientList', clients);
   });
 
+  //update client Triggers Settings
+  socket.on('updateValuesClientsTriggers', ({ triggersState }) => {
+    // Parse the received triggers state
+    let parsedTriggersState = JSON.parse(triggersState);
+
+    clients[socket.id].Triggers = parsedTriggersState.triggers;
+
+    io.emit('updateValuesClientsTriggers', {
+      triggersState: JSON.stringify(clients),
+    });
+
+    // Emit the 'clientList' event with the updated clients object
+    io.emit('clientList', clients);
+  });
+
   //update the client divs for Curves
   socket.on('updateClientsDiv', () => {
     io.emit('syncClientsDiv', clients);

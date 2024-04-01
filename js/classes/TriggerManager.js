@@ -148,8 +148,6 @@ class TriggerManager {
     }
     // Add the new trigger to the array
     this.clientTriggers[clientID][index] = newTrigger;
-    console.log('clientTriggers', this.clientTriggers);
-
     // Store Trigger in the corresponding clients object
     clients[clientID].Triggers[index] = newTrigger;
   }
@@ -300,13 +298,15 @@ class TriggerManager {
 
     const trigPos = curve.getPointAt(Math.abs(position) % 1);
     trigger.mesh.position.copy(trigPos);
-
     const label = trigger.mesh.children[0].element;
-    label.innerHTML = `${index + 1}: ${trigPos.x.toFixed(
-      2,
-    )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
+    label.innerHTML = `${index + 1}`;
 
     if (positionsArray) {
+      const label = trigger.mesh.children[0].element;
+      label.innerHTML = `${index + 1}: ${trigPos.x.toFixed(
+        2,
+      )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
+
       positionsArray[index] = trigPos.clone();
     }
     curve.updateArcLengths();

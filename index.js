@@ -104,6 +104,7 @@ const init = () => {
   multiPlayerManager.updateSceneOnChanges();
   multiPlayerManager.updateClientsDiv();
   multiPlayerManager.updateTriggersClientOnChange();
+  multiPlayerManager.updateTriggersClientsStateFromServer();
 };
 
 const setupSocket = () => {
@@ -194,6 +195,7 @@ const animate = () => {
   //triggerManager.animateTriggers(positionsArray);
   triggerManager.animateAllTriggers(positionsArray);
   curveManager.updateSplineOutline();
+  multiPlayerManager.sendUpdateTriggersClientsStateToServer();
   render();
 };
 

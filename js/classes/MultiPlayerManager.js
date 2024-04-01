@@ -88,6 +88,17 @@ class MultiPlayerManager {
     this.socket.emit('updateTriggersLength', { triggersState });
   }
 
+  sendUpdateTriggersClientsStateToServer() {
+    let triggersState = this.getTriggersClientState();
+    this.socket.emit('updateValuesClientsTriggers', { triggersState });
+  }
+
+  updateTriggersClientsStateFromServer() {
+    this.socket.on('updateValuesClientsTriggers', ({ triggersState }) => {
+      this.updateTriggersClientSettings(triggersState);
+    });
+  }
+
   setCurvesOnClientConnected() {
     // Listen for the 'syncCurves' event from the server
     this.socket.on('syncCurves', ({ curvesState }) => {
@@ -217,6 +228,29 @@ class MultiPlayerManager {
     };
 
     return JSON.stringify(state);
+  }
+
+  updateTriggersClientSettings(statestring) {
+    const state = JSON.parse(statestring);
+    for (const clientID in state) {
+      if (clientID === this.socketID) {
+        continue;
+      }
+      const clientState = state[clientID];
+      clientState.Triggers.forEach((triggerState, index) => {
+        if (triggerState !== null) {
+          const trigger = this.triggerManager.clientTriggers[clientID][index];
+          if (trigger !== undefined) {
+            trigger.animate = triggerState.animate;
+            trigger.loop = triggerState.loop;
+            trigger.speed = triggerState.speed;
+            trigger.position = triggerState.position;
+            trigger.curveIndex = triggerState.curveIndex;
+            trigger.direction = triggerState.direction;
+          }
+        }
+      });
+    }
   }
 
   setTriggersClientState(stateString) {
