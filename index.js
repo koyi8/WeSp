@@ -101,7 +101,7 @@ const init = () => {
   multiPlayerManager.getTriggersOnClientConnected();
   multiPlayerManager.setCurvesOnClientConnected();
   multiPlayerManager.setTriggersOnClientConnected();
-  multiPlayerManager.updateSceneOnChanges();
+  multiPlayerManager.updateCurvesOnChanges();
   multiPlayerManager.updateClientsDiv();
   multiPlayerManager.updateTriggersClientOnChange();
   multiPlayerManager.updateTriggersClientsStateFromServer();
@@ -252,7 +252,7 @@ const onDocumentMouseDown = (event) => {
 
 const debouncedUpdateControlPointsHTML = debounce(() => {
   updateControlPointsHTML(curveManager);
-  multiPlayerManager.sendStatetoServer();
+  multiPlayerManager.sendCurvesStateToServer();
   // console.log(multiPlayerManager.clients);
   //console.log(triggerManager.triggers);
   console.log(positionsArray);

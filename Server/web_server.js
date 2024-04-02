@@ -1,3 +1,4 @@
+//refactor
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -14,37 +15,10 @@ const __dirname = dirname(__filename);
 
 // Serve static files from the 'dist' directory
 app.use(express.static(resolve(__dirname, '../dist')));
-
-/*
-// Create an HTTP server that listens to clients and gives responses back
-const httpServer = createServer((req, res) => {    
-    res.writeHead(200, {"Content-Type": "text/plain"}); // 200 = request successful
-    res.write("The web server is up and running!");     // writes to the browser
-    res.end();                                          // signals headers/body sent
-});
-*/
-
 // Create a socket.io server instance passing it httpServer and required options
 const io = new Server(httpServer, {
   cors: { origin: '*' }, // wild card since security isn't a concern
 });
-
-// object to store connected clients
-const clients = {};
-let sockets = {};
-let firstClientSocket = null;
-let clientCounter = 0;
-let currentSceneState = null;
-const previousStates = new Map();
-
-// Opening UDP-Port for OSC communication
-//--------------------------------------------------
-
-const defaultLocalPort = 7400,
-  defaultRemotePort = 7500,
-  defaultRemoteAddress = '127.0.0.1',
-  udpPorts = []; // array of open UDP ports to send
-
 // Get current IP-Addresses for the local machine
 const getIPAddresses = () => {
   const interfaces = os.networkInterfaces();
@@ -57,12 +31,21 @@ const getIPAddresses = () => {
     .map((addressInfo) => addressInfo.address);
 };
 
-// Setting up UDP Port
+// UDP-Ports for OSC communication
+//--------------------------------------------------
+const udpPortSettings = {
+  defaultLocalPort: 7400,
+  defaultRemotePort: 7500,
+  defaultRemoteAddress: '127.0.0.1',
+};
+//Array to store all the UDP Ports
+let udpPorts = [];
 
+// Setting up UDP Ports
 const createUDPPort = (
-  localPort = defaultLocalPort,
-  remotePort = defaultRemotePort,
-  remoteAddress = defaultRemoteAddress,
+  localPort = udpPortSettings.defaultLocalPort,
+  remotePort = udpPortSettings.defaultRemotePort,
+  remoteAddress = udpPortSettings.defaultRemoteAddress,
 ) => {
   return new osc.UDPPort({
     localAddress: '0.0.0.0',
@@ -88,15 +71,12 @@ const setupReadyEvent = (udp) => {
 };
 
 const setupUDPPort = (
-  localPort = defaultLocalPort,
-  remotePort = defaultRemotePort,
-  remoteAddress = defaultRemoteAddress,
+  localPort = udpPortSettings.defaultLocalPort,
+  remotePort = udpPortSettings.defaultRemotePort,
+  remoteAddress = udpPortSettings.defaultRemoteAddress,
 ) => {
   // Get all the local port numbers from the udpPorts array
   const localPorts = udpPorts.map((udp) => udp.options.localPort);
-  // Get all the remote port numbers from the udpPorts array
-  //const remotePorts = udpPorts.map((udp) => udp.options.remotePort);
-
   // If the provided localPort is already in use, return without doing anything
   if (localPorts.includes(localPort)) {
     console.log('inPort already in use');
@@ -111,8 +91,6 @@ const setupUDPPort = (
   return udp;
 };
 
-//const initialUDPPort = setupUDPPort();
-
 // Function to close the UDP Port
 const closeUDPPort = (localPort, remotePort) => {
   // Find the index of the port with the specified localPort and remotePort
@@ -121,7 +99,6 @@ const closeUDPPort = (localPort, remotePort) => {
       udp.options.localPort === localPort &&
       udp.options.remotePort === remotePort,
   );
-
   if (index >= 0 && index < udpPorts.length) {
     const udp = udpPorts[index];
     udp.close();
@@ -131,6 +108,14 @@ const closeUDPPort = (localPort, remotePort) => {
   }
 };
 
+// Websocket MultiClient communication
+//--------------------------------------------------
+// Objects to store clients and sockets
+let clients = {},
+  sockets = {};
+
+let firstClientSocket = null;
+
 // Event fired when client connects, giving each client a unique "socket" instance
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
@@ -138,12 +123,16 @@ io.on('connection', (socket) => {
   //Store client id and initialize triggers array for each client
   clients[socket.id] = { clientID: socket.id, Triggers: [] };
   sockets[socket.id] = socket;
-
+  // Emit the 'clientList' event with the updated clients object
   io.emit('clientList', clients);
-  //console.log('clients on new connection', clients);
 
-  // SYNC CURVES
-  // If this is the first client, store its socket and set up the 'syncCurves' listener
+  // Update the client divs for Curves
+  socket.on('updateClientsDiv', () => {
+    io.emit('syncClientsDiv', clients);
+  });
+
+  // CURVES
+  // SynCurves on Client Connection
   if (!firstClientSocket) {
     firstClientSocket = socket;
     firstClientSocket.on('syncCurves', ({ curvesState }) => {
@@ -154,77 +143,11 @@ io.on('connection', (socket) => {
     });
   } else {
     firstClientSocket.emit('requestCurveState');
-    //('requestScene sent to first client');
   }
-
-  socket.emit('requestTriggersState');
-
-  socket.on('syncTriggers', ({ triggersState }) => {
-    let counter = 0;
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-
-    // Update the triggers state for this client in the clients object
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-    console.log(clients[socket.id].Triggers);
-
-    // Forward forward the updated triggers state to all clients
-    socket.emit('syncTriggers', {
-      triggersState: JSON.stringify(clients),
-    });
-    console.log('syncedTriggers', counter++);
-
-    // Emit the 'clientList' event with the updated clients object
-    io.emit('clientList', clients);
-  });
-
-  socket.on('updateTriggersLength', ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-
-    console.log(clients);
-
-    // Always forward the updated triggers state to all clients
-    io.emit('updateTriggersLength', {
-      triggersState: JSON.stringify(clients),
-    });
-    // Emit the 'clientList' event with the updated clients object
-    io.emit('clientList', clients);
-  });
-
-  //update client Triggers Settings
-  socket.on('updateValuesClientsTriggers', ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-
-    io.emit('updateValuesClientsTriggers', {
-      triggersState: JSON.stringify(clients),
-    });
-
-    // Emit the 'clientList' event with the updated clients object
-    io.emit('clientList', clients);
-  });
-
-  //update the client divs for Curves
-  socket.on('updateClientsDiv', () => {
-    io.emit('syncClientsDiv', clients);
-  });
-
-  // Listen for the 'updateScene' event from the client
-  socket.on('updateScene', (state) => {
-    // Broadcast the new state to all connected clients
-    socket.broadcast.emit('updateScene', state);
-  });
-
-  // Remove client from clients object when they disconnect
+  // Handle Client Disconnection
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
-    //console.log(Object.keys(sockets).length);
-    //console.log(socketKeys);
+
     if (socket === firstClientSocket) {
       const socketKeys = Object.keys(sockets);
       if (socketKeys.length > 1) {
@@ -248,14 +171,32 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Listen for the 'updateCurves' event from the client
+  socket.on('updateCurves', (curvesState) => {
+    // Broadcast the new curvesState to all connected clients
+    socket.broadcast.emit('updateCurves', curvesState);
+  });
+
+  // TRIGGERS
+  // Request Triggers State on Client Connection
+  socket.emit('requestTriggersState');
+  // Sync Triggers on Client Connection
+  socket.on('syncTriggers', syncTriggersOnClientConnect(socket, clients, io));
+  // Update Triggers Length
+  socket.on('updateTriggersLength', updateTriggersLength(socket, clients, io));
+  // Update client Triggers Settings
+  socket.on(
+    'updateValuesClientsTriggers',
+    updateValuesClientsTriggers(socket, clients, io),
+  );
+
   // Setup UDP PORTS
   // OpenPort message
   socket.on('addUDPPort', (localPort, remotePort, remoteAddress) => {
     setupUDPPort(localPort, remotePort, remoteAddress);
   });
-  // close port message
+  // Close port message
   socket.on('removeUDPPort', (localPort, remotePort) => {
-    //console.log('Remove UDP Port');
     closeUDPPort(localPort, remotePort);
   });
 
@@ -263,7 +204,7 @@ io.on('connection', (socket) => {
 
   let shouldSendMap = new Map();
 
-  //receive triggerObjects from client
+  // Receive triggerObjects from client
   socket.on('sendOSC', (objectsToSend) => {
     objectsToSend.forEach((object) => {
       // If shouldSend flag for this row is false, return
@@ -274,10 +215,8 @@ io.on('connection', (socket) => {
           udp.options.remotePort === object.outPort &&
           udp.options.remoteAddress === object.outAddress
         ) {
-          // Create an array of arguments
           let args = [];
 
-          // Only add the values that are present
           if (object.x !== undefined) args.push({ type: 'f', value: object.x });
           if (object.y !== undefined) args.push({ type: 'f', value: object.y });
           if (object.z !== undefined) args.push({ type: 'f', value: object.z });
@@ -286,7 +225,6 @@ io.on('connection', (socket) => {
             address: object.oscMessage,
             args: args,
           });
-
           // Log the final UDP send
           console.log(
             `Sent OSC message to ${object.outAddress}:${
@@ -312,14 +250,56 @@ io.on('connection', (socket) => {
 
   // Measure RTT
   socket.on('pingCheck', () => {
-    socket.emit('pongCheck');
-  });
-
-  socket.on('message', (message) => {
-    console.log(message);
-    io.emit('message', message); // send to all clients
+    socket.emit('pongCheck', Date.now());
   });
 });
+
+// Function to sync triggers on client connect
+const syncTriggersOnClientConnect =
+  (socket, clients, io) =>
+  ({ triggersState }) => {
+    // Parse the received triggers state
+    let parsedTriggersState = JSON.parse(triggersState);
+    // Update the triggers state for this client in the clients object
+    clients[socket.id].Triggers = parsedTriggersState.triggers;
+    // Forward the updated triggers state to all clients
+    socket.emit('syncTriggers', {
+      triggersState: JSON.stringify(clients),
+    });
+    // Emit the 'clientList' event with the updated clients object
+    io.emit('clientList', clients);
+  };
+
+// Function to update triggers length
+const updateTriggersLength =
+  (socket, clients, io) =>
+  ({ triggersState }) => {
+    // Parse the received triggers state
+    let parsedTriggersState = JSON.parse(triggersState);
+    // Update the triggers state for this client in the clients object
+    clients[socket.id].Triggers = parsedTriggersState.triggers;
+    // Forward the updated triggers state to all clients
+    io.emit('updateTriggersLength', {
+      triggersState: JSON.stringify(clients),
+    });
+    // Emit the 'clientList' event with the updated clients object
+    io.emit('clientList', clients);
+  };
+// Function to the triggers
+const updateValuesClientsTriggers =
+  (socket, clients, io) =>
+  ({ triggersState }) => {
+    // Parse the received triggers state
+    let parsedTriggersState = JSON.parse(triggersState);
+    // Update the triggers state for this client in the clients object
+    clients[socket.id].Triggers = parsedTriggersState.triggers;
+    // Forward the updated triggers state to all clients
+    io.emit('updateValuesClientsTriggers', {
+      triggersState: JSON.stringify(clients),
+    });
+    // Emit the 'clientList' event with the updated clients object
+    io.emit('clientList', clients);
+  };
 
 // Launch server
 const myPort = process.env.PORT || 8081; // let Glitch choose port OR use 3000

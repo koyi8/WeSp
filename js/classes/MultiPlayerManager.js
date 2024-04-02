@@ -111,8 +111,6 @@ class MultiPlayerManager {
   setTriggersOnClientConnected() {
     // Listen for the 'syncTriggers' event from the server
     this.socket.on('syncTriggers', ({ triggersState }) => {
-      console.log('syncTriggersOnclientConnected');
-      console.log(this.clients);
       // Set the state of the triggers
       this.setTriggersClientState(triggersState);
     });
@@ -131,17 +129,17 @@ class MultiPlayerManager {
     });
   }
 
-  updateSceneOnChanges() {
-    // Listen for the 'updateScene' event from the server
-    this.socket.on('updateScene', (state) => {
+  updateCurvesOnChanges() {
+    // Listen for the 'updateCurves' event from the server
+    this.socket.on('updateCurves', (state) => {
       // Update the state of the curves UI
       this.setCurvesUIState(state);
     });
   }
 
-  sendStatetoServer = () => {
+  sendCurvesStateToServer = () => {
     const state = this.getCurvesUIState();
-    this.socket.emit('updateScene', state);
+    this.socket.emit('updateCurves', state);
   };
 
   getCurvesUIState() {
@@ -255,6 +253,12 @@ class MultiPlayerManager {
             trigger.animate = triggerState.animate;
             trigger.loop = triggerState.loop;
             trigger.speed = triggerState.speed;
+            trigger.position = this.lerp(
+              trigger.position,
+              triggerState.position,
+              0.95,
+            );
+
             trigger.position = triggerState.position;
             trigger.curveIndex = triggerState.curveIndex;
             trigger.direction = triggerState.direction;
@@ -262,6 +266,10 @@ class MultiPlayerManager {
         }
       });
     }
+  }
+
+  lerp(start, end, t) {
+    return start * (1 - t) + end * t;
   }
 
   setTriggersClientState(stateString) {
