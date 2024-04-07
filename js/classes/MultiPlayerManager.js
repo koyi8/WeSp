@@ -54,9 +54,17 @@ class MultiPlayerManager {
 
     html += '</div>';
 
-    // Update the settings-container div
+    // Get the settings-container div
     const container = document.getElementById('settings-container');
-    container.innerHTML = html;
+
+    // Remove the old clients div if it exists
+    const oldClientsDiv = document.getElementById('clients');
+    if (oldClientsDiv) {
+      oldClientsDiv.remove();
+    }
+
+    // Add the new clients div to the container
+    container.insertAdjacentHTML('beforeend', html);
   }
 
   updateClientsDiv() {
