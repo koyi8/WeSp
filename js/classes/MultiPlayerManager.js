@@ -15,42 +15,139 @@ class MultiPlayerManager {
     this.socket = socket;
     // curves and splineobjects
     this.curves = this.curveManager.getCurves();
+    this.triggers = this.triggerManager.getTriggers();
     this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
+    this.socketID = '';
+    this.clients = {};
   }
 
-  setSceneOnClientConnected() {
-    // Send the scene data to the server when a client connects
-    this.socket.on('requestScene', () => {
-      // Get the current state of the curves UI
-      console.log('requestScene received');
-      const state = this.getCurvesUIState();
-      // Send the state to the server
-      this.socket.emit('syncScene', state);
+  // RECEIVE
+
+  initSocketID() {
+    return new Promise((resolve) => {
+      this.socket.on('connect', () => {
+        console.log('Connected to server!');
+        this.socketID = this.socket.id; // unique random 20-character id is given to client from server
+        console.log(`Your socket id is  ${this.socketID}`);
+        resolve(this.socketID);
+      });
     });
   }
 
-  getSceneOnClientConnected() {
-    // Listen for the 'syncScene' event from the server
-    this.socket.on('syncScene', (state) => {
-      // Clear the current scene
-      console.log('syncScene received');
-
-      // Set the state of the curves UI
-      this.setCurvesUIState(state);
+  receiveClientList() {
+    this.socket.on('clientList', (clients) => {
+      this.clients = clients;
+      this.setClientsDiv(clients);
     });
   }
 
-  updateSceneOnChanges() {
-    // Listen for the 'updateScene' event from the server
-    this.socket.on('updateScene', (state) => {
+  setClientsDiv(clients) {
+    let html = '<div id="clients">';
+
+    Object.keys(clients).forEach((clientId, index) => {
+      // Highlight the client if it matches the client id
+      const highlight =
+        clientId === this.socket.id ? 'style="background-color: yellow;"' : '';
+
+      html += `<div ${highlight}>Client ${index + 1}: ${clientId}</div>`;
+    });
+
+    html += '</div>';
+
+    // Get the settings-container div
+    const container = document.getElementById('settings-container');
+
+    // Remove the old clients div if it exists
+    const oldClientsDiv = document.getElementById('clients');
+    if (oldClientsDiv) {
+      oldClientsDiv.remove();
+    }
+
+    // Add the new clients div to the container
+    container.insertAdjacentHTML('beforeend', html);
+  }
+
+  updateClientsDiv() {
+    this.socket.on('syncClientsDiv', (clients) => {
+      this.setClientsDiv(clients);
+    });
+  }
+
+  getCurvesOnClientConnected() {
+    let curvesState;
+    this.socket.on('requestCurveState', () => {
+      curvesState = this.getCurvesUIState();
+
+      this.socket.emit('syncCurves', { curvesState });
+    });
+  }
+
+  getTriggersOnClientConnected() {
+    let triggersState;
+    this.socket.on('requestTriggersState', () => {
+      // Get the current state of the triggers
+      triggersState = this.getTriggersClientState();
+      this.socket.emit('syncTriggers', { triggersState });
+    });
+  }
+
+  sendTriggersClientsLengthToServer() {
+    let triggersState = this.getTriggersClientState();
+    this.socket.emit('updateTriggersLength', { triggersState });
+  }
+
+  sendUpdateTriggersClientsStateToServer() {
+    let triggersState = this.getTriggersClientState();
+    this.socket.emit('updateValuesClientsTriggers', { triggersState });
+  }
+
+  updateTriggersClientsStateFromServer() {
+    this.socket.on('updateValuesClientsTriggers', ({ triggersState }) => {
+      this.updateTriggersClientSettings(triggersState);
+    });
+  }
+
+  setCurvesOnClientConnected() {
+    // Listen for the 'syncCurves' event from the server
+    this.socket.on('syncCurves', ({ curvesState }) => {
+      // Set the state of the curves
+      this.setCurvesUIState(curvesState);
+      this.socket.emit('updateClientsDiv');
+    });
+  }
+
+  setTriggersOnClientConnected() {
+    // Listen for the 'syncTriggers' event from the server
+    this.socket.on('syncTriggers', ({ triggersState }) => {
+      // Set the state of the triggers
+      this.setTriggersClientState(triggersState);
+    });
+  }
+
+  setTriggersOnClientDisconnected() {
+    this.socket.on('syncTriggersOnClientDisconnected', ({ triggersState }) => {
+      this.deleteTriggersClientOnDisconnect(triggersState);
+    });
+  }
+
+  updateTriggersClientOnChange() {
+    // Listen for 'updateTriggersLenght' event from the server
+    this.socket.on('updateTriggersLength', ({ triggersState }) => {
+      this.updateTriggersClientLength(triggersState);
+    });
+  }
+
+  updateCurvesOnChanges() {
+    // Listen for the 'updateCurves' event from the server
+    this.socket.on('updateCurves', (state) => {
       // Update the state of the curves UI
       this.setCurvesUIState(state);
     });
   }
 
-  sendStatetoServer = () => {
+  sendCurvesStateToServer = () => {
     const state = this.getCurvesUIState();
-    this.socket.emit('updateScene', state);
+    this.socket.emit('updateCurves', state);
   };
 
   getCurvesUIState() {
@@ -67,9 +164,6 @@ class MultiPlayerManager {
       })),
       splineHelperObjects: this.splineHelperObjects,
     };
-    //console.log(this.curveManager.splineHelperObjects);
-    //console.log(this.curves);
-    //console.log(state.curves);
     return JSON.stringify(state);
   }
 
@@ -126,9 +220,194 @@ class MultiPlayerManager {
         );
       }
       curve.needsUpdate = true;
-      //console.log(curve.mesh.material.color);
     });
     updateTrajectoriesHTML(this.curveManager);
+  }
+
+  getTriggersClientState() {
+    const state = {
+      triggers: this.triggers.map((trigger) => {
+        if (trigger === null) return null;
+        return {
+          ...trigger,
+          color: {
+            r: trigger.mesh?.material.color.r,
+            g: trigger.mesh?.material.color.g,
+            b: trigger.mesh?.material.color.b,
+          },
+        };
+      }),
+    };
+
+    return JSON.stringify(state);
+  }
+
+  updateTriggersClientSettings(statestring) {
+    const state = JSON.parse(statestring);
+    for (const clientID in state) {
+      if (clientID === this.socketID) {
+        continue;
+      }
+      const clientState = state[clientID];
+      clientState.Triggers.forEach((triggerState, index) => {
+        if (triggerState !== null) {
+          // not defined
+          if (!this.triggerManager.clientTriggers[clientID]) {
+            return;
+          }
+
+          const trigger = this.triggerManager.clientTriggers[clientID][index];
+          if (trigger !== undefined) {
+            trigger.animate = triggerState.animate;
+            trigger.loop = triggerState.loop;
+            trigger.speed = triggerState.speed;
+
+            // Check if the position difference is greater than 0.5
+            const positionDifference = Math.abs(
+              triggerState.position - trigger.position,
+            );
+            if (positionDifference < 0.5) {
+              //console.log('Position difference:', positionDifference);
+              trigger.position = this.lerp(
+                trigger.position,
+                triggerState.position,
+                0.15,
+              );
+            }
+            trigger.curveIndex = triggerState.curveIndex;
+            trigger.direction = triggerState.direction;
+          }
+        }
+      });
+    }
+  }
+
+  lerp(start, end, t) {
+    return start * (1 - t) + end * t;
+  }
+
+  setTriggersClientState(stateString) {
+    const state = JSON.parse(stateString);
+    for (const clientID in state) {
+      // skip for local client
+      if (clientID === this.socketID) {
+        continue;
+      }
+      const clientState = state[clientID];
+      // Create triggers for all triggers in the clients object
+      clientState.Triggers.forEach((triggerState, index) => {
+        if (triggerState !== null) {
+          // A trigger exists, create it
+          this.triggerManager.createTriggerFromClient(
+            clientID,
+            this.clients,
+            triggerState,
+          );
+        }
+      });
+    }
+    this.clients = state;
+  }
+
+  updateTriggersClientLength(stateString) {
+    const newState = JSON.parse(stateString);
+    for (const clientID in newState) {
+      // skip for local client
+      if (clientID === this.socketID) {
+        continue;
+      }
+      const newClientState = newState[clientID];
+      const oldClientState = this.clients[clientID];
+      // Update the Triggers array for each client
+      newClientState.Triggers.forEach((triggerState, index) => {
+        if (
+          triggerState !== null &&
+          (oldClientState.Triggers[index] === undefined ||
+            oldClientState.Triggers[index] === null)
+        ) {
+          // A trigger was added, create it
+          this.triggerManager.createTriggerFromClient(
+            clientID,
+            this.clients,
+            triggerState,
+          );
+        } else if (
+          (triggerState === null ||
+            newState[clientID].Triggers.length <
+              oldClientState.Triggers.length) &&
+          oldClientState.Triggers[index] !== undefined
+        ) {
+          // A trigger was deleted, delete it
+          this.triggerManager.deleteTriggerFromClient(
+            clientID,
+            this.clients,
+            index,
+          );
+        }
+      });
+    }
+    // Update the previous state
+    this.clients = newState;
+  }
+
+  deleteTriggersClientOnDisconnect(stateString) {
+    const newState = JSON.parse(stateString);
+    for (const clientID in this.clients) {
+      const newClientState = newState[clientID];
+      const oldClientState = this.clients[clientID];
+      if (
+        !newClientState &&
+        oldClientState &&
+        this.triggerManager.clientTriggers[clientID]
+      ) {
+        for (
+          let i = 0;
+          i < this.triggerManager.clientTriggers[clientID].length;
+          i++
+        ) {
+          this.triggerManager.deleteTriggerFromClient(
+            clientID,
+            this.clients,
+            i,
+          );
+        }
+      }
+    }
+  }
+
+  OLDsetTriggersClientState(stateString) {
+    const state = JSON.parse(stateString);
+    console.log('State of trigger is:', state.triggers);
+    // Create a placeholder for each element in state.triggers
+    state.triggers.forEach((triggerState, index) => {
+      const button = document.getElementById(`create-trigger-${index}`); // use default id for button on initial creation
+      this.triggerManager.createTrigger(button);
+      const newTrigger = this.triggerManager.triggers[index];
+      if (triggerState !== null && newTrigger !== undefined) {
+        newTrigger.animate = triggerState.animate;
+        newTrigger.loop = triggerState.loop;
+        newTrigger.speed = triggerState.speed;
+        newTrigger.position = triggerState.position;
+        newTrigger.curveIndex = triggerState.curveIndex;
+        newTrigger.direction = triggerState.direction;
+        newTrigger.mesh.material.color.r = triggerState.color.r;
+        newTrigger.mesh.material.color.g = triggerState.color.g;
+        newTrigger.mesh.material.color.b = triggerState.color.b;
+        this.triggerManager.updateTriggerControlDiv(index);
+      }
+    });
+
+    // Delete the placeholders that correspond to nulls in state.triggers
+    state.triggers.forEach((triggerState, index) => {
+      if (
+        triggerState === null &&
+        this.triggerManager.triggers[index] !== undefined
+      ) {
+        this.triggerManager.deleteTrigger(index);
+      }
+    });
+
+    this.triggers = this.triggerManager.triggers;
   }
 
   toggleDummyState() {
@@ -146,8 +425,11 @@ class MultiPlayerManager {
     checkbox.addEventListener('change', () => {
       if (checkbox.checked) {
         // Call getUIStateAsJSON when the checkbox is checked
-        json = this.getCurvesUIState();
-        console.log(json); // You can replace this with code to send the JSON to the server
+
+        const button = document.getElementById('create-trigger-0');
+        this.triggerManager.createTrigger(button);
+        json = this.getTriggersClientState();
+        console.log(json);
       }
     });
     // Create a new label

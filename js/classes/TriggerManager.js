@@ -13,7 +13,13 @@ class TriggerManager {
     this.curveManager = curveManager;
     this.container = container;
     this.triggers = [];
+    this.clientTriggers = {};
     this.initLabelRenderer();
+    this.triggerColor = this.setTriggerColor();
+  }
+
+  getTriggers() {
+    return this.triggers;
   }
 
   initLabelRenderer() {
@@ -34,11 +40,18 @@ class TriggerManager {
     });
   }
 
-  createTrigger(button) {
+  setTriggerColor() {
     const colors = [0x000000, 0xff0000, 0x0000ff, 0x808080];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    this.triggerColor = randomColor;
+    return this.triggerColor;
+  }
+
+  createTrigger(button) {
     const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-    const cubeMaterial = new THREE.MeshBasicMaterial({ color: randomColor });
+    const cubeMaterial = new THREE.MeshBasicMaterial({
+      color: this.triggerColor,
+    });
     const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
     const labelElement = document.createElement('div');
@@ -84,6 +97,84 @@ class TriggerManager {
     );
 
     button.replaceWith(triggerDiv);
+
+    // event for Server to update the trigger
+    const event = new Event('addedTrigger');
+    window.dispatchEvent(event);
+  }
+
+  createTriggerFromClient(clientID, clients, triggerState) {
+    const cubeGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+    const cubeMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(
+        triggerState.color.r,
+        triggerState.color.g,
+        triggerState.color.b,
+      ),
+      wireframe: true,
+    });
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    this.scene.add(cube);
+
+    const labelElement = document.createElement('div');
+    labelElement.className = 'label';
+    const cubeLabel = new CSS2DObject(labelElement);
+    cubeLabel.position.set(0, 0.2, 0);
+    cube.add(cubeLabel);
+
+    // default properties for the new trigger
+    const triggerDefaults = {
+      animate: triggerState.animate,
+      loop: triggerState.loop,
+      speed: triggerState.speed,
+      position: triggerState.position,
+      curveIndex: triggerState.curveIndex,
+      direction: triggerState.direction,
+    };
+
+    const newTrigger = {
+      mesh: cube,
+      label: labelElement,
+      ...triggerDefaults,
+    };
+
+    // Store Trigger in the local clientTriggers array
+    if (!this.clientTriggers[clientID]) {
+      this.clientTriggers[clientID] = [];
+    }
+    let index = this.clientTriggers[clientID].indexOf(null);
+    if (index === -1) {
+      index = this.clientTriggers[clientID].length;
+    }
+    // Add the new trigger to the array
+    this.clientTriggers[clientID][index] = newTrigger;
+    // Store Trigger in the corresponding clients object
+    clients[clientID].Triggers[index] = newTrigger;
+  }
+
+  deleteTriggerFromClient(clientID, clients, index) {
+    const triggerToRemove = this.clientTriggers[clientID][index];
+    if (!triggerToRemove) return;
+
+    this.scene.remove(triggerToRemove.mesh);
+
+    triggerToRemove.mesh.geometry.dispose();
+    triggerToRemove.mesh.material.dispose();
+
+    if (triggerToRemove.mesh.children.length > 0) {
+      const labelObject = triggerToRemove.mesh.children.find(
+        (child) => child instanceof CSS2DObject,
+      );
+      if (labelObject) {
+        labelObject.element.remove(); // Remove label from the DOM
+        this.scene.remove(labelObject); // Remove CSS2DObject from scene graph
+      }
+    }
+    // Set the trigger to null in the clientTriggers array
+    this.clientTriggers[clientID][index] = null;
+
+    // Set the trigger to null in the clients object
+    clients[clientID].Triggers[index] = null;
   }
 
   deleteTrigger(index) {
@@ -122,6 +213,10 @@ class TriggerManager {
     //this.triggers.splice(index, 1);
     // Replace the trigger in the array with null
     this.triggers[index] = null;
+
+    // Event for Server to update the trigger
+    const event = new Event('deletedTrigger');
+    window.dispatchEvent(event);
   }
 
   createTriggers() {
@@ -166,9 +261,74 @@ class TriggerManager {
     }
   }
 
+  animateTrigger(trigger, index, positionsArray) {
+    if (trigger === null || trigger === undefined) {
+      if (positionsArray) {
+        positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
+      }
+      return; // Skip this iteration
+    }
+    const curves = this.curveManager.getCurves();
+
+    const curve = curves[trigger.curveIndex];
+    let position = trigger.position;
+    if (!curve) {
+      console.warn(`Curve ${trigger.curveIndex} not found`);
+      return; // Skip this iteration
+    }
+    if (trigger.animate) {
+      let arclength = curve.getLength();
+      let directionFactor = trigger.direction === 'rtl' ? -1 : 1;
+      let speedAdjustment = (trigger.speed / arclength) * directionFactor;
+
+      position += speedAdjustment;
+
+      if (trigger.loop) {
+        if (position < 0) position += 1;
+        position %= 1;
+      } else {
+        if (position >= 1 || position <= 0) {
+          trigger.speed *= -1;
+          position = position >= 1 ? 1 - (position - 1) : Math.abs(position);
+        }
+      }
+
+      trigger.position = position;
+    }
+
+    const trigPos = curve.getPointAt(Math.abs(position) % 1);
+    trigger.mesh.position.copy(trigPos);
+    const label = trigger.mesh.children[0].element;
+    label.innerHTML = `${index + 1}`;
+
+    if (positionsArray) {
+      const label = trigger.mesh.children[0].element;
+      label.innerHTML = `${index + 1}: ${trigPos.x.toFixed(
+        2,
+      )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
+
+      positionsArray[index] = trigPos.clone();
+    }
+    curve.updateArcLengths();
+  }
+
+  animateAllTriggers(positionsArray) {
+    this.triggers.forEach((trigger, index) => {
+      this.animateTrigger(trigger, index, positionsArray);
+    });
+
+    Object.entries(this.clientTriggers).forEach(
+      ([clientID, clientTriggers]) => {
+        clientTriggers.forEach((trigger, index) => {
+          this.animateTrigger(trigger, index);
+        });
+      },
+    );
+  }
+
   animateTriggers(positionsArray) {
     this.triggers.forEach((trigger, index) => {
-      if (trigger === null) {
+      if (trigger === null || trigger === undefined) {
         positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
         return; // Skip this iteration
       }
@@ -251,6 +411,51 @@ class TriggerManager {
 
   updateLabelRendererSize(width, height) {
     this.labelRenderer.setSize(width, height);
+  }
+
+  updateTriggerControlDiv(index) {
+    const trigger = this.triggers[index];
+    const div = document.getElementById(`trigger${index}`);
+    if (div) {
+      // Update the animate checkbox
+      const animateCheckbox = div.querySelector(`#animate${index}`);
+      animateCheckbox.checked = trigger.animate;
+
+      const speedControl = div.querySelector(`div.control:has(#speed${index})`);
+      const positionControl = div.querySelector(
+        `div.control:has(#position${index})`,
+      );
+      // Show or hide the speed and position controls based on the animate checkbox
+      if (animateCheckbox.checked) {
+        positionControl.style.display = 'none'; // Hide position control when animated
+        speedControl.style.display = ''; // Show speed control (use default or '' to reset)
+      } else {
+        positionControl.style.display = ''; // Show position control when not animated
+        speedControl.style.display = 'none'; // Hide speed control
+      }
+
+      const speedRange = div.querySelector(`#speed${index}`);
+      speedRange.value = trigger.speed;
+
+      const positionRange = div.querySelector(`#position${index}`);
+      positionRange.value = trigger.position;
+
+      const trajectorySelect = div.querySelector(`#trajectory${index}`);
+      trajectorySelect.value = trigger.curveIndex;
+
+      const loopCheckbox = div.querySelector(`#loop${index}`);
+      loopCheckbox.checked = trigger.loop;
+
+      const ltrButton = div.querySelector(`#ltr${index}`);
+      const rtlButton = div.querySelector(`#rtl${index}`);
+      if (trigger.direction === 'ltr') {
+        ltrButton.classList.add('selected');
+        rtlButton.classList.remove('selected');
+      } else if (trigger.direction === 'rtl') {
+        rtlButton.classList.add('selected');
+        ltrButton.classList.remove('selected');
+      }
+    }
   }
 }
 

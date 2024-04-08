@@ -11,11 +11,12 @@ import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/createOCSTables';
+import Stats from 'three/addons/libs/stats.module.js';
 
 const cameraSettings = {
   fov: 70, // field of view
-  near: 1,
-  far: 10000,
+  near: 0.1,
+  far: 5000,
   position: { x: 3, y: 0, z: 1.6 },
   up: { x: 0, y: 0, z: 1 },
 };
@@ -70,12 +71,13 @@ let selectedObject = null;
 let controls;
 let transformControl;
 let socket;
+let stats;
 
-let isUpdateFromUI = false;
 let isDragging = false;
 
 const init = () => {
   setupSocket();
+  setupStats();
   setupScene();
   setupLights();
   setupGeometry();
@@ -95,16 +97,37 @@ const init = () => {
   render();
   updateTrajectoriesHTML(curveManager);
   createOCSTables();
-  multiPlayerManager.toggleDummyState();
-  multiPlayerManager.getSceneOnClientConnected();
-  multiPlayerManager.setSceneOnClientConnected();
-  multiPlayerManager.updateSceneOnChanges();
+  setupMultiPlayerManager();
 };
 
 const setupSocket = () => {
   const serverURL = 'http://:8081/'; //
   // Client Initialization
   socket = io(serverURL);
+};
+
+const setupMultiPlayerManager = () => {
+  multiPlayerManager.initSocketID();
+  multiPlayerManager.toggleDummyState();
+  multiPlayerManager.receiveClientList();
+  multiPlayerManager.getCurvesOnClientConnected();
+  multiPlayerManager.getTriggersOnClientConnected();
+  multiPlayerManager.setCurvesOnClientConnected();
+  multiPlayerManager.setTriggersOnClientConnected();
+  multiPlayerManager.updateCurvesOnChanges();
+  multiPlayerManager.updateClientsDiv();
+  multiPlayerManager.updateTriggersClientOnChange();
+  multiPlayerManager.updateTriggersClientsStateFromServer();
+  multiPlayerManager.setTriggersOnClientDisconnected();
+};
+
+const setupStats = () => {
+  stats = new Stats();
+  stats.dom.style.position = 'absolute';
+  stats.dom.style.left = '0';
+  stats.dom.style.top = '0';
+  //stats.dom.style.transform = 'translateX(-50%)';
+  document.body.appendChild(stats.dom);
 };
 
 const setupScene = () => {
@@ -128,7 +151,7 @@ const setupScene = () => {
   scene.add(camera);
 
   renderer = new THREE.WebGLRenderer({ antialias: settings.antialias });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
   renderer.setSize(width, height);
   renderer.shadowMap.enabled = false; // disable shadows
   container.appendChild(renderer.domElement);
@@ -184,12 +207,42 @@ const setupControls = () => {
   scene.add(transformControl, axesHelper);
 };
 
+/*
+const animate = () => {
+  //requestAnimationFrame(animate);
+
+  setTimeout(function () {
+    requestAnimationFrame(animate);
+  }, 1000 / 40);
+  //triggerManager.animateTriggers(positionsArray);
+  triggerManager.animateAllTriggers(positionsArray);
+  curveManager.updateSplineOutline();
+  multiPlayerManager.sendUpdateTriggersClientsStateToServer();
+  render();
+  stats.update();
+};
+
+*/
+
+let lastTime = performance.now();
+let renderFPS = 40;
+let interval = 1000 / renderFPS;
+
 const animate = () => {
   requestAnimationFrame(animate);
-  triggerManager.animateTriggers(positionsArray);
-  curveManager.updateSplineOutline();
-  //throttleSendToServer();
-  render();
+  let currentTime = performance.now();
+  let delta = currentTime - lastTime;
+
+  if (delta > interval) {
+    // The draw or time dependent code are here
+    triggerManager.animateAllTriggers(positionsArray);
+    curveManager.updateSplineOutline();
+    multiPlayerManager.sendUpdateTriggersClientsStateToServer();
+    render();
+
+    lastTime = currentTime - (delta % interval);
+    stats.update();
+  }
 };
 
 const render = () => {
@@ -244,7 +297,8 @@ const onDocumentMouseDown = (event) => {
 
 const debouncedUpdateControlPointsHTML = debounce(() => {
   updateControlPointsHTML(curveManager);
-  multiPlayerManager.sendStatetoServer();
+  multiPlayerManager.sendCurvesStateToServer();
+  console.log(positionsArray);
 }, 300);
 
 const initListeners = () => {
@@ -258,10 +312,13 @@ const initListeners = () => {
     controls.enabled = true;
   });
   transformControl.addEventListener('dragging-changed', (event) => {
+    //console.log('Dragging changed: ', event.value);
     controls.enabled = !event.value;
     isDragging = event.value;
   });
+
   transformControl.addEventListener('objectChange', () => {
+    //console.log('Object changed: ', selectedObject);
     if (selectedObject) {
       curveManager.updateCurveFromControlPoint(selectedObject);
       debouncedUpdateControlPointsHTML();
@@ -273,6 +330,12 @@ const initListeners = () => {
   });
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();
+  });
+  window.addEventListener('addedTrigger', () => {
+    multiPlayerManager.sendTriggersClientsLengthToServer();
+  });
+  window.addEventListener('deletedTrigger', () => {
+    multiPlayerManager.sendTriggersClientsLengthToServer();
   });
 };
 
