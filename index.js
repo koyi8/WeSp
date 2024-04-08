@@ -227,7 +227,7 @@ const animate = () => {
 let clock = new THREE.Clock();
 let delta = 0;
 // 30 fps
-let interval = 1 / 50;
+let interval = 1 / 40;
 
 function animate() {
   requestAnimationFrame(animate);

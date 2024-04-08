@@ -261,13 +261,19 @@ class MultiPlayerManager {
             trigger.animate = triggerState.animate;
             trigger.loop = triggerState.loop;
             trigger.speed = triggerState.speed;
-            trigger.position = this.lerp(
-              trigger.position,
-              triggerState.position,
-              0.95,
-            );
 
-            trigger.position = triggerState.position;
+            // Check if the position difference is greater than 0.5
+            const positionDifference = Math.abs(
+              triggerState.position - trigger.position,
+            );
+            if (positionDifference < 0.5) {
+              //console.log('Position difference:', positionDifference);
+              trigger.position = this.lerp(
+                trigger.position,
+                triggerState.position,
+                0.15,
+              );
+            }
             trigger.curveIndex = triggerState.curveIndex;
             trigger.direction = triggerState.direction;
           }
