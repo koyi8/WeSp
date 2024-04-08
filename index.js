@@ -151,7 +151,7 @@ const setupScene = () => {
   scene.add(camera);
 
   renderer = new THREE.WebGLRenderer({ antialias: settings.antialias });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
   renderer.setSize(width, height);
   renderer.shadowMap.enabled = false; // disable shadows
   container.appendChild(renderer.domElement);
@@ -224,15 +224,14 @@ const animate = () => {
 
 */
 
-let clock = new THREE.Clock();
-let delta = 0;
-// 30 fps
-let interval = 1 / 40;
+let lastTime = performance.now();
+let renderFPS = 40;
+let interval = 1000 / renderFPS;
 
-function animate() {
+const animate = () => {
   requestAnimationFrame(animate);
-  delta += clock.getDelta();
-  //stats.update();
+  let currentTime = performance.now();
+  let delta = currentTime - lastTime;
 
   if (delta > interval) {
     // The draw or time dependent code are here
@@ -240,11 +239,11 @@ function animate() {
     curveManager.updateSplineOutline();
     multiPlayerManager.sendUpdateTriggersClientsStateToServer();
     render();
-    stats.update();
 
-    delta = delta % interval;
+    lastTime = currentTime - (delta % interval);
+    stats.update();
   }
-}
+};
 
 const render = () => {
   renderer.render(scene, camera);
@@ -299,8 +298,6 @@ const onDocumentMouseDown = (event) => {
 const debouncedUpdateControlPointsHTML = debounce(() => {
   updateControlPointsHTML(curveManager);
   multiPlayerManager.sendCurvesStateToServer();
-  // console.log(multiPlayerManager.clients);
-  //console.log(triggerManager.triggers);
   console.log(positionsArray);
 }, 300);
 
