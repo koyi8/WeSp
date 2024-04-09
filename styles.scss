@@ -82,6 +82,18 @@ button {
   &.left {
     @include respond-to(portrait) {
       height: 50vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+  }
+
+  &.right {
+    @include respond-to(portrait) {
+      height: 50vh;
+      position: relative;
+      top: 50vh;
+      left: 0;
     }
   }
 }
@@ -105,11 +117,27 @@ button {
   overflow: hidden;
   min-height: 620px;
 
+  @include respond-to(portrait) {
+    flex-direction: column;
+    //flex-wrap: wrap;
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+  }
+
   .trigger,
   .add-trigger {
     display: flex;
     width: 20%;
     height: 50%;
+
+    @include respond-to(portrait) {
+      display: flex;
+      width: 20%;
+      height: 100%;
+      overflow: auto;
+      overflow-x: auto; // Enables horizontal scrolling when the content overflows
+    }
   }
 
   .trigger {
