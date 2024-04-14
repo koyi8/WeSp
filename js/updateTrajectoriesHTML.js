@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 let selectedPointIndex;
+let isNewTrajectory = false;
 
 export let selectedCurveIndex;
 
@@ -11,12 +12,41 @@ let pointControlSettings = {
   cpStepNumber: 0.05,
 };
 
-export const updateTrajectoriesHTML = (curveManager) => {
+export const updateTrajectoriesHTML = (
+  curveManager,
+  isNewTrajectory = false,
+) => {
   const container = document.getElementById('trajectories-container');
   container.innerHTML = '';
 
+  const tabContainer = document.createElement('div');
+  tabContainer.className = 'tab-container';
+  container.appendChild(tabContainer);
+
   curveManager.curves.forEach((curve, curveIndex) => {
     let selectPointIndex = 0;
+
+    // Create a tab for each trajectory
+    const tab = document.createElement('button');
+    tab.className = 'tab';
+    tab.textContent = `Trajectory ${curveIndex + 1}`;
+    tab.addEventListener('click', () => {
+      // Hide all trajectories
+      document.querySelectorAll('.trajectory').forEach((trajectory) => {
+        trajectory.style.display = 'none';
+      });
+      // Show the clicked trajectory
+      document.getElementById(`trajectory-${curveIndex}`).style.display =
+        'block';
+      // Deselect all curves
+      curveManager.curves.forEach((_, index) => {
+        curveManager.toggleCurveSelected(index, false);
+      });
+      curveManager.toggleCurveSelected(curveIndex, true);
+      selectedCurveIndex = curveIndex;
+    });
+
+    tabContainer.appendChild(tab);
 
     const trajectoryDiv = document.createElement('div');
     trajectoryDiv.className = 'trajectory';
@@ -69,7 +99,7 @@ export const updateTrajectoriesHTML = (curveManager) => {
     deleteCurveButton.textContent = 'x';
     deleteCurveButton.addEventListener('click', () => {
       curveManager.deleteCurve(curveIndex);
-      updateTrajectoriesHTML(curveManager);
+      updateTrajectoriesHTML(curveManager, (isNewTrajectory = false));
     });
     headerDiv.appendChild(deleteCurveButton);
 
@@ -178,12 +208,34 @@ export const updateTrajectoriesHTML = (curveManager) => {
     trajectoryDiv.appendChild(pointsDiv);
     container.appendChild(trajectoryDiv);
     //selectPointIndex++;
+    // Initially hide all trajectories
+    trajectoryDiv.style.display = 'none';
+    container.appendChild(trajectoryDiv);
   });
+
+  //console.log('selectedcurve index', selectedCurveIndex);
+
+  // Show the last trajectory by default (which is the newly created one)
+  const trajectoryIndexToShow = isNewTrajectory
+    ? curveManager.curves.length - 1
+    : selectedCurveIndex;
+  if (trajectoryIndexToShow >= 0) {
+    document.getElementById(
+      `trajectory-${trajectoryIndexToShow}`,
+    ).style.display = 'block';
+  }
+  // If a new trajectory was created, update the selectedCurveIndex
+  if (isNewTrajectory) {
+    selectedCurveIndex = curveManager.curves.length - 1;
+  }
 };
 
 const deleteControlPoint = (objectIndex, curveManager) => {
   curveManager.deleteSplineObject(objectIndex);
-  updateTrajectoriesHTML(curveManager);
+  updateTrajectoriesHTML(curveManager, (isNewTrajectory = false));
+
+  const event = new Event('uiUpdated');
+  window.dispatchEvent(event);
 };
 
 const addControlPoint = (curveIndex, curveManager, objectIndex) => {
@@ -196,7 +248,7 @@ const addControlPoint = (curveIndex, curveManager, objectIndex) => {
     .addVectors(currentPoint, nextPoint)
     .multiplyScalar(0.5);
 
-  console.log(curveManager.curves[curveIndex].tension);
+  //console.log(curveManager.curves[curveIndex].tension);
 
   const newControlPoint = curveManager.addSplineObject(midPoint, curveIndex);
 
@@ -211,18 +263,21 @@ const addControlPoint = (curveIndex, curveManager, objectIndex) => {
 
   curveManager.updateCurveFromControlPoint(newControlPoint);
 
-  updateTrajectoriesHTML(curveManager);
+  updateTrajectoriesHTML(curveManager, (isNewTrajectory = false));
+
+  const event = new Event('uiUpdated');
+  window.dispatchEvent(event);
 };
 
 const selectPointListener = (curveIndex, pointIndex, curveManager) => {
   return () => {
-    console.log(`Trajectory ${curveIndex}, Point ${pointIndex} clicked`);
+    //console.log(`Trajectory ${curveIndex}, Point ${pointIndex} clicked`);
     selectedPointIndex = pointIndex;
     for (let i = 0; i < curveIndex; i++) {
       selectedPointIndex += curveManager.curves[i].points.length;
     }
-    console.log(curveManager.splineHelperObjects[selectedPointIndex]);
-    console.log(curveManager.splineHelperObjects);
+    //console.log(curveManager.splineHelperObjects[selectedPointIndex]);
+    //console.log(curveManager.splineHelperObjects);
   };
 };
 

@@ -137,7 +137,7 @@ class CurveManager {
       curveObjects.map((obj) => obj.position),
       this.settings.closed,
     );
-    updateTrajectoriesHTML(this);
+    updateTrajectoriesHTML(this, true);
   }
 
   createCurve(positions, isClosed) {

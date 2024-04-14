@@ -319,6 +319,9 @@ button {
         position: absolute;
         top: 50%;
         left: 0;
+        @include respond-to(portrait) {
+          display: none; // Hides the middle line in portrait mode
+        }
       }
 
       &.left20 {

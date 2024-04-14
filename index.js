@@ -95,7 +95,7 @@ const init = () => {
   curveManager.setMultiPlayerManager(multiPlayerManager);
   initListeners();
   render();
-  updateTrajectoriesHTML(curveManager);
+  updateTrajectoriesHTML(curveManager, true);
   createOCSTables();
   setupMultiPlayerManager();
 };
