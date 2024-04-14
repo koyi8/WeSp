@@ -28,7 +28,7 @@ export const updateTrajectoriesHTML = (
 
     // Create a tab for each trajectory
     const tab = document.createElement('button');
-    tab.className = 'tab';
+    tab.className = 'trajectory-tabs';
     tab.textContent = `Trajectory ${curveIndex + 1}`;
     tab.addEventListener('click', () => {
       // Hide all trajectories
@@ -183,6 +183,7 @@ export const updateTrajectoriesHTML = (
       });
 
       const deleteButton = document.createElement('button');
+      deleteButton.className = 'delete-controlPoint-button';
       deleteButton.textContent = 'delete';
       deleteButton.addEventListener(
         'click',
@@ -192,6 +193,7 @@ export const updateTrajectoriesHTML = (
       pointDiv.appendChild(deleteButton);
 
       const addButton = document.createElement('button');
+      addButton.className = 'add-controlPoint-button';
       addButton.textContent = 'add';
       addButton.addEventListener(
         'click',

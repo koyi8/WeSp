@@ -193,6 +193,15 @@ class CurveManager {
 
     this.splineHelperObjects = this.splineHelperObjects.filter((object) => {
       if (object.curveIndex === curveIndex) {
+        // Remove the label associated with the splineHelperObject
+        const label = object.children.find(
+          (child) => child instanceof CSS2DObject,
+        );
+        if (label) {
+          label.element.remove();
+          this.scene.remove(label);
+        }
+
         this.scene.remove(object);
         object.geometry.dispose();
         object.material.dispose();

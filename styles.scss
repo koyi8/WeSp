@@ -238,6 +238,7 @@ button {
   padding-bottom: 40px;
 
   .header {
+    //position: fixed;
     padding: 15px 10px;
     border-top: 1px solid #f1f1f1;
     display: flex;
@@ -254,11 +255,56 @@ button {
     display: flex;
     flex-direction: row;
     column-gap: 15px;
+    margin-bottom: 10px;
 
     input {
       width: 100%;
     }
   }
+}
+
+.tab-container {
+  //position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.trajectory-tabs {
+  background-color: #f1f1f1;
+  border: none;
+  cursor: pointer;
+  padding: 5px 15px;
+  transition: 0.3s;
+  margin: 5px;
+}
+.trajectory {
+  position: relative; // Add position: relative
+  z-index: 1; // Add a lower z-index
+  // Add other styles as needed
+}
+
+.points {
+  position: relative; // Add position: relative
+  z-index: 1;
+  background-color: #f0f0f0; //
+  border: 1px solid #ccc; //
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.delete-controlPoint-button {
+  padding: 10px 10px;
+  margin: auto 0; // Center vertically in the div
+
+  cursor: pointer;
+}
+
+.add-controlPoint-button {
+  padding: 10px 10px;
+  margin: auto 0; // Center vertically in the div
+
+  cursor: pointer;
 }
 
 /*GUI*/
@@ -319,6 +365,7 @@ button {
         position: absolute;
         top: 50%;
         left: 0;
+
         @include respond-to(portrait) {
           display: none; // Hides the middle line in portrait mode
         }
