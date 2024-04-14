@@ -260,8 +260,7 @@ class MultiPlayerManager {
           if (trigger !== undefined) {
             trigger.animate = triggerState.animate;
             trigger.loop = triggerState.loop;
-            trigger.speed = triggerState.speed;
-
+            trigger.speed = this.lerp(trigger.speed, triggerState.speed, 0.1);
             // Check if the position difference is greater than 0.5
             const positionDifference = Math.abs(
               triggerState.position - trigger.position,
@@ -271,7 +270,7 @@ class MultiPlayerManager {
               trigger.position = this.lerp(
                 trigger.position,
                 triggerState.position,
-                0.15,
+                0.01,
               );
             }
             trigger.curveIndex = triggerState.curveIndex;
