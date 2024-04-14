@@ -99,7 +99,13 @@ export const updateTrajectoriesHTML = (
     deleteCurveButton.textContent = 'x';
     deleteCurveButton.addEventListener('click', () => {
       curveManager.deleteCurve(curveIndex);
+      selectedCurveIndex = curveManager.curves.length - 1;
       updateTrajectoriesHTML(curveManager, (isNewTrajectory = false));
+      console.log('delete curve', curveIndex);
+      const event = new Event('uiUpdated');
+      window.dispatchEvent(event);
+
+      //selectedCurveIndex = this.curves.length - 1;
     });
     headerDiv.appendChild(deleteCurveButton);
 
@@ -218,15 +224,29 @@ export const updateTrajectoriesHTML = (
   //console.log('selectedcurve index', selectedCurveIndex);
 
   // Show the last trajectory by default (which is the newly created one)
-  const trajectoryIndexToShow = isNewTrajectory
+  let trajectoryIndexToShow = isNewTrajectory
     ? curveManager.curves.length - 1
     : selectedCurveIndex;
   if (trajectoryIndexToShow >= 0) {
-    document.getElementById(
+    let element = document.getElementById(
       `trajectory-${trajectoryIndexToShow}`,
-    ).style.display = 'block';
+    );
+
+    if (element) {
+      element.style.display = 'block';
+    } else if (curveManager.curves.length > 0) {
+      // If the element is null and there are still curves, display the last curve
+      trajectoryIndexToShow = curveManager.curves.length - 1;
+      const lastElement = document.getElementById(
+        `trajectory-${trajectoryIndexToShow}`,
+      );
+
+      if (lastElement) {
+        lastElement.style.display = 'block';
+      }
+    }
   }
-  // If a new trajectory was created, update the selectedCurveIndex
+
   if (isNewTrajectory) {
     selectedCurveIndex = curveManager.curves.length - 1;
   }
