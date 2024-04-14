@@ -227,23 +227,20 @@ export const updateTrajectoriesHTML = (
   let trajectoryIndexToShow = isNewTrajectory
     ? curveManager.curves.length - 1
     : selectedCurveIndex;
+
   if (trajectoryIndexToShow >= 0) {
     let element = document.getElementById(
       `trajectory-${trajectoryIndexToShow}`,
     );
 
+    // If the element is null and there are still curves, display the last curve
+    if (!element && curveManager.curves.length > 0) {
+      trajectoryIndexToShow = curveManager.curves.length - 1;
+      element = document.getElementById(`trajectory-${trajectoryIndexToShow}`);
+    }
+
     if (element) {
       element.style.display = 'block';
-    } else if (curveManager.curves.length > 0) {
-      // If the element is null and there are still curves, display the last curve
-      trajectoryIndexToShow = curveManager.curves.length - 1;
-      const lastElement = document.getElementById(
-        `trajectory-${trajectoryIndexToShow}`,
-      );
-
-      if (lastElement) {
-        lastElement.style.display = 'block';
-      }
     }
   }
 
