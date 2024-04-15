@@ -1,11 +1,5 @@
 import * as THREE from 'three';
-import {
-  CSS2DObject,
-  CSS2DRenderer,
-} from 'three/addons/renderers/CSS2DRenderer.js';
 import { updateTrajectoriesHTML } from '../updateTrajectoriesHTML';
-import { createTriggerControlDiv } from '../createTriggerControlDiv';
-import { positionsArray } from '../..';
 
 class MultiPlayerManager {
   constructor(scene, curveManager, triggerManager, socket) {
@@ -261,7 +255,7 @@ class MultiPlayerManager {
             trigger.animate = triggerState.animate;
             trigger.loop = triggerState.loop;
             trigger.speed = this.lerp(trigger.speed, triggerState.speed, 0.1);
-            // Check if the position difference is greater than 0.5
+            // Discard trigger update from network dropouts
             const positionDifference = Math.abs(
               triggerState.position - trigger.position,
             );
