@@ -13,6 +13,7 @@ class MultiPlayerManager {
     this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
     this.socketID = '';
     this.clients = {};
+    this.clientColor = this.triggerManager.triggerColor;
   }
 
   // RECEIVE
@@ -32,6 +33,14 @@ class MultiPlayerManager {
     this.socket.on('clientList', (clients) => {
       this.clients = clients;
       this.setClientsDiv(clients);
+    });
+  }
+
+  getClientColor() {
+    this.socket.on('assignColor', ({ color }) => {
+      // Handle the received color
+      console.log(`Assigned color is ${color}`);
+      this.triggerManager.triggerColor = color;
     });
   }
 
@@ -418,11 +427,7 @@ class MultiPlayerManager {
     checkbox.addEventListener('change', () => {
       if (checkbox.checked) {
         // Call getUIStateAsJSON when the checkbox is checked
-
-        const button = document.getElementById('create-trigger-0');
-        this.triggerManager.createTrigger(button);
-        json = this.getTriggersClientState();
-        console.log(json);
+        this.getClientColor();
       }
     });
     // Create a new label

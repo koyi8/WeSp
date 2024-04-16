@@ -115,16 +115,31 @@ let clients = {},
   sockets = {};
 
 let firstClientSocket = null;
-
+let clientColors = [
+  '#FF00FF',
+  '#00FFFF',
+  '#00FF00',
+  '#0000FF',
+  '#FFFF00',
+  '#FF0000',
+];
 // Event fired when client connects, giving each client a unique "socket" instance
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
 
+  let colorIndex = Object.keys(clients).length % clientColors.length;
+
   //Store client id and initialize triggers array for each client
-  clients[socket.id] = { clientID: socket.id, Triggers: [] };
+  clients[socket.id] = {
+    clientID: socket.id,
+    Triggers: [],
+    color: clientColors[colorIndex],
+  };
   sockets[socket.id] = socket;
   // Emit the 'clientList' event with the updated clients object
   io.emit('clientList', clients);
+  // Send the assigned color to the client
+  socket.emit('assignColor', { color: clients[socket.id].color });
 
   // Update the client divs for Curves
   socket.on('updateClientsDiv', () => {

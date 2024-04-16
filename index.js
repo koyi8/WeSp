@@ -119,6 +119,7 @@ const setupMultiPlayerManager = () => {
   multiPlayerManager.updateTriggersClientOnChange();
   multiPlayerManager.updateTriggersClientsStateFromServer();
   multiPlayerManager.setTriggersOnClientDisconnected();
+  multiPlayerManager.getClientColor();
 };
 
 const setupStats = () => {

@@ -42,7 +42,7 @@ class CurveManager {
   addSplineObject(position, curveIndex) {
     const geometry = new THREE.BoxGeometry(0.04, 0.04, 0.04);
     const material = new THREE.MeshBasicMaterial({
-      color: Math.random() * 0xffffff,
+      color: 0x808080,
     });
     const object = new THREE.Mesh(geometry, material);
     // Create a div for the label
