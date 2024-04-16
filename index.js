@@ -95,7 +95,7 @@ const init = () => {
   curveManager.setMultiPlayerManager(multiPlayerManager);
   initListeners();
   render();
-  updateTrajectoriesHTML(curveManager);
+  updateTrajectoriesHTML(curveManager, true); // true value for isNewTrajectory
   createOCSTables();
   setupMultiPlayerManager();
 };
@@ -119,6 +119,7 @@ const setupMultiPlayerManager = () => {
   multiPlayerManager.updateTriggersClientOnChange();
   multiPlayerManager.updateTriggersClientsStateFromServer();
   multiPlayerManager.setTriggersOnClientDisconnected();
+  multiPlayerManager.getClientColor();
 };
 
 const setupStats = () => {

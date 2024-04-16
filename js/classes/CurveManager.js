@@ -42,7 +42,7 @@ class CurveManager {
   addSplineObject(position, curveIndex) {
     const geometry = new THREE.BoxGeometry(0.04, 0.04, 0.04);
     const material = new THREE.MeshBasicMaterial({
-      color: Math.random() * 0xffffff,
+      color: 0x808080,
     });
     const object = new THREE.Mesh(geometry, material);
     // Create a div for the label
@@ -137,7 +137,7 @@ class CurveManager {
       curveObjects.map((obj) => obj.position),
       this.settings.closed,
     );
-    updateTrajectoriesHTML(this);
+    updateTrajectoriesHTML(this, true);
   }
 
   createCurve(positions, isClosed) {
@@ -193,6 +193,15 @@ class CurveManager {
 
     this.splineHelperObjects = this.splineHelperObjects.filter((object) => {
       if (object.curveIndex === curveIndex) {
+        // Remove the label associated with the splineHelperObject
+        const label = object.children.find(
+          (child) => child instanceof CSS2DObject,
+        );
+        if (label) {
+          label.element.remove();
+          this.scene.remove(label);
+        }
+
         this.scene.remove(object);
         object.geometry.dispose();
         object.material.dispose();

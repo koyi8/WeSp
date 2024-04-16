@@ -1,11 +1,5 @@
 import * as THREE from 'three';
-import {
-  CSS2DObject,
-  CSS2DRenderer,
-} from 'three/addons/renderers/CSS2DRenderer.js';
 import { updateTrajectoriesHTML } from '../updateTrajectoriesHTML';
-import { createTriggerControlDiv } from '../createTriggerControlDiv';
-import { positionsArray } from '../..';
 
 class MultiPlayerManager {
   constructor(scene, curveManager, triggerManager, socket) {
@@ -19,6 +13,7 @@ class MultiPlayerManager {
     this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
     this.socketID = '';
     this.clients = {};
+    this.clientColor = this.triggerManager.triggerColor;
   }
 
   // RECEIVE
@@ -38,6 +33,14 @@ class MultiPlayerManager {
     this.socket.on('clientList', (clients) => {
       this.clients = clients;
       this.setClientsDiv(clients);
+    });
+  }
+
+  getClientColor() {
+    this.socket.on('assignColor', ({ color }) => {
+      // Handle the received color
+      console.log(`Assigned color is ${color}`);
+      this.triggerManager.triggerColor = color;
     });
   }
 
@@ -260,9 +263,8 @@ class MultiPlayerManager {
           if (trigger !== undefined) {
             trigger.animate = triggerState.animate;
             trigger.loop = triggerState.loop;
-            trigger.speed = triggerState.speed;
-
-            // Check if the position difference is greater than 0.5
+            trigger.speed = this.lerp(trigger.speed, triggerState.speed, 0.1);
+            // Discard trigger update from network dropouts
             const positionDifference = Math.abs(
               triggerState.position - trigger.position,
             );
@@ -271,7 +273,7 @@ class MultiPlayerManager {
               trigger.position = this.lerp(
                 trigger.position,
                 triggerState.position,
-                0.15,
+                0.01,
               );
             }
             trigger.curveIndex = triggerState.curveIndex;
@@ -425,11 +427,7 @@ class MultiPlayerManager {
     checkbox.addEventListener('change', () => {
       if (checkbox.checked) {
         // Call getUIStateAsJSON when the checkbox is checked
-
-        const button = document.getElementById('create-trigger-0');
-        this.triggerManager.createTrigger(button);
-        json = this.getTriggersClientState();
-        console.log(json);
+        this.getClientColor();
       }
     });
     // Create a new label
