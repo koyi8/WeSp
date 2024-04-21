@@ -39,7 +39,7 @@ class MultiPlayerManager {
   getClientColor() {
     this.socket.on('assignColor', ({ color }) => {
       // Handle the received color
-      console.log(`Assigned color is ${color}`);
+      //console.log(`Assigned color is ${color}`);
       this.triggerManager.triggerColor = color;
     });
   }
@@ -80,7 +80,6 @@ class MultiPlayerManager {
     let curvesState;
     this.socket.on('requestCurveState', () => {
       curvesState = this.getCurvesUIState();
-
       this.socket.emit('syncCurves', { curvesState });
     });
   }
@@ -113,6 +112,7 @@ class MultiPlayerManager {
   setCurvesOnClientConnected() {
     // Listen for the 'syncCurves' event from the server
     this.socket.on('syncCurves', ({ curvesState }) => {
+      this.deleteCurvesOnClientConnected();
       // Set the state of the curves
       this.setCurvesUIState(curvesState);
       this.socket.emit('updateClientsDiv');
@@ -170,29 +170,33 @@ class MultiPlayerManager {
     return JSON.stringify(state);
   }
 
+  deleteCurvesOnClientConnected() {
+    console.log('Deleting curves on client connected');
+    for (let index = this.curveManager.curves.length - 1; index >= 0; index--) {
+      this.curveManager.deleteCurve(index);
+    }
+  }
+
   setCurvesUIState(json) {
     // Parse the JSON string back into an object
     const state = JSON.parse(json);
-    //console.log(state.curves);
 
     let splineHelperObjects = this.curveManager.getSplineHelperObjects();
 
-    // If there are more curves in curveManager than in state, remove the extra curves
+    // remove the extra curves
     while (this.curveManager.curves.length > state.curves.length) {
       this.curveManager.deleteCurve(this.curveManager.curves.length - 1);
     }
 
     state.curves.forEach((curveData, index) => {
       let curve;
-      //console.log(`Processing curve at index ${index}`);
 
-      // Convert the points to THREE.Vector3 objects
       const positions = curveData.points.map(
         (point) => new THREE.Vector3(point.x, point.y, point.z),
       );
 
       if (index < this.curveManager.curves.length) {
-        // Replace the existing curve
+        // Replace the points for the existing curve
         curve = this.curveManager.curves[index];
         curve.points.length = 0;
 
@@ -204,7 +208,7 @@ class MultiPlayerManager {
         }
         // Add the new points
         curveData.points.forEach((point, pointIndex) => {
-          this.curveManager.addNewSplineObject(index, positions[pointIndex]);
+          this.curveManager.addSplineObject(positions[pointIndex], index);
         });
       } else {
         // Add a new curve
@@ -212,9 +216,12 @@ class MultiPlayerManager {
         curve = this.curveManager.curves[this.curveManager.curves.length - 1];
         this.curveManager.updateCurveGeometry(curve);
       }
-
       curve.closed = curveData.closed;
+      this.curveManager.toggleCurveClosed(index, curve.closed);
+
       curve.tension = curveData.tension;
+      this.curveManager.updateCurveTension(index, parseFloat(curve.tension));
+
       if (curve.mesh && curve.mesh.material) {
         curve.mesh.material.color.set(
           curveData.color.r,
@@ -224,6 +231,7 @@ class MultiPlayerManager {
       }
       curve.needsUpdate = true;
     });
+
     updateTrajectoriesHTML(this.curveManager);
   }
 
@@ -427,7 +435,7 @@ class MultiPlayerManager {
     checkbox.addEventListener('change', () => {
       if (checkbox.checked) {
         // Call getUIStateAsJSON when the checkbox is checked
-        this.getClientColor();
+        this.deleteCurvesOnClientConnected();
       }
     });
     // Create a new label
