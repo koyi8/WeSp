@@ -126,9 +126,12 @@ const setupStats = () => {
   stats = new Stats();
   stats.dom.style.position = 'absolute';
   stats.dom.style.left = '0';
-  stats.dom.style.top = '0';
+  stats.dom.style.bottom = '0%';
+  stats.dom.style.top = 'unset';
   //stats.dom.style.transform = 'translateX(-50%)';
-  document.body.appendChild(stats.dom);
+  const settingsTab = document.getElementById('settings-container');
+
+  settingsTab.appendChild(stats.dom);
 };
 
 const setupScene = () => {

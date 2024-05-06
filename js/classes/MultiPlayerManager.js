@@ -422,7 +422,7 @@ class MultiPlayerManager {
 
   toggleDummyState() {
     const container = document.getElementById('settings-container');
-    container.innerHTML = '';
+    //container.innerHTML = '';
 
     let json = null;
 
