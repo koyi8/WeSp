@@ -19,7 +19,7 @@ export const createTriggerControlDiv = (
 
   div.innerHTML = `
   <div class="header">
-    <label class="label">Trig #${index + 1}</label>
+    <label class="label">OBJ #${index + 1}</label>
     <button id="delete${index}">x</button>
   </div>
   <div class="control inline">
@@ -36,7 +36,7 @@ export const createTriggerControlDiv = (
   </div>
   <div class="control full">
     <label for="speed${index}" class="label">Speed</label>
-    <input type="range" orient="vertical" id="speed${index}" min="0.002" max="0.03" step="0.0001" value="${
+    <input type="range" orient="vertical" id="speed${index}" min="0.0" max="0.06" step="0.0001" value="${
     triggerDefaults.speed
   }"/>
   </div>
@@ -54,12 +54,12 @@ export const createTriggerControlDiv = (
   </div>
   <div class="control">
     <div class="direction">
-      <button id="ltr${index}" ${
+      <button id="ltr${index}" style="font-size:15px;" ${
     triggerDefaults.direction === 'ltr' ? 'class="selected"' : ''
-  }>LTR</button>
-      <button id="rtl${index}" ${
+  }>&#11013;</button>
+      <button id="rtl${index}" style="font-size:15px;" ${
     triggerDefaults.direction === 'rtl' ? 'class="selected"' : ''
-  }>RTL</button>
+  }>&#10145;</button>
     </div>
   </div>
 `;
