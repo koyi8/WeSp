@@ -297,9 +297,10 @@ const onDocumentMouseDown = (event) => {
 };
 
 const debouncedUpdateControlPointsHTML = debounce(() => {
-  updateControlPointsHTML(curveManager);
   multiPlayerManager.sendCurvesStateToServer();
-  console.log(positionsArray);
+  updateControlPointsHTML(curveManager);
+  //multiPlayerManager.sendCurvesStateToServer();
+  //console.log(positionsArray);
 }, 300);
 
 const initListeners = () => {

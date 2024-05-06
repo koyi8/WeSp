@@ -73,6 +73,8 @@ export const updateTrajectoriesHTML = (
     closedCheckbox.checked = curve.closed;
     closedCheckbox.addEventListener('change', (e) => {
       curveManager.toggleCurveClosed(curveIndex, e.target.checked);
+      const event = new Event('uiUpdated');
+      window.dispatchEvent(event);
     });
 
     const closedLabel = document.createElement('label');
@@ -88,6 +90,8 @@ export const updateTrajectoriesHTML = (
     tensionInput.value = curve.tension;
     tensionInput.addEventListener('input', (e) => {
       curveManager.updateCurveTension(curveIndex, parseFloat(e.target.value));
+      const event = new Event('uiUpdated');
+      window.dispatchEvent(event);
     });
 
     const tensionLabel = document.createElement('label');

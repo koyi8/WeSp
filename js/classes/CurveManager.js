@@ -45,7 +45,7 @@ class CurveManager {
       color: 0x808080,
     });
     const object = new THREE.Mesh(geometry, material);
-    // Create a div for the label
+    // div for the label
     const labelDiv = document.createElement('div');
     labelDiv.className = 'label';
     const label = new CSS2DObject(labelDiv);
@@ -62,7 +62,7 @@ class CurveManager {
 
   addNewSplineObject(curveIndex, position = new THREE.Vector3()) {
     this.addSplineObject(position, curveIndex);
-    this.updateCurveFromControlPoint({ curveIndex });
+    this.updateCurveFromControlPoint({ curveIndex }); //// THIS FIXED THE ISSUE  WITH THE CLOSED Property!!!
   }
 
   deleteSplineObject(objectIndex) {
@@ -71,15 +71,15 @@ class CurveManager {
 
     const { curveIndex } = objectToRemove;
 
-    // Find the label among the children of the object
+    // Find the label
     const label = objectToRemove.children.find(
       (child) => child instanceof CSS2DObject,
     );
 
     // If a label was found, remove it
     if (label) {
-      label.element.remove(); // Remove label from the DOM
-      this.scene.remove(label); // Remove CSS2DObject from scene graph
+      label.element.remove();
+      this.scene.remove(label);
     }
 
     this.scene.remove(objectToRemove);
@@ -249,8 +249,8 @@ class CurveManager {
     const curve = this.curves[curveIndex];
     if (curve) {
       curve.closed = isClosed;
-      this.updateCurveFromControlPoint({ curveIndex });
     }
+    curve.needsUpdate = true;
   }
 
   toggleCurveSelected(curveIndex, isSelected) {
