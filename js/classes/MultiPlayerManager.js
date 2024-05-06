@@ -419,57 +419,34 @@ class MultiPlayerManager {
 
     this.triggers = this.triggerManager.triggers;
   }
-
   toggleDummyState() {
     const container = document.getElementById('settings-container');
-    //container.innerHTML = '';
 
-    let json = null;
+    // Create a new checkbox for startLogging
+    const startCheckbox = document.createElement('input');
+    startCheckbox.type = 'checkbox';
+    startCheckbox.id = 'startLoggingCheckbox';
 
-    // Create a new checkbox
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = 'curvesCheckbox';
-
-    // Add an event listener to the checkbox
-    checkbox.addEventListener('change', () => {
-      if (checkbox.checked) {
-        // Call getUIStateAsJSON when the checkbox is checked
-        this.deleteCurvesOnClientConnected();
-      }
-    });
-    // Create a new label
-    const label = document.createElement('label');
-    label.htmlFor = 'curvesCheckbox';
-    label.textContent = 'Toggle UI state as JSON';
-
-    // Add the checkbox and label to the container
-    container.appendChild(checkbox);
-    container.appendChild(label);
-
-    // Create a new checkbox for setUIStateFromJSON
-    const setCheckbox = document.createElement('input');
-    setCheckbox.type = 'checkbox';
-    setCheckbox.id = 'setCurvesCheckbox';
-
-    // Add an event listener to the setCheckbox
-    setCheckbox.addEventListener('change', () => {
-      if (setCheckbox.checked) {
-        // Call setUIStateFromJSON when the checkbox is checked
-        if (json) {
-          this.setCurvesUIState(json);
-        }
+    // Add an event listener to the startCheckbox
+    startCheckbox.addEventListener('change', () => {
+      if (startCheckbox.checked) {
+        // Emit 'startLogging' event when the checkbox is checked
+        this.socket.emit('startLogging');
+      } else {
+        // Emit 'stopLogging' event when the checkbox is unchecked
+        this.socket.emit('stopLogging');
       }
     });
 
-    // Create a new label for setCheckbox
-    const setLabel = document.createElement('label');
-    setLabel.htmlFor = 'setCurvesCheckbox';
-    setLabel.textContent = 'Set UI state from JSON';
+    // Create a new label for startCheckbox
+    const startLabel = document.createElement('label');
+    startLabel.htmlFor = 'startLoggingCheckbox';
+    startLabel.textContent = 'Start/Stop Logging';
 
-    // Add the setCheckbox and setLabel to the container
-    container.appendChild(setCheckbox);
-    container.appendChild(setLabel);
+    // Add the startCheckbox and startLabel to the container
+    container.appendChild(startCheckbox);
+    container.appendChild(startLabel);
   }
 }
+
 export default MultiPlayerManager;
