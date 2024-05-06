@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import {
+  CSS2DObject,
+  CSS2DRenderer,
+} from 'three/addons/renderers/CSS2DRenderer.js';
 import { debounce } from './js/heplers/debounce';
 import {
   updateTrajectoriesHTML,
@@ -44,7 +48,7 @@ const geometrySettings = {
     divisions: 20,
   },
   axesHelper: {
-    size: 2,
+    size: 1.5,
   },
 };
 
@@ -128,7 +132,6 @@ const setupStats = () => {
   stats.dom.style.left = '0';
   stats.dom.style.bottom = '0%';
   stats.dom.style.top = 'unset';
-  //stats.dom.style.transform = 'translateX(-50%)';
   const settingsTab = document.getElementById('settings-container');
 
   settingsTab.appendChild(stats.dom);
@@ -201,15 +204,60 @@ const setupGeometry = () => {
   );
   gridHelper.rotation.x = -Math.PI / 2;
   scene.add(gridHelper);
+
+  /*
+  const polarGridHelper = new THREE.PolarGridHelper(
+    1.3,
+    32,
+    16,
+    64,
+    0x808080,
+    0x808080,
+  );
+  polarGridHelper.rotation.x = -Math.PI / 2;
+  scene.add(polarGridHelper);
+*/
+
+  const axesHelper = new THREE.AxesHelper(geometrySettings.axesHelper.size);
+  scene.add(axesHelper);
+  // Create labels
+  const labels = ['X+', 'Y+', 'Z+'];
+  const colors = [0xff9900, 0x00cc00, 0x0099ff]; // Red for X, Green for Y, Blue for Z
+
+  labels.forEach((label, i) => {
+    const div = document.createElement('div');
+    div.className = 'axes-label';
+    div.textContent = label;
+    div.style.color = `#${colors[i].toString(16).padStart(6, '0')}`;
+    const labelObject = new CSS2DObject(div);
+    labelObject.position.set(
+      i === 0 ? 1.6 : 0,
+      i === 1 ? 1.6 : 0,
+      i === 2 ? 1.6 : 0,
+    );
+    axesHelper.add(labelObject);
+  });
 };
 
 const setupControls = () => {
-  const axesHelper = new THREE.AxesHelper(geometrySettings.axesHelper.size);
-
   controls = new OrbitControls(camera, renderer.domElement);
   transformControl = new TransformControls(camera, renderer.domElement);
-  scene.add(transformControl, axesHelper);
+  scene.add(transformControl);
 };
+
+const resetViewPoint = () => {
+  camera.position.set(
+    cameraSettings.position.x,
+    cameraSettings.position.y,
+    cameraSettings.position.z,
+  );
+  controls.reset();
+  render();
+};
+
+document
+  .getElementById('reset-viewpoint')
+  .addEventListener('click', resetViewPoint);
 
 /*
 const animate = () => {
