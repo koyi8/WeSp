@@ -6,6 +6,7 @@ import {
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
 import { debounce } from './js/heplers/debounce';
+import { logUIInteraction } from './js/heplers/logUIInteraction';
 import {
   updateTrajectoriesHTML,
   updateControlPointsHTML,
@@ -16,6 +17,7 @@ import TriggerManager from './js/classes/TriggerManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/createOCSTables';
 import Stats from 'three/addons/libs/stats.module.js';
+import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 const cameraSettings = {
   fov: 70, // field of view
@@ -76,6 +78,9 @@ let controls;
 let transformControl;
 let socket;
 let stats;
+
+// interaction log
+let interactionLog = {};
 
 let isDragging = false;
 
@@ -313,7 +318,7 @@ const onWindowResize = () => {
 
 const onDocumentMouseDown = (event) => {
   event.preventDefault();
-  console.log(selectedCurveIndex);
+  //console.log(selectedCurveIndex);
 
   mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -354,16 +359,40 @@ const debouncedUpdateControlPointsHTML = debounce(() => {
   //console.log(positionsArray);
 }, 300);
 
+// Debounced log function
+const debouncedOrbitControlLog = debounce(() => {
+  logUIInteraction('3DModule', 'Orbit Control: 3DScene');
+}, 250); // 250ms delay
+
+// Interaction log add clientID
+const clientIDtoInteractionLog = (entry) => {
+  const { module, event } = entry;
+
+  interactionLog = {
+    clientID: multiPlayerManager.socketID,
+    module: module,
+    event: event,
+  };
+  console.log(interactionLog);
+};
+
 const initListeners = () => {
   renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
   // renderer.domElement.addEventListener('mouseup', onDocumentMouseUp, false);
   window.addEventListener('resize', debounce(onWindowResize, 250), false);
+
+  controls.addEventListener('end', debouncedOrbitControlLog);
+
   transformControl.addEventListener('mouseDown', (event) => {
     controls.enabled = false;
   });
   transformControl.addEventListener('mouseUp', (event) => {
     controls.enabled = true;
+
+    // interaction log
+    logUIInteraction('3DModule', 'Control Point Changed: 3DScene');
   });
+
   transformControl.addEventListener('dragging-changed', (event) => {
     //console.log('Dragging changed: ', event.value);
     controls.enabled = !event.value;
@@ -377,9 +406,16 @@ const initListeners = () => {
       debouncedUpdateControlPointsHTML();
     }
   });
+
   document.getElementById('create-curve').addEventListener('click', () => {
     curveManager.addRandomCurve();
     debouncedUpdateControlPointsHTML();
+
+    // Interaction log
+    logUIInteraction(
+      'trajectoryModule',
+      `curve added ${curveManager.curves.length}`,
+    );
   });
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();
@@ -389,6 +425,10 @@ const initListeners = () => {
   });
   window.addEventListener('deletedTrigger', () => {
     multiPlayerManager.sendTriggersClientsLengthToServer();
+  });
+  window.addEventListener('interactionLog', (e) => {
+    const entry = e.detail;
+    clientIDtoInteractionLog(entry);
   });
 };
 

@@ -1,7 +1,9 @@
 import * as THREE from 'three';
+import { logUIInteraction } from './heplers/logUIInteraction';
 
 let selectedPointIndex;
 let isNewTrajectory = false;
+let previousCurveIndex = null;
 
 export let selectedCurveIndex;
 
@@ -44,6 +46,12 @@ export const updateTrajectoriesHTML = (
       });
       curveManager.toggleCurveSelected(curveIndex, true);
       selectedCurveIndex = curveIndex;
+
+      //logging interaction
+      logUIInteraction(
+        'trajectoryModule',
+        `curve selected ${selectedCurveIndex + 1}`,
+      );
     });
 
     tabContainer.appendChild(tab);
@@ -75,6 +83,10 @@ export const updateTrajectoriesHTML = (
       curveManager.toggleCurveClosed(curveIndex, e.target.checked);
       const event = new Event('uiUpdated');
       window.dispatchEvent(event);
+
+      //logging interaction
+      const eventName = e.target.checked ? 'curve closed' : 'curve open';
+      logUIInteraction('trajectoryModule', eventName);
     });
 
     const closedLabel = document.createElement('label');
@@ -92,6 +104,9 @@ export const updateTrajectoriesHTML = (
       curveManager.updateCurveTension(curveIndex, parseFloat(e.target.value));
       const event = new Event('uiUpdated');
       window.dispatchEvent(event);
+
+      //logging interaction
+      logUIInteraction('trajectoryModule', 'tension changed');
     });
 
     const tensionLabel = document.createElement('label');
@@ -109,8 +124,10 @@ export const updateTrajectoriesHTML = (
       const event = new Event('uiUpdated');
       window.dispatchEvent(event);
 
-      //selectedCurveIndex = this.curves.length - 1;
+      //logging interaction
+      logUIInteraction('trajectoryModule', `curve deleted ${curveIndex + 1}`);
     });
+
     headerDiv.appendChild(deleteCurveButton);
 
     trajectoryDiv.appendChild(headerDiv);
@@ -179,11 +196,28 @@ export const updateTrajectoriesHTML = (
         input.addEventListener('change', (e) => {
           const event = new Event('uiUpdated');
           window.dispatchEvent(event);
+
+          //logging interaction
+          logUIInteraction(
+            'trajectoryModule',
+            `Control Point Changed: Input Curve: ${curveIndex + 1} Point: ${
+              pointLabelIndex + 1
+            } Axis: ${axis} Value: ${e.target.value}`,
+          );
         });
+
         slider.addEventListener('input', (e) => updatePosition(e.target.value));
         slider.addEventListener('change', (e) => {
           const event = new Event('uiUpdated');
           window.dispatchEvent(event);
+
+          //logging interaction
+          logUIInteraction(
+            'trajectoryModule',
+            `Control Point Changed: Slider Curve: ${curveIndex + 1} Point: ${
+              pointLabelIndex + 1
+            } Axis: ${axis} Value: ${e.target.value}`,
+          );
         });
 
         controlDiv.appendChild(label);
@@ -195,21 +229,36 @@ export const updateTrajectoriesHTML = (
       const deleteButton = document.createElement('button');
       deleteButton.className = 'delete-controlPoint-button';
       deleteButton.textContent = 'delete';
-      deleteButton.addEventListener(
-        'click',
-        () => deleteControlPoint(objectIndex, curveManager),
-        curveManager.updateControlPointLabels(curveIndex),
-      );
+      deleteButton.addEventListener('click', () => {
+        deleteControlPoint(objectIndex, curveManager);
+        curveManager.updateControlPointLabels(curveIndex);
+
+        //logging interaction
+        logUIInteraction(
+          'trajectoryModule',
+          `Control Point Deleted: Curve: ${curveIndex + 1} Point: ${
+            pointLabelIndex + 1
+          }`,
+        );
+      });
+
       pointDiv.appendChild(deleteButton);
 
       const addButton = document.createElement('button');
       addButton.className = 'add-controlPoint-button';
       addButton.textContent = 'add';
-      addButton.addEventListener(
-        'click',
-        () => addControlPoint(curveIndex, curveManager, objectIndex),
-        curveManager.updateControlPointLabels(curveIndex),
-      );
+      addButton.addEventListener('click', () => {
+        addControlPoint(curveIndex, curveManager, objectIndex);
+        curveManager.updateControlPointLabels(curveIndex);
+
+        //logging interaction
+        logUIInteraction(
+          'trajectoryModule',
+          `Control Point Added: Curve: ${curveIndex + 1} Point: ${
+            pointLabelIndex + 2
+          }`,
+        );
+      });
 
       pointDiv.appendChild(addButton);
 
