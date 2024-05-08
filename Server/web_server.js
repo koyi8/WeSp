@@ -130,6 +130,12 @@ let clientColors = [
 // Event fired when client connects, giving each client a unique "socket" instance
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
+  // LOG User Connection
+  storeLogData(new Date().toISOString(), {
+    clientID: socket.id,
+    module: 'Server',
+    event: 'User Connected',
+  });
 
   let colorIndex = Object.keys(clients).length % clientColors.length;
 
@@ -150,11 +156,6 @@ io.on('connection', (socket) => {
     io.emit('syncClientsDiv', clients);
   });
 
-  socket.on('logData', (data) => {
-    let timestamp = new Date().toISOString();
-    storeLogData(timestamp, data);
-  });
-
   // CURVES
   // SynCurves on Client Connection
   if (!firstClientSocket) {
@@ -171,6 +172,12 @@ io.on('connection', (socket) => {
   // Handle Client Disconnection
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
+    // LOG User Disonnection
+    storeLogData(new Date().toISOString(), {
+      clientID: socket.id,
+      module: 'Server',
+      event: 'User Disconnected',
+    });
 
     if (socket === firstClientSocket) {
       const socketKeys = Object.keys(sockets);
@@ -275,6 +282,12 @@ io.on('connection', (socket) => {
   socket.on('startLogging', () => {
     io.emit('requestLogData');
     io.emit('updateCheckbox');
+    logEntries = [];
+  });
+
+  socket.on('logData', (data) => {
+    let timestamp = new Date().toISOString();
+    storeLogData(timestamp, data);
   });
 
   socket.on('stopLogging', () => {
