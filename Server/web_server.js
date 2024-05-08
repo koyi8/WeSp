@@ -7,60 +7,10 @@ import { dirname, resolve } from 'path';
 import osc from 'osc';
 import os from 'os';
 import fs from 'fs';
+import { log } from 'console';
 
-// DATA LOGGING TEST
+// Server Setup Host Satic Files with express
 //--------------------------------------------------
-
-let logEntries = [];
-let logFilePath = null;
-let logInterval = null;
-
-// Function to generate a new file path based on the timestamp
-const generateFilePath = (timestamp) => {
-  let filename = `log_${new Date(timestamp)
-    .toISOString()
-    .replace(/[:.]/g, '-')}.txt`;
-  return resolve(
-    'C:/Users/Lennart/Documents/TUB_MASTER/CODE/Javascript/WeSpa_Data_Logs',
-    filename,
-  );
-};
-
-// Arrow function to store log data in memory
-const storeLogData = (timestamp, clients) => {
-  logEntries.push(
-    ...Object.values(clients).flatMap((client) =>
-      client.Triggers.map((trigger) => ({
-        timestamp,
-        speed: trigger.speed,
-        buttonID: trigger.buttonID,
-      })),
-    ),
-  );
-
-  if (!logFilePath) {
-    logFilePath = generateFilePath(timestamp);
-  }
-};
-
-// Function to write the stored log data to a file
-const writeLogData = () => {
-  // Convert the log entries to CSV
-  let csvData = logEntries
-    .map((entry) => `${entry.timestamp},${entry.speed},${entry.buttonID}`)
-    .join('\n');
-
-  // Write the CSV data to a new file
-  fs.writeFile(logFilePath, csvData, (err) => {
-    if (err) throw err;
-    console.log('Log data saved!');
-
-    // Reset the log entries and file path for the next log
-    logEntries = [];
-    logFilePath = null;
-  });
-};
-
 const app = express(); // create express app
 const httpServer = createServer(app);
 
@@ -200,25 +150,9 @@ io.on('connection', (socket) => {
     io.emit('syncClientsDiv', clients);
   });
 
-  // LOG data test:
-  // Listen for 'startLogging' event
-  socket.on('startLogging', () => {
-    // Start logging every second
-    logInterval = setInterval(() => {
-      let timestamp = new Date().toISOString();
-      storeLogData(timestamp, clients);
-      console.log('Logging data');
-    }, 1000);
-  });
-
-  // Listen for 'stopLogging' event
-  socket.on('stopLogging', () => {
-    // Stop logging
-    if (logInterval) {
-      clearInterval(logInterval);
-      writeLogData();
-      console.log('Logging stopped');
-    }
+  socket.on('logData', (data) => {
+    let timestamp = new Date().toISOString();
+    storeLogData(timestamp, data);
   });
 
   // CURVES
@@ -337,6 +271,18 @@ io.on('connection', (socket) => {
     shouldSendMap.set(rowId, true);
   });
 
+  // LOG DATA
+  socket.on('startLogging', () => {
+    io.emit('requestLogData');
+    io.emit('updateCheckbox');
+  });
+
+  socket.on('stopLogging', () => {
+    io.emit('stopLogData');
+    writeLogData();
+    io.emit('updateCheckbox');
+  });
+
   //LATENCY TEST
 
   // Measure RTT
@@ -391,6 +337,56 @@ const updateValuesClientsTriggers =
     // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
+
+// DATA LOGGING
+//--------------------------------------------------
+
+let logEntries = [];
+let logFilePath = null;
+
+// Function to generate a new file path based on the timestamp
+const generateFilePath = (timestamp) => {
+  let filename = `log_${new Date(timestamp)
+    .toISOString()
+    .replace(/[:.]/g, '-')}.txt`;
+  return resolve(
+    'C:/Users/Lennart/Documents/TUB_MASTER/CODE/Javascript/WeSpa_Data_Logs',
+    filename,
+  );
+};
+
+//store log data in memory
+const storeLogData = (timestamp, logData) => {
+  logEntries.push({
+    timestamp,
+    ...logData,
+  });
+
+  if (!logFilePath) {
+    logFilePath = generateFilePath(timestamp);
+  }
+};
+
+// Function to write the stored log data to a file
+const writeLogData = () => {
+  // Convert the log entries to CSV
+  let csvData = logEntries
+    .map(
+      (entry) =>
+        `${entry.timestamp},${entry.clientID},${entry.module},${entry.event}`,
+    )
+    .join('\n');
+
+  // Write the CSV data to a new file
+  fs.writeFile(logFilePath, csvData, (err) => {
+    if (err) throw err;
+    console.log('Log data saved!');
+
+    // Reset the log entries and file path for the next log
+    logEntries = [];
+    logFilePath = null;
+  });
+};
 
 // Launch server
 const myPort = process.env.PORT || 8081; // let Glitch choose port OR use 3000

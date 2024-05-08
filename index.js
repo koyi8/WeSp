@@ -129,6 +129,7 @@ const setupMultiPlayerManager = () => {
   multiPlayerManager.updateTriggersClientsStateFromServer();
   multiPlayerManager.setTriggersOnClientDisconnected();
   multiPlayerManager.getClientColor();
+  multiPlayerManager.listenRequestLogging();
 };
 
 const setupStats = () => {
@@ -373,7 +374,7 @@ const clientIDtoInteractionLog = (entry) => {
     module: module,
     event: event,
   };
-  console.log(interactionLog);
+  return interactionLog;
 };
 
 const initListeners = () => {
@@ -428,7 +429,8 @@ const initListeners = () => {
   });
   window.addEventListener('interactionLog', (e) => {
     const entry = e.detail;
-    clientIDtoInteractionLog(entry);
+    const interactionlog = clientIDtoInteractionLog(entry);
+    multiPlayerManager.sendLogDatatoServer(interactionlog);
   });
 };
 

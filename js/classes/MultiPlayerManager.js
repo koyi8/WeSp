@@ -14,6 +14,7 @@ class MultiPlayerManager {
     this.socketID = '';
     this.clients = {};
     this.clientColor = this.triggerManager.triggerColor;
+    this.shouldEmitLogs = false;
   }
 
   // RECEIVE
@@ -41,6 +42,24 @@ class MultiPlayerManager {
       // Handle the received color
       //console.log(`Assigned color is ${color}`);
       this.triggerManager.triggerColor = color;
+    });
+  }
+
+  sendLogDatatoServer(interactionLog) {
+    if (!this.shouldEmitLogs) {
+      return;
+    }
+    this.socket.emit('logData', interactionLog);
+  }
+
+  listenRequestLogging() {
+    this.socket.on('requestLogData', () => {
+      this.shouldEmitLogs = true;
+      console.log('shouldEmitLogs:', this.shouldEmitLogs);
+    });
+    this.socket.on('stopLogData', () => {
+      this.shouldEmitLogs = false;
+      console.log('shouldEmitLogs:', this.shouldEmitLogs);
     });
   }
 
@@ -419,6 +438,7 @@ class MultiPlayerManager {
 
     this.triggers = this.triggerManager.triggers;
   }
+
   toggleDummyState() {
     const container = document.getElementById('settings-container');
 
@@ -436,6 +456,10 @@ class MultiPlayerManager {
         // Emit 'stopLogging' event when the checkbox is unchecked
         this.socket.emit('stopLogging');
       }
+    });
+    // Add an event listener to the socket to update the checkbox
+    this.socket.on('updateCheckbox', () => {
+      startCheckbox.checked = this.shouldEmitLogs;
     });
 
     // Create a new label for startCheckbox

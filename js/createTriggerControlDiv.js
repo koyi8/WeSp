@@ -83,6 +83,12 @@ export const createTriggerControlDiv = (
       positionControl.style.display = ''; // Show position control when not animated
       speedControl.style.display = 'none'; // Hide speed control
     }
+
+    //logging interaction
+    const eventName = e.target.checked
+      ? `Animate active Object ${index + 1}`
+      : `Position active Object ${index + 1}`;
+    logUIInteraction('objectsModule', eventName);
   });
 
   // Speed Range Input
