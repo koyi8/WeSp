@@ -1,3 +1,5 @@
+import { logUIInteraction } from './heplers/logUIInteraction';
+
 export const createTriggerControlDiv = (
   index,
   onUpdate,
@@ -88,25 +90,54 @@ export const createTriggerControlDiv = (
   speedRange.addEventListener('input', (e) => {
     onUpdate(index, { speed: parseFloat(e.target.value) });
   });
+  // interaction logging
+  speedRange.addEventListener('change', (e) => {
+    logUIInteraction(
+      'objectsModule',
+      `Animate Speed changed Object ${index + 1} Value: ${e.target.value}`,
+    );
+  });
 
   // Position Range Input
   const positionRange = div.querySelector(`#position${index}`);
   positionRange.addEventListener('input', (e) => {
     onUpdate(index, { position: parseFloat(e.target.value) });
   });
+  // interaction logging
+  positionRange.addEventListener('change', (e) => {
+    logUIInteraction(
+      'objectsModule',
+      `Object Position changed Object ${index + 1} Value: ${e.target.value}`,
+    );
+  });
 
   // Trajectory Select
   const trajectorySelect = div.querySelector(`#trajectory${index}`);
   trajectorySelect.addEventListener('change', (e) => {
     onUpdate(index, { curveIndex: e.target.value });
+
+    // interaction logging
+    logUIInteraction(
+      'objectsModule',
+      `Trajectory changed Object ${index + 1} Traj: ${
+        parseFloat(e.target.value) + 1
+      }`,
+    );
   });
 
-  // Direction Buttons
+  // Loop /Alternate Checkbox
   const loopButton = div.querySelector(`#loop${index}`);
   loopButton.addEventListener('click', (e) => {
     onUpdate(index, { loop: e.target.checked });
+
+    //logging interaction
+    const eventName = e.target.checked
+      ? `Loop active Object ${index + 1}`
+      : `Alternate active  Object ${index + 1}`;
+    logUIInteraction('objectsModule', eventName);
   });
 
+  //Direction Buttons
   const updateDirectionSelected = (direction) => {
     const ltrButton = div.querySelector(`#ltr${index}`);
     const rtlButton = div.querySelector(`#rtl${index}`);
@@ -129,17 +160,31 @@ export const createTriggerControlDiv = (
   ltrButton.addEventListener('click', () => {
     updateDirectionSelected('ltr');
     onUpdate(index, { direction: 'ltr' });
+
+    //logging interaction
+    logUIInteraction(
+      'objectsModule',
+      `Direction changed Object ${index + 1} Value: leftArrow`,
+    );
   });
 
   const rtlButton = div.querySelector(`#rtl${index}`);
   rtlButton.addEventListener('click', () => {
     updateDirectionSelected('rtl');
     onUpdate(index, { direction: 'rtl' });
+
+    //logging interaction
+    logUIInteraction(
+      'objectsModule',
+      `Direction changed Object ${index + 1} Value: rightArrow`,
+    );
   });
 
   const deleteButton = div.querySelector(`#delete${index}`);
   deleteButton.addEventListener('click', () => {
     onUpdate(index, { delete: true });
+    //logging interaction
+    logUIInteraction('objectsModule', `Deleted Object ${index + 1}`);
   });
 
   return div;

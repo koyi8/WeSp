@@ -99,7 +99,7 @@ class TriggerManager {
     button.replaceWith(triggerDiv);
 
     // event for Server to update the trigger
-    const event = new Event('addedTrigger');
+    const event = new CustomEvent('addedTrigger', { detail: { index: index } });
     window.dispatchEvent(event);
   }
 

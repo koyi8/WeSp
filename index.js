@@ -394,13 +394,11 @@ const initListeners = () => {
   });
 
   transformControl.addEventListener('dragging-changed', (event) => {
-    //console.log('Dragging changed: ', event.value);
     controls.enabled = !event.value;
     isDragging = event.value;
   });
 
   transformControl.addEventListener('objectChange', () => {
-    //console.log('Object changed: ', selectedObject);
     if (selectedObject) {
       curveManager.updateCurveFromControlPoint(selectedObject);
       debouncedUpdateControlPointsHTML();
@@ -420,8 +418,10 @@ const initListeners = () => {
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();
   });
-  window.addEventListener('addedTrigger', () => {
+  window.addEventListener('addedTrigger', (event) => {
     multiPlayerManager.sendTriggersClientsLengthToServer();
+    //interaction logging
+    logUIInteraction('objectsModule', `Added Object ${event.detail.index + 1}`);
   });
   window.addEventListener('deletedTrigger', () => {
     multiPlayerManager.sendTriggersClientsLengthToServer();
