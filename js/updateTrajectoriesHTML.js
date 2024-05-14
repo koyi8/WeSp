@@ -179,7 +179,7 @@ export const updateTrajectoriesHTML = (
         const slider = document.createElement('input');
         slider.type = 'range';
         slider.name = `${axis}Slider`;
-        slider.min = pointControlSettings.cpRangeMin;
+        slider.min = axis === 'z' ? 0 : pointControlSettings.cpRangeMin;
         slider.max = pointControlSettings.cpRangeMax;
         slider.step = pointControlSettings.cpStepSlider;
         slider.value = object.position[axis].toFixed(2);
