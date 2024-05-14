@@ -98,6 +98,18 @@ button {
   }
 }
 
+// AXES STYLES
+.axes-label {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  text-align: center;
+  background-color: rgba(222, 222, 222, 0.5); // Greyed out background
+  padding: 2px;
+  display: inline-block;
+  opacity: 0.9;
+  border: 2px solid transparent; // Transparent border
+}
+
 .trigger-container {
   position: absolute;
   top: 0;

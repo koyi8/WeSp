@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import {
+  CSS2DObject,
+  CSS2DRenderer,
+} from 'three/addons/renderers/CSS2DRenderer.js';
 import { debounce } from './js/heplers/debounce';
+import { logUIInteraction } from './js/heplers/logUIInteraction';
 import {
   updateTrajectoriesHTML,
   updateControlPointsHTML,
@@ -12,6 +17,7 @@ import TriggerManager from './js/classes/TriggerManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/createOCSTables';
 import Stats from 'three/addons/libs/stats.module.js';
+import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 const cameraSettings = {
   fov: 70, // field of view
@@ -44,7 +50,7 @@ const geometrySettings = {
     divisions: 20,
   },
   axesHelper: {
-    size: 2,
+    size: 1.5,
   },
 };
 
@@ -72,6 +78,9 @@ let controls;
 let transformControl;
 let socket;
 let stats;
+
+// interaction log
+let interactionLog = {};
 
 let isDragging = false;
 
@@ -120,15 +129,18 @@ const setupMultiPlayerManager = () => {
   multiPlayerManager.updateTriggersClientsStateFromServer();
   multiPlayerManager.setTriggersOnClientDisconnected();
   multiPlayerManager.getClientColor();
+  multiPlayerManager.listenRequestLogging();
 };
 
 const setupStats = () => {
   stats = new Stats();
   stats.dom.style.position = 'absolute';
   stats.dom.style.left = '0';
-  stats.dom.style.top = '0';
-  //stats.dom.style.transform = 'translateX(-50%)';
-  document.body.appendChild(stats.dom);
+  stats.dom.style.bottom = '0%';
+  stats.dom.style.top = 'unset';
+  const settingsTab = document.getElementById('settings-container');
+
+  settingsTab.appendChild(stats.dom);
 };
 
 const setupScene = () => {
@@ -198,15 +210,60 @@ const setupGeometry = () => {
   );
   gridHelper.rotation.x = -Math.PI / 2;
   scene.add(gridHelper);
+
+  /*
+  const polarGridHelper = new THREE.PolarGridHelper(
+    1.3,
+    32,
+    16,
+    64,
+    0x808080,
+    0x808080,
+  );
+  polarGridHelper.rotation.x = -Math.PI / 2;
+  scene.add(polarGridHelper);
+*/
+
+  const axesHelper = new THREE.AxesHelper(geometrySettings.axesHelper.size);
+  scene.add(axesHelper);
+  // Create labels
+  const labels = ['X+', 'Y+', 'Z+'];
+  const colors = [0xff9900, 0x00cc00, 0x0099ff]; // Red for X, Green for Y, Blue for Z
+
+  labels.forEach((label, i) => {
+    const div = document.createElement('div');
+    div.className = 'axes-label';
+    div.textContent = label;
+    div.style.color = `#${colors[i].toString(16).padStart(6, '0')}`;
+    const labelObject = new CSS2DObject(div);
+    labelObject.position.set(
+      i === 0 ? 1.6 : 0,
+      i === 1 ? 1.6 : 0,
+      i === 2 ? 1.6 : 0,
+    );
+    axesHelper.add(labelObject);
+  });
 };
 
 const setupControls = () => {
-  const axesHelper = new THREE.AxesHelper(geometrySettings.axesHelper.size);
-
   controls = new OrbitControls(camera, renderer.domElement);
   transformControl = new TransformControls(camera, renderer.domElement);
-  scene.add(transformControl, axesHelper);
+  scene.add(transformControl);
 };
+
+const resetViewPoint = () => {
+  camera.position.set(
+    cameraSettings.position.x,
+    cameraSettings.position.y,
+    cameraSettings.position.z,
+  );
+  controls.reset();
+  render();
+};
+
+document
+  .getElementById('reset-viewpoint')
+  .addEventListener('click', resetViewPoint);
 
 /*
 const animate = () => {
@@ -262,7 +319,7 @@ const onWindowResize = () => {
 
 const onDocumentMouseDown = (event) => {
   event.preventDefault();
-  console.log(selectedCurveIndex);
+  //console.log(selectedCurveIndex);
 
   mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -303,41 +360,77 @@ const debouncedUpdateControlPointsHTML = debounce(() => {
   //console.log(positionsArray);
 }, 300);
 
+// Debounced log function
+const debouncedOrbitControlLog = debounce(() => {
+  logUIInteraction('3DModule', 'Orbit Control: 3DScene');
+}, 250); // 250ms delay
+
+// Interaction log add clientID
+const clientIDtoInteractionLog = (entry) => {
+  const { module, event } = entry;
+
+  interactionLog = {
+    clientID: multiPlayerManager.socketID,
+    module: module,
+    event: event,
+  };
+  return interactionLog;
+};
+
 const initListeners = () => {
   renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
   // renderer.domElement.addEventListener('mouseup', onDocumentMouseUp, false);
   window.addEventListener('resize', debounce(onWindowResize, 250), false);
+
+  controls.addEventListener('end', debouncedOrbitControlLog);
+
   transformControl.addEventListener('mouseDown', (event) => {
     controls.enabled = false;
   });
   transformControl.addEventListener('mouseUp', (event) => {
     controls.enabled = true;
+
+    // interaction log
+    logUIInteraction('3DModule', 'Control Point Changed: 3DScene');
   });
+
   transformControl.addEventListener('dragging-changed', (event) => {
-    //console.log('Dragging changed: ', event.value);
     controls.enabled = !event.value;
     isDragging = event.value;
   });
 
   transformControl.addEventListener('objectChange', () => {
-    //console.log('Object changed: ', selectedObject);
     if (selectedObject) {
       curveManager.updateCurveFromControlPoint(selectedObject);
       debouncedUpdateControlPointsHTML();
     }
   });
+
   document.getElementById('create-curve').addEventListener('click', () => {
     curveManager.addRandomCurve();
     debouncedUpdateControlPointsHTML();
+
+    // Interaction log
+    logUIInteraction(
+      'trajectoryModule',
+      `curve added ${curveManager.curves.length}`,
+    );
   });
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();
   });
-  window.addEventListener('addedTrigger', () => {
+  window.addEventListener('addedTrigger', (event) => {
     multiPlayerManager.sendTriggersClientsLengthToServer();
+    //interaction logging
+    logUIInteraction('objectsModule', `Added Object ${event.detail.index + 1}`);
   });
   window.addEventListener('deletedTrigger', () => {
     multiPlayerManager.sendTriggersClientsLengthToServer();
+  });
+  window.addEventListener('interactionLog', (e) => {
+    const entry = e.detail;
+    const interactionlog = clientIDtoInteractionLog(entry);
+    multiPlayerManager.sendLogDatatoServer(interactionlog);
   });
 };
 

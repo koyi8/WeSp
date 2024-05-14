@@ -6,7 +6,11 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import osc from 'osc';
 import os from 'os';
+import fs from 'fs';
+import { log } from 'console';
 
+// Server Setup Host Satic Files with express
+//--------------------------------------------------
 const app = express(); // create express app
 const httpServer = createServer(app);
 
@@ -15,7 +19,7 @@ const __dirname = dirname(__filename);
 
 // Serve static files from the 'dist' directory
 app.use(express.static(resolve(__dirname, '../dist')));
-// Create a socket.io server instance passing it httpServer and required options
+// socket.io server
 const io = new Server(httpServer, {
   cors: { origin: '*' }, // wild card since security isn't a concern
 });
@@ -126,6 +130,12 @@ let clientColors = [
 // Event fired when client connects, giving each client a unique "socket" instance
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
+  // LOG User Connection
+  storeLogData(new Date().toISOString(), {
+    clientID: socket.id,
+    module: 'Server',
+    event: 'User Connected',
+  });
 
   let colorIndex = Object.keys(clients).length % clientColors.length;
 
@@ -162,6 +172,12 @@ io.on('connection', (socket) => {
   // Handle Client Disconnection
   socket.on('disconnect', () => {
     console.log('a user disconnected ' + socket.id);
+    // LOG User Disonnection
+    storeLogData(new Date().toISOString(), {
+      clientID: socket.id,
+      module: 'Server',
+      event: 'User Disconnected',
+    });
 
     if (socket === firstClientSocket) {
       const socketKeys = Object.keys(sockets);
@@ -225,6 +241,7 @@ io.on('connection', (socket) => {
       // If shouldSend flag for this row is false, return
       let shouldSend = shouldSendMap.get(object.rowId);
       if (shouldSend === false) return;
+
       udpPorts.forEach((udp) => {
         if (
           udp.options.remotePort === object.outPort &&
@@ -259,6 +276,24 @@ io.on('connection', (socket) => {
 
   socket.on('startSendOSC', (rowId) => {
     shouldSendMap.set(rowId, true);
+  });
+
+  // LOG DATA
+  socket.on('startLogging', () => {
+    io.emit('requestLogData');
+    io.emit('updateCheckbox');
+    logEntries = [];
+  });
+
+  socket.on('logData', (data) => {
+    let timestamp = new Date().toISOString();
+    storeLogData(timestamp, data);
+  });
+
+  socket.on('stopLogging', () => {
+    io.emit('stopLogData');
+    writeLogData();
+    io.emit('updateCheckbox');
   });
 
   //LATENCY TEST
@@ -315,6 +350,56 @@ const updateValuesClientsTriggers =
     // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
+
+// DATA LOGGING
+//--------------------------------------------------
+
+let logEntries = [];
+let logFilePath = null;
+
+// Function to generate a new file path based on the timestamp
+const generateFilePath = (timestamp) => {
+  let filename = `log_${new Date(timestamp)
+    .toISOString()
+    .replace(/[:.]/g, '-')}.txt`;
+  return resolve(
+    'C:/Users/Lennart/Documents/TUB_MASTER/CODE/Javascript/WeSpa_Data_Logs',
+    filename,
+  );
+};
+
+//store log data in memory
+const storeLogData = (timestamp, logData) => {
+  logEntries.push({
+    timestamp,
+    ...logData,
+  });
+
+  if (!logFilePath) {
+    logFilePath = generateFilePath(timestamp);
+  }
+};
+
+// Function to write the stored log data to a file
+const writeLogData = () => {
+  // Convert the log entries to CSV
+  let csvData = logEntries
+    .map(
+      (entry) =>
+        `${entry.timestamp},${entry.clientID},${entry.module},${entry.event}`,
+    )
+    .join('\n');
+
+  // Write the CSV data to a new file
+  fs.writeFile(logFilePath, csvData, (err) => {
+    if (err) throw err;
+    console.log('Log data saved!');
+
+    // Reset the log entries and file path for the next log
+    logEntries = [];
+    logFilePath = null;
+  });
+};
 
 // Launch server
 const myPort = process.env.PORT || 8081; // let Glitch choose port OR use 3000
