@@ -247,6 +247,9 @@ const setupGeometry = () => {
 
 const setupControls = () => {
   controls = new OrbitControls(camera, renderer.domElement);
+  controls.addEventListener('change', (event) => {
+    console.log(controls.object.position);
+  });
   transformControl = new TransformControls(camera, renderer.domElement);
   scene.add(transformControl);
 };
@@ -261,9 +264,34 @@ const resetViewPoint = () => {
   render();
 };
 
+const moveCamera = (direction) => {
+  let initPosition = { x: camera.position.x, y: camera.position.y };
+
+  switch (direction) {
+    case 'left':
+      camera.position.x = -initPosition.y; // Change to -x
+      camera.position.y = initPosition.x; // Keep y the same
+      break;
+    case 'right':
+      camera.position.x = initPosition.y; // Keep x the same
+      camera.position.y = -initPosition.x; // Change to y
+      break;
+  }
+  camera.lookAt(scene.position);
+  render();
+};
+
 document
   .getElementById('reset-viewpoint')
   .addEventListener('click', resetViewPoint);
+
+document
+  .getElementById('rotate-left')
+  .addEventListener('click', () => moveCamera('left')); // Move camera to the left
+
+document
+  .getElementById('rotate-right')
+  .addEventListener('click', () => moveCamera('right')); // Move camera to the right
 
 /*
 const animate = () => {

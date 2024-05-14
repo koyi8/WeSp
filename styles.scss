@@ -98,6 +98,29 @@ button {
   }
 }
 
+// ViewPoint Styles
+.viewpoint-wrapper {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  justify-content: space-between;
+  width: 50%;
+}
+
+#reset-viewpoint,
+#rotate-left,
+#rotate-right {
+  background-color: #fff;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  &:active {
+    background-color: #ddd; // Change to the color you want when clicked
+  }
+}
+
 // AXES STYLES
 .axes-label {
   font-family: Arial, sans-serif;
