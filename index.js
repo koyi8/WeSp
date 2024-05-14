@@ -283,7 +283,7 @@ const animate = () => {
 */
 
 let lastTime = performance.now();
-let renderFPS = 40;
+let renderFPS = 60;
 let interval = 1000 / renderFPS;
 
 const animate = () => {

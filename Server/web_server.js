@@ -120,16 +120,18 @@ let clients = {},
 
 let firstClientSocket = null;
 let clientColors = [
-  '#FF00FF',
-  '#00FFFF',
-  '#00FF00',
-  '#0000FF',
-  '#FFFF00',
-  '#FF0000',
+  '#FF00FF', // Magenta
+  '#00FFFF', // Cyan
+  '#00FF00', // Lime
+  '#0000FF', // Blue
+  '#FF0000', // Red
+  '#006400', // Dark Green
 ];
+
 // Event fired when client connects, giving each client a unique "socket" instance
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
+
   // LOG User Connection
   storeLogData(new Date().toISOString(), {
     clientID: socket.id,
@@ -137,11 +139,10 @@ io.on('connection', (socket) => {
     event: 'User Connected',
   });
 
-  // Assign a color to the client from the clientColors array
-
+  // Assign unique color to the client
   const clientColor = clientColors[0];
-
   clientColors.shift();
+
   //Store client id and initialize triggers array for each client
   clients[socket.id] = {
     clientID: socket.id,

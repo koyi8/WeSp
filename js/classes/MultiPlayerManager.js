@@ -301,12 +301,16 @@ class MultiPlayerManager {
             const positionDifference = Math.abs(
               triggerState.position - trigger.position,
             );
-            if (positionDifference < 0.5) {
+            if (
+              !trigger.animate ||
+              (trigger.animate && positionDifference < 0.5)
+            ) {
               //console.log('Position difference:', positionDifference);
+              let lerpValue = trigger.animate ? 0.01 : 0.8;
               trigger.position = this.lerp(
                 trigger.position,
                 triggerState.position,
-                0.01,
+                lerpValue,
               );
             }
             trigger.curveIndex = triggerState.curveIndex;
