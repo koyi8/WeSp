@@ -67,11 +67,17 @@ class MultiPlayerManager {
     let html = '<div id="clients">';
 
     Object.keys(clients).forEach((clientId, index) => {
-      // Highlight the client if it matches the client id
-      const highlight =
-        clientId === this.socket.id ? 'style="background-color: yellow;"' : '';
+      // Get the client color
+      const clientColor = clients[clientId].color;
 
-      html += `<div ${highlight}>Client ${index + 1}: ${clientId}</div>`;
+      // bounding box marking the local client
+      const boundingBox =
+        clientId === this.socket.id ? 'border: 2px solid black;' : '';
+
+      html += `<div style="width: 40%; ${boundingBox}">
+        <span style="background-color: ${clientColor}; border-radius: 50%; width: 10px; height: 10px; display: inline-block;"></span>
+        Client ${index + 1}: ${clientId}
+      </div>`;
     });
 
     html += '</div>';

@@ -137,13 +137,16 @@ io.on('connection', (socket) => {
     event: 'User Connected',
   });
 
-  let colorIndex = Object.keys(clients).length % clientColors.length;
+  // Assign a color to the client from the clientColors array
 
+  const clientColor = clientColors[0];
+
+  clientColors.shift();
   //Store client id and initialize triggers array for each client
   clients[socket.id] = {
     clientID: socket.id,
     Triggers: [],
-    color: clientColors[colorIndex],
+    color: clientColor,
   };
   sockets[socket.id] = socket;
   // Emit the 'clientList' event with the updated clients object
@@ -192,6 +195,11 @@ io.on('connection', (socket) => {
       } else {
         firstClientSocket = null;
       }
+    }
+
+    // Add the client's color back to the clientColors array
+    if (clients[socket.id]) {
+      clientColors.push(clients[socket.id].color);
     }
 
     delete clients[socket.id];
