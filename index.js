@@ -247,9 +247,6 @@ const setupGeometry = () => {
 
 const setupControls = () => {
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.addEventListener('change', (event) => {
-    console.log(controls.object.position);
-  });
   transformControl = new TransformControls(camera, renderer.domElement);
   scene.add(transformControl);
 };
