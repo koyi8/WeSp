@@ -307,24 +307,35 @@ const animate = () => {
 
 */
 
-let lastTime = performance.now();
-let renderFPS = 60;
-let interval = 1000 / renderFPS;
+let lastRenderTime = performance.now();
+let renderFPS = 50;
+let renderInterval = 1000 / renderFPS;
+
+let lastUpdateTime = 0;
+let updateRate = 200; // Send update every 100 ms
 
 const animate = () => {
   requestAnimationFrame(animate);
   let currentTime = performance.now();
-  let delta = currentTime - lastTime;
+  let delta = currentTime - lastRenderTime;
 
-  if (delta > interval) {
+  if (delta > renderInterval) {
     // The draw or time dependent code are here
     triggerManager.animateAllTriggers(positionsArray);
     curveManager.updateSplineOutline();
-    multiPlayerManager.sendUpdateTriggersClientsStateToServer();
     render();
 
-    lastTime = currentTime - (delta % interval);
+    lastRenderTime = currentTime - (delta % renderInterval);
     stats.update();
+  }
+
+  updateTriggersToServer(currentTime);
+};
+
+const updateTriggersToServer = (currentTime) => {
+  if (currentTime - lastUpdateTime > updateRate) {
+    multiPlayerManager.sendUpdateTriggersClientsStateToServer();
+    lastUpdateTime = currentTime;
   }
 };
 

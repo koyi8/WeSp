@@ -82,7 +82,7 @@ button {
   &.left {
     @include respond-to(portrait) {
       height: 50vh;
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
     }

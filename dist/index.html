@@ -1,26 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>WeSp_Prototype.js app</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>WeSp</title>
+    <!-- <link rel="icon" href="/favicon.ico" type="image/x-icon" /> -->
     
-    
-  <script type="module" crossorigin src="./assets/index-235cdca0.js"></script>
-  <link rel="stylesheet" href="./assets/index-2b6f471f.css">
-</head>
-<body>
-    <div id="container"></canvas>
-    <div id="trajectoryGUI"></div>
-    
-    
-    <!-- Include the "main copy.js" script -->
-    <!--<script type="module" src="/main copy.js"></script>-->
+    <script type="module" crossorigin src="/assets/index-773461fe.js"></script>
+    <link rel="stylesheet" href="/assets/index-cc20a7f4.css">
+  </head>
+  <body>
+    <div class="main-container">
+      <div id="3d-container" class="col left">
+        <div class="viewpoint-wrapper">
+          <button id="rotate-left">Rotate Left</button>
+          <button id="reset-viewpoint">Reset Viewpoint</button>
+          <button id="rotate-right">Rotate Right</button>
+        </div>
+      </div>
 
-    <!-- WEBSOCKET__ SOCKET.IO -->
-
+      <div id="gui-container" class="col right">
+        <div class="tabs">
+          <button class="tab" onclick="openTab(event, 'Tab1')">
+            Trajectories
+          </button>
+          <button class="tab" onclick="openTab(event, 'Tab2')">Objects</button>
+          <button class="tab" onclick="openTab(event, 'Tab3')">Settings</button>
+          <button class="tab" onclick="openTab(event, 'Tab4')">OSC</button>
+        </div>
+        <div
+          id="Tab1"
+          class="tabcontent trajectories-container"
+          style="display: block"
+        >
+          <button id="create-curve">Add trajectory</button>
+          <!-- <div id="trajectory-tabs" class="trajectory-tabs">
+            <button>Trajectory 1</button>
+            <button>Trajectory 2</button>
+            <button>Trajectory 3</button>
+          </div> -->
+          <!-- array of tragectories -->
+          <div class="trajectories" id="trajectories-container"></div>
+        </div>
+        <div id="Tab2" class="tabcontent">
+          <div>
+            <div class="lines">
+              <div class="line top"></div>
+              <div class="line middle"></div>
+              <div class="line left20"></div>
+              <div class="line left40"></div>
+              <div class="line left60"></div>
+              <div class="line left80"></div>
+            </div>
+          </div>
+          <div id="triggers" class="triggers">
+            <button id="create-trigger-0" class="add-trigger">+</button>
+            <button id="create-trigger-1" class="add-trigger">+</button>
+            <button id="create-trigger-2" class="add-trigger">+</button>
+            <button id="create-trigger-3" class="add-trigger">+</button>
+            <button id="create-trigger-4" class="add-trigger">+</button>
+            <button id="create-trigger-5" class="add-trigger">+</button>
+            <button id="create-trigger-6" class="add-trigger">+</button>
+            <button id="create-trigger-7" class="add-trigger">+</button>
+            <button id="create-trigger-8" class="add-trigger">+</button>
+            <button id="create-trigger-9" class="add-trigger">+</button>
+          </div>
+        </div>
+        <div id="Tab3" class="tabcontent">
+          <div class="settings" id="settings-container"></div>
+        </div>
+        <div id="Tab4" class="tabcontent">
+          <h2>OSC_Config</h2>
+          <div class="OSC" id="osc-container">
+            <div class="item">
+              <h3>UDP_Ports</h3>
+              <table id="portTable" class="oscConfigTable">
+                <tr class="oscConfigTableRow">
+                  <th class="indexCell">Port-ID</th>
+                  <th class="portCell">inPort</th>
+                  <th class="portCell">outPort</th>
+                  <th class="ipCell">outAddress</th>
+                  <th class="checkboxCell">open/close</th>
+                </tr>
+              </table>
+              <button onclick="addRowUDPPorts()">Add</button>
+              <button onclick="deleteRowUDPPorts()">Delete</button>
+            </div>
+            <div class="item">
+              <h3>OSC_Messages</h3>
+              <table id="messageTable" class="oscConfigTable">
+                <tr class="oscConfigTableRow">
+                  <th class="portNumberCell">Port Sel</th>
+                  <th class="oscMessageCell">oscMessage</th>
+                  <th class="oscArgumentsCell">oscArguments</th>
+                  <th class="sendCell">Send</th>
+                </tr>
+              </table>
+              <button onclick="addRowOSCMessage()">Add</button>
+              <button onclick="deleteRowOSCMessage()">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Including Socket.IO for real-time communication -->
+    <script src="gui-actions.js"></script>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-
     
     
-</body>
+  </body>
 </html>
