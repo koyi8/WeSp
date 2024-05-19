@@ -271,7 +271,9 @@ class TriggerManager {
     const curves = this.curveManager.getCurves();
 
     const curve = curves[trigger.curveIndex];
+
     let position = trigger.position;
+
     if (!curve) {
       console.warn(`Curve ${trigger.curveIndex} not found`);
       return; // Skip this iteration
@@ -310,6 +312,10 @@ class TriggerManager {
       positionsArray[index] = trigPos.clone();
     }
     curve.updateArcLengths();
+  }
+
+  lerp(start, end, t) {
+    return start * (1 - t) + end * t;
   }
 
   animateAllTriggers(positionsArray) {

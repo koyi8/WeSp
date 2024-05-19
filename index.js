@@ -17,7 +17,6 @@ import TriggerManager from './js/classes/TriggerManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/createOCSTables';
 import Stats from 'three/addons/libs/stats.module.js';
-import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 const cameraSettings = {
   fov: 70, // field of view
@@ -312,7 +311,7 @@ let renderFPS = 50;
 let renderInterval = 1000 / renderFPS;
 
 let lastUpdateTime = 0;
-let updateRate = 200; // Send update every 100 ms
+let updateRate = 100; // Send update every 100 ms
 
 const animate = () => {
   requestAnimationFrame(animate);

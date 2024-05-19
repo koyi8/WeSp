@@ -47,8 +47,8 @@ setInterval(() => {
 }, 17); // ~16.67 ms (1 second / 60) for 60 fps
 
 export const addRowUDPPorts = (
-  inPortValue = '5001',
-  outPortValue = '7001',
+  inPortValue = '5002',
+  outPortValue = '7002',
   outAddressValue = '127.0.0.1',
 ) => {
   const row = {};
