@@ -119,8 +119,8 @@ class CurveManager {
     for (let i = 0; i < 4; i++) {
       randomPositions.push(
         new THREE.Vector3(
-          THREE.MathUtils.randFloatSpread(1), // x between -1 and 1
-          THREE.MathUtils.randFloatSpread(1), // y between -1 and 1
+          THREE.MathUtils.randFloatSpread(2), // x between -1 and 1
+          THREE.MathUtils.randFloatSpread(2), // y between -1 and 1
           THREE.MathUtils.randFloat(0, 1), // z between 0 and 1
         ),
       );
@@ -140,10 +140,10 @@ class CurveManager {
     updateTrajectoriesHTML(this, true);
   }
 
-  createCurve(positions, isClosed) {
+  createCurve(positions, isClosed, selected = false) {
     const curve = new THREE.CatmullRomCurve3(positions, isClosed);
     curve.needsUpdate = true;
-    curve.selected = false;
+    curve.selected = selected;
     this.curves.push(curve);
 
     // TODO refactor
@@ -179,6 +179,7 @@ class CurveManager {
       this.createCurve(
         curveObjects.map((obj) => obj.position),
         this.settings.closed,
+        index === curvesPositions.length - 1 && true,
       );
     });
   }

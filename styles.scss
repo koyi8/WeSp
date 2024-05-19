@@ -20,6 +20,9 @@
   }
 }
 
+$color-gray: #f1f1f1;
+$color-gray-hover: #ddd;
+
 html,
 body {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
@@ -48,10 +51,10 @@ button {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   font-size: 12px;
   cursor: pointer;
+  appearance: none;
 
   &:hover {
-    background-color: black;
-    color: white;
+    background-color: $color-gray-hover;
   }
 
   &.selected {
@@ -276,25 +279,41 @@ button {
 }
 
 .tab-container {
-  //position: sticky;
-  top: 0;
-  z-index: 2;
+  display: flex;
+  column-gap: 2px;
+  padding: 4px;
+  // align-items: center;
+  // justify-content: center;
 }
 
-.trajectory-tabs {
-  background-color: #f1f1f1;
+.trajectory-tab {
+  background-color: $color-gray;
   border: none;
   cursor: pointer;
-  padding: 5px 15px;
+  padding: 12px;
+  border-radius: 100px;
   transition: 0.3s;
-  margin: 5px;
 
-  &:focus {
-    outline: none;
-    background-color: #3f3f3f;
-    color: #ffffff;
+  &.active {
+    background-color: black;
+    pointer-events: none;
   }
 }
+
+// .trajectory-tabs {
+//   // background-color: #f1f1f1;
+//   // border: none;
+//   // cursor: pointer;
+//   // padding: 5px 15px;
+//   // transition: 0.3s;
+//   // margin: 5px;
+
+//   &:focus {
+//     outline: none;
+//     background-color: #3f3f3f;
+//     color: #ffffff;
+//   }
+// }
 .trajectory {
   position: relative; // Add position: relative
   z-index: 1; // Add a lower z-index
@@ -327,26 +346,31 @@ button {
 
 /*GUI*/
 #gui-container {
-  padding-top: 33.8px;
+  padding-top: 29.8px;
 }
 
 .tabs {
   position: absolute;
   top: 0;
+  right: 0;
   left: 0;
   z-index: 9;
+  display: flex;
+  flex-direction: row;
+  background-color: $color-gray;
 }
 
 .tab {
-  background-color: #f1f1f1;
+  background-color: $color-gray;
   border: none;
   cursor: pointer;
-  padding: 10px 15px;
+  padding: 9px 12px;
   transition: 0.3s;
-}
 
-.tab:hover {
-  background-color: #ddd;
+  &.active {
+    background-color: #fff;
+    pointer-events: none;
+  }
 }
 
 .tabcontent {

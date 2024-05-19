@@ -38,13 +38,13 @@ export const createTriggerControlDiv = (
   </div>
   <div class="control full">
     <label for="speed${index}" class="label">Speed</label>
-    <input type="range" orient="vertical" id="speed${index}" min="0.0" max="0.06" step="0.0001" value="${
+    <input type="range" class="range-vertical" id="speed${index}" min="0.0" max="0.06" step="0.0001" value="${
     triggerDefaults.speed
   }"/>
   </div>
   <div class="control full" style="display: none;">
     <label for="position${index}" class="label">Position</label>
-    <input type="range" orient="vertical" id="position${index}" min="0" max="1" step="0.001" value="${
+    <input type="range" class="range-vertical" id="position${index}" min="0" max="1" step="0.001" value="${
     triggerDefaults.position
   }"/>
   </div>

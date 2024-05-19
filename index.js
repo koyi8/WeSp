@@ -353,7 +353,7 @@ const onDocumentMouseDown = (event) => {
   }
 };
 
-const debouncedUpdateControlPointsHTML = debounce(() => {
+export const debouncedUpdateControlPointsHTML = debounce(() => {
   multiPlayerManager.sendCurvesStateToServer();
   updateControlPointsHTML(curveManager);
   //multiPlayerManager.sendCurvesStateToServer();
@@ -404,17 +404,6 @@ const initListeners = () => {
       curveManager.updateCurveFromControlPoint(selectedObject);
       debouncedUpdateControlPointsHTML();
     }
-  });
-
-  document.getElementById('create-curve').addEventListener('click', () => {
-    curveManager.addRandomCurve();
-    debouncedUpdateControlPointsHTML();
-
-    // Interaction log
-    logUIInteraction(
-      'trajectoryModule',
-      `curve added ${curveManager.curves.length}`,
-    );
   });
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();
