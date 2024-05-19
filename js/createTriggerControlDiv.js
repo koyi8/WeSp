@@ -1,3 +1,4 @@
+import noUiSlider from 'nouislider';
 import { logUIInteraction } from './heplers/logUIInteraction';
 
 export const createTriggerControlDiv = (
@@ -25,7 +26,7 @@ export const createTriggerControlDiv = (
     <button id="delete${index}">x</button>
   </div>
   <div class="control inline">
-    <label for="trajectory${index}" class="label">Trajectory</label>
+    <label for="trajectory${index}" class="label">Tr#</label>
     <select name="trajectory" id="trajectory${index}" class="trajectory-select">
       ${selectOptions}
     </select>
@@ -38,15 +39,11 @@ export const createTriggerControlDiv = (
   </div>
   <div class="control full">
     <label for="speed${index}" class="label">Speed</label>
-    <input type="range" class="range-vertical" id="speed${index}" min="0.0" max="0.06" step="0.0001" value="${
-    triggerDefaults.speed
-  }"/>
+    <div id="speed${index}" class="slider"></div>
   </div>
   <div class="control full" style="display: none;">
     <label for="position${index}" class="label">Position</label>
-    <input type="range" class="range-vertical" id="position${index}" min="0" max="1" step="0.001" value="${
-    triggerDefaults.position
-  }"/>
+    <div id="position${index}" class="slider"></div>
   </div>
   <div class="control inline">
     <label for="loop${index}" class="label">Loop</label>
@@ -66,6 +63,9 @@ export const createTriggerControlDiv = (
   </div>
 `;
 
+  // Append the div to the DOM before initializing sliders
+  document.body.appendChild(div);
+
   const speedControl = div.querySelector(`div.control:has(#speed${index})`);
   const positionControl = div.querySelector(
     `div.control:has(#position${index})`,
@@ -73,11 +73,10 @@ export const createTriggerControlDiv = (
   const animateCheckbox = div.querySelector(`#animate${index}`);
   animateCheckbox.addEventListener('change', (e) => {
     onUpdate(index, { animate: e.target.checked });
-    // When animation starts, update the position range input to match the trigger's current position.
     onAnimateChange(index);
 
     if (e.target.checked) {
-      positionControl.style.display = 'none'; // Hide position control when animated
+      positionControl.style.display = 'none';
       speedControl.style.display = ''; // Show speed control (use default or '' to reset)
     } else {
       positionControl.style.display = ''; // Show position control when not animated
@@ -91,31 +90,64 @@ export const createTriggerControlDiv = (
     logUIInteraction('objectsModule', eventName);
   });
 
-  // Speed Range Input
-  const speedRange = div.querySelector(`#speed${index}`);
-  speedRange.addEventListener('input', (e) => {
-    onUpdate(index, { speed: parseFloat(e.target.value) });
-  });
-  // interaction logging
-  speedRange.addEventListener('change', (e) => {
-    logUIInteraction(
-      'objectsModule',
-      `Animate Speed changed Object ${index + 1} Value: ${e.target.value}`,
-    );
-  });
+  // Initialize noUiSlider for Speed
 
-  // Position Range Input
-  const positionRange = div.querySelector(`#position${index}`);
-  positionRange.addEventListener('input', (e) => {
-    onUpdate(index, { position: parseFloat(e.target.value) });
-  });
-  // interaction logging
-  positionRange.addEventListener('change', (e) => {
-    logUIInteraction(
-      'objectsModule',
-      `Object Position changed Object ${index + 1} Value: ${e.target.value}`,
-    );
-  });
+  const speedSlider = document.getElementById(`speed${index}`);
+  if (speedSlider) {
+    noUiSlider.create(speedSlider, {
+      start: triggerDefaults.speed,
+      connect: [true, false],
+      range: {
+        min: 0,
+        max: 0.06,
+      },
+      step: 0.0001,
+      orientation: 'vertical',
+      direction: 'rtl',
+    });
+
+    speedSlider.noUiSlider.on('update', (values) => {
+      onUpdate(index, { speed: parseFloat(values[0]) });
+    });
+
+    speedSlider.noUiSlider.on('change', (values) => {
+      logUIInteraction(
+        'objectsModule',
+        `Animate Speed changed Object ${index + 1} Value: ${values[0]}`,
+      );
+    });
+  } else {
+    console.error(`Speed slider with id speed${index} not found`);
+  }
+
+  // Initialize noUiSlider for Position
+  const positionSlider = document.getElementById(`position${index}`);
+  if (positionSlider) {
+    noUiSlider.create(positionSlider, {
+      start: triggerDefaults.position,
+      connect: [true, false],
+      range: {
+        min: 0,
+        max: 1,
+      },
+      step: 0.001,
+      orientation: 'vertical',
+      direction: 'rtl',
+    });
+
+    positionSlider.noUiSlider.on('update', (values) => {
+      onUpdate(index, { position: parseFloat(values[0]) });
+    });
+
+    positionSlider.noUiSlider.on('change', (values) => {
+      logUIInteraction(
+        'objectsModule',
+        `Object Position changed Object ${index + 1} Value: ${values[0]}`,
+      );
+    });
+  } else {
+    console.error(`Position slider with id position${index} not found`);
+  }
 
   // Trajectory Select
   const trajectorySelect = div.querySelector(`#trajectory${index}`);

@@ -66,7 +66,7 @@ class TriggerManager {
     const triggerDefaults = {
       animate: true,
       loop: true,
-      speed: Math.random() * 0.02,
+      speed: Math.random() * (0.04 - 0.01) + 0.01,
       position: Math.random(),
       curveIndex: 0,
       direction: 'ltr',
@@ -403,9 +403,14 @@ class TriggerManager {
   }
 
   updatePositionInput(index) {
-    const positionInput = document.getElementById(`position${index}`);
-    if (positionInput) {
-      positionInput.value = this.triggers[index].position;
+    const positionSlider = document.getElementById(`position${index}`);
+
+    if (positionSlider && positionSlider.noUiSlider) {
+      positionSlider.noUiSlider.set(this.triggers[index].position);
+    } else {
+      console.error(
+        `Position slider with id position${index} not found or noUiSlider not initialized`,
+      );
     }
   }
 

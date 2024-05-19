@@ -1,4 +1,6 @@
 @import 'normalize.css';
+@import 'slider';
+@import 'nouislider/dist/nouislider.css';
 
 @mixin respond-to($point) {
   @if $point == small {
@@ -214,6 +216,7 @@ button {
     display: flex;
     flex-direction: column;
     // row-gap: 10px;
+    align-items: center;
 
     &.inline {
       flex-direction: row;
@@ -240,8 +243,8 @@ button {
     }
   }
 
-  input[type='range'] {
-    appearance: slider-vertical;
+  .slider {
+    height: 100%;
   }
 }
 
