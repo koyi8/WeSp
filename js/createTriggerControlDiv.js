@@ -104,6 +104,7 @@ export const createTriggerControlDiv = (
       step: 0.0001,
       orientation: 'vertical',
       direction: 'rtl',
+      behaviour: 'snap',
     });
 
     speedSlider.noUiSlider.on('update', (values) => {
@@ -133,6 +134,7 @@ export const createTriggerControlDiv = (
       step: 0.001,
       orientation: 'vertical',
       direction: 'rtl',
+      behaviour: 'snap',
     });
 
     positionSlider.noUiSlider.on('update', (values) => {
