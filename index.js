@@ -17,7 +17,6 @@ import TriggerManager from './js/classes/TriggerManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/createOCSTables';
 import Stats from 'three/addons/libs/stats.module.js';
-import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 const cameraSettings = {
   fov: 70, // field of view
@@ -261,9 +260,34 @@ const resetViewPoint = () => {
   render();
 };
 
+const moveCamera = (direction) => {
+  let initPosition = { x: camera.position.x, y: camera.position.y };
+
+  switch (direction) {
+    case 'left':
+      camera.position.x = -initPosition.y; // Change to -x
+      camera.position.y = initPosition.x; // Keep y the same
+      break;
+    case 'right':
+      camera.position.x = initPosition.y; // Keep x the same
+      camera.position.y = -initPosition.x; // Change to y
+      break;
+  }
+  camera.lookAt(scene.position);
+  render();
+};
+
 document
   .getElementById('reset-viewpoint')
   .addEventListener('click', resetViewPoint);
+
+document
+  .getElementById('rotate-left')
+  .addEventListener('click', () => moveCamera('left')); // Move camera to the left
+
+document
+  .getElementById('rotate-right')
+  .addEventListener('click', () => moveCamera('right')); // Move camera to the right
 
 /*
 const animate = () => {
@@ -282,24 +306,35 @@ const animate = () => {
 
 */
 
-let lastTime = performance.now();
-let renderFPS = 40;
-let interval = 1000 / renderFPS;
+let lastRenderTime = performance.now();
+let renderFPS = 50;
+let renderInterval = 1000 / renderFPS;
+
+let lastUpdateTime = 0;
+let updateRate = 100; // Send update every 100 ms
 
 const animate = () => {
   requestAnimationFrame(animate);
   let currentTime = performance.now();
-  let delta = currentTime - lastTime;
+  let delta = currentTime - lastRenderTime;
 
-  if (delta > interval) {
+  if (delta > renderInterval) {
     // The draw or time dependent code are here
     triggerManager.animateAllTriggers(positionsArray);
     curveManager.updateSplineOutline();
-    multiPlayerManager.sendUpdateTriggersClientsStateToServer();
     render();
 
-    lastTime = currentTime - (delta % interval);
+    lastRenderTime = currentTime - (delta % renderInterval);
     stats.update();
+  }
+
+  updateTriggersToServer(currentTime);
+};
+
+const updateTriggersToServer = (currentTime) => {
+  if (currentTime - lastUpdateTime > updateRate) {
+    multiPlayerManager.sendUpdateTriggersClientsStateToServer();
+    lastUpdateTime = currentTime;
   }
 };
 

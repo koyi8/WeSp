@@ -14,6 +14,23 @@ class CurveManager {
     this.splineHelperObjects = [];
     this.container = container;
     this.initTrajectoryLabelRenderer();
+    this.originalCurveColors = [
+      '#FF0000', // Red
+      '#0000FF', // Blue
+      '#FF00FF', // Fuchsia
+      '#800000', // Maroon
+      '#000080', // Navy
+      '#808000', // Olive
+      '#800080', // Purple
+      '#008080', // Teal
+      '#8B4513', // SaddleBrown
+      '#FF69B4', // HotPink
+      '#4B0082', // Indigo
+      '#008000', // Green
+      '#FF6347', // Tomato
+      '#40E0D0', // Turquoise
+    ];
+    this.curveColors = [...this.originalCurveColors];
   }
 
   getSplineHelperObjects() {
@@ -297,8 +314,22 @@ class CurveManager {
       curve.mesh.geometry.dispose();
       curve.mesh.geometry = geometry;
     } else {
+      let color;
+      if (this.curveColors.length > 0) {
+        const randomIndex = Math.floor(Math.random() * this.curveColors.length);
+        color = this.curveColors[randomIndex];
+        this.curveColors.splice(randomIndex, 1); // Remove the chosen color from the array
+      } else {
+        // If all colors have been used, reset the array
+        this.curveColors = [...this.originalCurveColors];
+        color = this.curveColors[0];
+        this.curveColors.splice(0, 1);
+      }
+
+      console.log('color', color);
+
       const material = new THREE.MeshLambertMaterial({
-        color: Math.random() * 0xffffff,
+        color: new THREE.Color(color),
       });
       curve.mesh = new THREE.Mesh(geometry, material);
       this.scene.add(curve.mesh);

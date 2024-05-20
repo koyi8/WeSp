@@ -34,7 +34,7 @@ export const updateTriggerObjectsPositions = (
 };
 
 export const processTriggerObjects = (triggerObjects, outportValue) => {
-  // Convert outportValue to a number using parseInt
+  // Convert outportValue
   let outportNumber = parseInt(outportValue, 10);
 
   // Iterate over the triggerObjects
