@@ -66,7 +66,7 @@ class TriggerManager {
     const triggerDefaults = {
       animate: true,
       loop: true,
-      speed: Math.random() * (0.04 - 0.01) + 0.01,
+      speed: Math.random() * (4 - 1) + 1,
       position: Math.random(),
       curveIndex: 0,
       direction: 'ltr',

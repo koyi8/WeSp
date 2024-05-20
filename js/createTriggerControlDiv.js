@@ -98,17 +98,21 @@ export const createTriggerControlDiv = (
       start: triggerDefaults.speed,
       connect: [true, false],
       range: {
-        min: 0,
-        max: 0.06,
+        min: [0],
+        '30%': [1], //non-linear slider behaviour
+        '70%': [4],
+        max: [6], // change because noUI only accepts 2 digits after komma
       },
-      step: 0.0001,
+      step: 0.01,
       orientation: 'vertical',
       direction: 'rtl',
       behaviour: 'snap',
     });
 
     speedSlider.noUiSlider.on('update', (values) => {
-      onUpdate(index, { speed: parseFloat(values[0]) });
+      const speed = parseFloat(values[0]) / 100; // scale back the output
+      onUpdate(index, { speed });
+      console.log('speed', speed);
     });
 
     speedSlider.noUiSlider.on('change', (values) => {
