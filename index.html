@@ -8,7 +8,26 @@
     />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>WeSp</title>
-    <!-- <link rel="icon" href="/favicon.ico" type="image/x-icon" /> -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="public/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="public/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="public/favicon-16x16.png"
+    />
+    <link rel="mask-icon" href="public/safari-pinned-tab.svg" color="#5bbad5" />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="stylesheet" type="text/css" href="styles.scss" />
   </head>
   <body>
@@ -24,7 +43,7 @@
 
       <div id="gui-container" class="col right">
         <div class="tabs">
-          <button class="tab" onclick="openTab(event, 'Tab1')">
+          <button class="tab active" onclick="openTab(event, 'Tab1')">
             Trajectories
           </button>
           <button class="tab" onclick="openTab(event, 'Tab2')">Objects</button>
@@ -36,19 +55,13 @@
           class="tabcontent trajectories-container"
           style="display: block"
         >
-          <button id="create-curve">Add trajectory</button>
-          <!-- <div id="trajectory-tabs" class="trajectory-tabs">
-            <button>Trajectory 1</button>
-            <button>Trajectory 2</button>
-            <button>Trajectory 3</button>
-          </div> -->
-          <!-- array of tragectories -->
+          <div id="tab-container" class="tab-container"></div>
           <div class="trajectories" id="trajectories-container"></div>
         </div>
         <div id="Tab2" class="tabcontent">
           <div>
             <div class="lines">
-              <div class="line top"></div>
+              <!-- <div class="line top"></div> -->
               <div class="line middle"></div>
               <div class="line left20"></div>
               <div class="line left40"></div>

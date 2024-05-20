@@ -1,0 +1,81 @@
+$slider-background-color: #e0e0e0;
+$slider-border-color: #ccc;
+$slider-border-radius: 0;
+$slider-width: 2px;
+
+$handle-color: #000;
+$handle-border-radius: 6px;
+$handle-width: 48px;
+$handle-height: 16px;
+$handle-border-color: #fff;
+
+$connect-color: #000;
+
+.noUi-target {
+  border: none;
+  height: 100%;
+  position: relative;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+
+
+.noUi-vertical {
+  width: 100%;
+  position: relative;
+  box-shadow: none;
+
+  .noUi-base {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    // border-radius: $slider-border-radius;
+
+    .noUi-connects {
+      width: 2px;
+      background-color: $slider-background-color;
+
+      .noUi-connect {
+        background-color: $connect-color;
+      }
+    }
+  }
+
+  .noUi-origin {
+    right: auto;
+    left: 50%;
+    margin-left: 25px;
+  }
+
+  .noUi-handle {
+    background-color: $handle-color;
+    border-radius: $handle-border-radius;
+    width: $handle-width;
+    height: $handle-height;
+    border: none;
+    box-shadow: none;
+    bottom: -10px;
+    left: -49px;
+    cursor: pointer;
+
+    &:before, &:after {
+      display: none;
+    }
+
+    .noUi-touch-area {
+      width: 56px;
+      height: 56px;
+      margin-top: -20px;
+      margin-left: -4px;
+      outline: none;
+    }
+  }
+}
+
+.noUi-tooltip {
+  display: none;
+}
