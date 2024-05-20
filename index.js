@@ -61,7 +61,7 @@ const settings = {
   arcLength: 0,
   antialias: true,
   triggerAmount: 2,
-  curveAmount: 2,
+  curveAmount: 1,
 };
 
 const container = document.getElementById('3d-container');

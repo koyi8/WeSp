@@ -480,6 +480,19 @@ class MultiPlayerManager {
     // Add the startCheckbox and startLabel to the container
     container.appendChild(startCheckbox);
     container.appendChild(startLabel);
+
+    // Create a new button for logMarker
+    const markerButton = document.createElement('button');
+    markerButton.id = 'markerButton';
+    markerButton.textContent = 'Marker';
+
+    // Add a click event listener to the markerButton
+    markerButton.addEventListener('click', () => {
+      // Emit 'logMarker' event when the button is clicked
+      this.socket.emit('logMarker');
+    });
+
+    container.appendChild(markerButton);
   }
 }
 

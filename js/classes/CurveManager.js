@@ -176,16 +176,10 @@ class CurveManager {
   initCurves() {
     const curvesPositions = [
       [
-        new THREE.Vector3(-1, -1, 0.1),
-        new THREE.Vector3(1, -1, 0.1),
-        new THREE.Vector3(1, 1, 0.1),
-        new THREE.Vector3(-1, 1, 0.1),
-      ],
-      [
-        new THREE.Vector3(-1, -1, 0.4),
-        new THREE.Vector3(1, -1, 0.4),
-        new THREE.Vector3(1, 1, 0.4),
-        new THREE.Vector3(-1, 1, 0.4),
+        new THREE.Vector3(-0.7, -0.7, 0.3),
+        new THREE.Vector3(0.7, -0.7, 0.3),
+        new THREE.Vector3(0.7, 0.7, 0.3),
+        new THREE.Vector3(-0.7, 0.7, 0.3),
       ],
     ];
 

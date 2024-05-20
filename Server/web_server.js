@@ -267,6 +267,7 @@ io.on('connection', (socket) => {
             args: args,
           });
           // Log the final UDP send
+          /*
           console.log(
             `Sent OSC message to ${object.outAddress}:${
               object.outPort
@@ -274,6 +275,7 @@ io.on('connection', (socket) => {
               (arg) => arg.value,
             )}`,
           );
+          */
         }
       });
     });
@@ -292,6 +294,7 @@ io.on('connection', (socket) => {
     io.emit('requestLogData');
     io.emit('updateCheckbox');
     logEntries = [];
+    console.log('Logging started');
   });
 
   socket.on('logData', (data) => {
@@ -303,6 +306,12 @@ io.on('connection', (socket) => {
     io.emit('stopLogData');
     writeLogData();
     io.emit('updateCheckbox');
+  });
+
+  socket.on('logMarker', () => {
+    const timestamp = new Date().toISOString();
+    storeLogData(timestamp, { event: 'Marker' });
+    console.log('Marker logged');
   });
 
   //LATENCY TEST
