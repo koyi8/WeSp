@@ -193,7 +193,7 @@ export const updateTrajectoriesHTML = (
         const input = document.createElement('input');
         input.type = 'number';
         input.name = axis;
-        input.min = pointControlSettings.cpRangeMin;
+        input.min = axis === 'z' ? 0 : pointControlSettings.cpRangeMin;
         input.max = pointControlSettings.cpRangeMax;
         input.step = pointControlSettings.cpStepNumber;
         input.value = object.position[axis].toFixed(2);

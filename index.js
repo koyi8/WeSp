@@ -389,9 +389,9 @@ const onDocumentMouseDown = (event) => {
 };
 
 export const debouncedUpdateControlPointsHTML = debounce(() => {
-  multiPlayerManager.sendCurvesStateToServer();
+  // multiPlayerManager.sendCurvesStateToServer();
   updateControlPointsHTML(curveManager);
-  //multiPlayerManager.sendCurvesStateToServer();
+  multiPlayerManager.sendCurvesStateToServer();
   //console.log(positionsArray);
 }, 300);
 
