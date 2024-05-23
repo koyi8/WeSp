@@ -25,15 +25,21 @@ export const updateTrajectoriesHTML = (
   const tabContainer = document.getElementById('tab-container');
   tabContainer.innerHTML = '';
 
+  // Store the currently active tab index
+  let activeTabIndex = selectedCurveIndex;
+
   curveManager.curves.forEach((curve, curveIndex) => {
     let selectPointIndex = 0;
     // Create a tab for each trajectory
     const tab = document.createElement('button');
     tab.id = `trajectory-tab-${curveIndex}`;
     tab.className =
-      curveManager.curves.length - 1 === curveIndex
+      curveIndex === activeTabIndex
         ? 'trajectory-tab active'
         : 'trajectory-tab';
+    curveManager.curves.length - 1 === curveIndex
+      ? 'trajectory-tab active'
+      : 'trajectory-tab';
     tab.textContent = `T${curveIndex + 1}`;
     tab.addEventListener('click', () => {
       // Hide all trajectories
@@ -306,10 +312,8 @@ export const updateTrajectoriesHTML = (
     debouncedUpdateControlPointsHTML();
 
     setTimeout(() => {
-      const curves = curveManager.getCurves();
       const curvesLength = curveManager.getCurves().length - 1;
-
-      curves.forEach((_, index) => {
+      curveManager.curves.forEach((_, index) => {
         curveManager.toggleCurveSelected(index, false);
       });
       curveManager.toggleCurveSelected(curvesLength, true);
@@ -319,6 +323,16 @@ export const updateTrajectoriesHTML = (
       document
         .getElementById(`trajectory-tab-${curvesLength}`)
         .classList.add('active');
+      document.querySelectorAll('.trajectory').forEach((trajectory) => {
+        trajectory.style.display = 'none';
+      });
+      document.getElementById(`trajectory-${curvesLength}`).style.display =
+        'block';
+      selectedCurveIndex = curvesLength;
+      logUIInteraction(
+        'trajectoryModule',
+        `curve added ${curveManager.curves.length}`,
+      );
     }, 50);
 
     // Interaction log
@@ -331,29 +345,24 @@ export const updateTrajectoriesHTML = (
 
   //console.log('selectedcurve index', selectedCurveIndex);
 
-  // Show the last trajectory by default (which is the newly created one)
-  let trajectoryIndexToShow = isNewTrajectory
-    ? curveManager.curves.length - 1
-    : selectedCurveIndex;
-
-  if (trajectoryIndexToShow >= 0) {
-    let element = document.getElementById(
-      `trajectory-${trajectoryIndexToShow}`,
+  // Restore the active tab and its corresponding content
+  if (activeTabIndex >= 0) {
+    const activeTab = document.getElementById(
+      `trajectory-tab-${activeTabIndex}`,
     );
+    if (activeTab) activeTab.classList.add('active');
 
-    // If the element is null and there are still curves, display the last curve
-    if (!element && curveManager.curves.length > 0) {
-      trajectoryIndexToShow = curveManager.curves.length - 1;
-      element = document.getElementById(`trajectory-${trajectoryIndexToShow}`);
-    }
+    const activeTrajectory = document.getElementById(
+      `trajectory-${activeTabIndex}`,
+    );
+    if (activeTrajectory) activeTrajectory.style.display = 'block';
+  } else if (curveManager.curves.length > 0) {
+    // Default to the first tab if there are curves but no active tab
+    const firstTab = document.getElementById('trajectory-tab-0');
+    if (firstTab) firstTab.classList.add('active');
 
-    if (element) {
-      element.style.display = 'block';
-    }
-  }
-
-  if (isNewTrajectory) {
-    selectedCurveIndex = curveManager.curves.length - 1;
+    const firstTrajectory = document.getElementById('trajectory-0');
+    if (firstTrajectory) firstTrajectory.style.display = 'block';
   }
 };
 
