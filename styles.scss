@@ -43,7 +43,14 @@ label {
   font-size: 10px;
   margin-bottom: 6px;
   text-transform: uppercase;
-  color: #666;
+  color: #222;
+
+  &.small {
+    font-size: 8px;
+    text-transform: none;
+    color: #808080;
+    margin-bottom: 2px;
+  }
 }
 
 button {
@@ -63,6 +70,10 @@ button {
     background-color: black;
     color: white;
   }
+}
+
+.hidden-checkbox {
+  display: none;
 }
 
 .main-container {
@@ -182,22 +193,82 @@ button {
 
   .trigger {
     flex-direction: column;
-    padding: 13px 10px;
-    row-gap: 10px;
-    text-align: center;
     justify-content: space-between;
     position: relative;
+    overflow: hidden;
 
     .direction {
       display: flex;
       flex-direction: row;
     }
 
+    .value-placeholder {
+      font-size: 10px;
+      text-transform: uppercase;
+      user-select: none;
+      cursor: pointer;
+
+      &.with-arrow {
+        position: relative;
+        padding-right: 6px;
+
+        &:after {
+          content: '';
+          position: absolute;
+          bottom: 3px;
+          right: 0px;
+          width: 0px;
+          height: 0px;
+          border-style: solid;
+          border-width: 0 2px 3px 2px;
+          border-color: transparent transparent #000000 transparent;
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    .trajectory-select {
+      font-size: 10px;
+      text-transform: uppercase;
+      user-select: none;
+      cursor: pointer;
+      position: relative;
+
+      select {
+        padding-right: 6px;
+        appearance: none;
+        border: none;
+        outline: none;
+      }
+
+      &:after {
+        content: '';
+        position: absolute;
+        bottom: 3px;
+        right: 0px;
+        width: 0px;
+        height: 0px;
+        border-style: solid;
+        border-width: 0 2px 3px 2px;
+        border-color: transparent transparent #000000 transparent;
+        transform: rotate(180deg);
+      }
+    }
+
+    .direction {
+      cursor: pointer;
+
+      label {
+        pointer-events: none;
+      }
+    }
+
     .header {
       width: 100%;
-      display: flex;
-      justify-content: space-between;
       border-bottom: 1px solid #f1f1f1;
+      padding: 4px 4px 3px;
+      position: relative;
+      display: flex;
 
       label {
         margin-bottom: 0;
@@ -205,12 +276,15 @@ button {
 
       button {
         appearance: none;
-        background-color: #fff;
+        background-color: transparent;
         border: none;
-        padding: 0 0 10px 10px;
-        font-size: 12px;
-        margin-top: -2px;
-        color: #666;
+        padding: 0;
+        color: #222;
+        width: 26px;
+        height: 26px;
+        position: absolute;
+        top: -3px;
+        right: -4px;
 
         &:hover {
           color: #d3d3d3;
@@ -238,31 +312,33 @@ button {
   .control {
     display: flex;
     flex-direction: column;
-    // row-gap: 10px;
-    align-items: center;
 
     &.inline {
       flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      column-gap: 15px;
+      justify-content: space-between;
+      padding: 3px 4px;
 
-      label {
+      label:not(.small) {
         margin-bottom: 0;
       }
     }
 
     &.full {
       flex: 1;
-
-      input {
-        height: 100%;
-        min-height: 40px;
-      }
     }
 
-    .direction {
-      justify-content: center;
+    &.slider-wrapper {
+      padding: 10px 0;
+    }
+
+    .control-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      &.right {
+        align-items: flex-end;
+      }
     }
   }
 
@@ -372,7 +448,7 @@ button {
 
 /*GUI*/
 #gui-container {
-  padding-top: 29.8px;
+  padding-top: 31.8px;
 }
 
 .tabs {

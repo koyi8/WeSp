@@ -23,42 +23,46 @@ export const createTriggerControlDiv = (
   div.innerHTML = `
   <div class="header">
     <label class="label">OBJ #${index + 1}</label>
-    <button id="delete${index}">x</button>
+    <button id="delete${index}">&#10005;</button>
   </div>
   <div class="control inline">
-    <label for="trajectory${index}" class="label">Tr#</label>
-    <select name="trajectory" id="trajectory${index}" class="trajectory-select">
-      ${selectOptions}
-    </select>
-  </div>
-  <div class="control inline">
-    <label for="animate${index}">Animate</label>
-    <input type="checkbox" id="animate${index}" name="animate" ${
+    <div class="control-col">
+      <label class="label small" for="animate${index}">Control:</label>
+      <input type="checkbox" id="animate${index}" name="animate" class="hidden-checkbox" ${
     triggerDefaults.animate ? 'checked' : ''
   }/>
+      <div id="animate-sign-${index}" class="value-placeholder with-arrow">${
+    triggerDefaults.animate ? 'Speed' : 'Coords'
+  }</div>
+    </div>
+    <div class="control-col right trajectory-select">
+      <label for="trajectory${index}" class="label small">Trajectory:</label>
+      <select name="trajectory" id="trajectory${index}">
+        ${selectOptions}
+      </select>
+    </div>
   </div>
-  <div class="control full">
-    <label for="speed${index}" class="label">Speed</label>
+  <div class="control full slider-wrapper">
     <div id="speed${index}" class="slider"></div>
   </div>
-  <div class="control full" style="display: none;">
-    <label for="position${index}" class="label">Position</label>
+  <div class="control full slider-wrapper" style="display: none;">
     <div id="position${index}" class="slider"></div>
   </div>
   <div class="control inline">
-    <label for="loop${index}" class="label">Loop</label>
-    <input type="checkbox" id="loop${index}" name="animate" ${
+    <div class="control-col">
+      <label for="loop${index}" class="label small">Move:</label>
+      <input type="checkbox" id="loop${index}" name="animate" class="hidden-checkbox" ${
     triggerDefaults.loop ? 'checked' : ''
   }/>
-  </div>
-  <div class="control">
-    <div class="direction">
-      <button id="ltr${index}" style="font-size:15px;" ${
-    triggerDefaults.direction === 'ltr' ? 'class="selected"' : ''
-  }>&#11013;</button>
-      <button id="rtl${index}" style="font-size:15px;" ${
-    triggerDefaults.direction === 'rtl' ? 'class="selected"' : ''
-  }>&#10145;</button>
+      <div id="loop-sign-${index}" class="value-placeholder with-arrow">${
+    triggerDefaults.loop ? 'Loop' : 'Alt'
+  }</div>
+    </div>
+    <div id="direction-${index}" class="direction control-col">
+      <label class="label small">Direction:</label>
+      <span  id="direction-sign-${index}" class="value-placeholder with-arrow">${
+    triggerDefaults.direction === 'ltr' ? 'L > R' : 'R > L'
+  }</span>
     </div>
   </div>
 `;
@@ -70,7 +74,14 @@ export const createTriggerControlDiv = (
   const positionControl = div.querySelector(
     `div.control:has(#position${index})`,
   );
+
+  const animateSign = div.querySelector(`#animate-sign-${index}`);
   const animateCheckbox = div.querySelector(`#animate${index}`);
+  animateSign.addEventListener('click', () => {
+    animateCheckbox.checked = !animateCheckbox.checked;
+    const event = new Event('change');
+    animateCheckbox.dispatchEvent(event);
+  });
   animateCheckbox.addEventListener('change', (e) => {
     onUpdate(index, { animate: e.target.checked });
     onAnimateChange(index);
@@ -78,9 +89,11 @@ export const createTriggerControlDiv = (
     if (e.target.checked) {
       positionControl.style.display = 'none';
       speedControl.style.display = ''; // Show speed control (use default or '' to reset)
+      div.querySelector(`#animate-sign-${index}`).textContent = 'Speed';
     } else {
       positionControl.style.display = ''; // Show position control when not animated
       speedControl.style.display = 'none'; // Hide speed control
+      div.querySelector(`#animate-sign-${index}`).textContent = 'Coords';
     }
 
     //logging interaction
@@ -170,58 +183,41 @@ export const createTriggerControlDiv = (
   });
 
   // Loop /Alternate Checkbox
+  const loopSign = div.querySelector(`#loop-sign-${index}`);
   const loopButton = div.querySelector(`#loop${index}`);
-  loopButton.addEventListener('click', (e) => {
+  loopSign.addEventListener('click', () => {
+    loopButton.checked = !loopButton.checked;
+    const event = new Event('change');
+    loopButton.dispatchEvent(event);
+  });
+  loopButton.addEventListener('change', (e) => {
     onUpdate(index, { loop: e.target.checked });
 
     //logging interaction
     const eventName = e.target.checked
       ? `Loop active Object ${index + 1}`
       : `Alternate active  Object ${index + 1}`;
+
+    div.querySelector(`#loop-sign-${index}`).textContent = e.target.checked
+      ? 'Loop'
+      : 'Alt';
+
     logUIInteraction('objectsModule', eventName);
   });
 
-  //Direction Buttons
-  const updateDirectionSelected = (direction) => {
-    const ltrButton = div.querySelector(`#ltr${index}`);
-    const rtlButton = div.querySelector(`#rtl${index}`);
-
-    // Remove selected class from both buttons
-    ltrButton.classList.remove('selected');
-    rtlButton.classList.remove('selected');
-
-    if (direction === 'ltr') {
-      ltrButton.classList.add('selected');
-    } else if (direction === 'rtl') {
-      rtlButton.classList.add('selected');
-    }
-  };
-
-  // Set initial selection based on defaults
-  updateDirectionSelected(triggerDefaults.direction);
-
-  const ltrButton = div.querySelector(`#ltr${index}`);
-  ltrButton.addEventListener('click', () => {
-    updateDirectionSelected('ltr');
-    onUpdate(index, { direction: 'ltr' });
+  const directionDiv = div.querySelector(`#direction-${index}`);
+  directionDiv.addEventListener('click', () => {
+    const directionSign = div.querySelector(`#direction-sign-${index}`);
+    const newDirection =
+      directionSign.textContent === 'L > R' ? 'R > L' : 'L > R';
+    directionSign.textContent = newDirection;
+    onUpdate(index, { direction: newDirection === 'L > R' ? 'ltr' : 'rtl' });
 
     //logging interaction
-    logUIInteraction(
-      'objectsModule',
-      `Direction changed Object ${index + 1} Value: leftArrow`,
-    );
-  });
-
-  const rtlButton = div.querySelector(`#rtl${index}`);
-  rtlButton.addEventListener('click', () => {
-    updateDirectionSelected('rtl');
-    onUpdate(index, { direction: 'rtl' });
-
-    //logging interaction
-    logUIInteraction(
-      'objectsModule',
-      `Direction changed Object ${index + 1} Value: rightArrow`,
-    );
+    const eventName = `Direction changed Object ${
+      index + 1
+    } Value: ${newDirection}`;
+    logUIInteraction('objectsModule', eventName);
   });
 
   const deleteButton = div.querySelector(`#delete${index}`);
