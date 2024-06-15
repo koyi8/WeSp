@@ -136,7 +136,11 @@ export const updateTrajectoriesHTML = (
       const isLast = curvesLength === curveIndex;
 
       curveManager.deleteCurve(curveIndex);
-      selectedCurveIndex = isLast ? curvesLength : curveIndex;
+      // Adjust selectedCurveIndex to account for the shift in indices after deletion
+      selectedCurveIndex = isLast
+        ? curvesLength
+        : Math.min(curveIndex, curvesLength - 1);
+
       updateTrajectoriesHTML(curveManager);
       console.log('delete curve', curveIndex);
       const event = new Event('uiUpdated');
@@ -152,6 +156,8 @@ export const updateTrajectoriesHTML = (
           }`,
         )
         .classList.add('active');
+
+      console.log('curves', curveManager.curves);
 
       //logging interaction
       logUIInteraction('trajectoryModule', `curve deleted ${curveIndex + 1}`);
@@ -345,6 +351,10 @@ export const updateTrajectoriesHTML = (
 
   //console.log('selectedcurve index', selectedCurveIndex);
 
+  // Adjust for deletion of the last trajectory
+  if (activeTabIndex >= curveManager.curves.length) {
+    activeTabIndex = curveManager.curves.length - 1; // Update to new last index
+  }
   // Restore the active tab and its corresponding content
   if (activeTabIndex >= 0) {
     const activeTab = document.getElementById(
