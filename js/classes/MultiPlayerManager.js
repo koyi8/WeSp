@@ -39,8 +39,6 @@ class MultiPlayerManager {
 
   getClientColor() {
     this.socket.on('assignColor', ({ color }) => {
-      // Handle the received color
-      //console.log(`Assigned color is ${color}`);
       this.triggerManager.triggerColor = color;
     });
   }
@@ -196,7 +194,6 @@ class MultiPlayerManager {
   }
 
   deleteCurvesOnClientConnected() {
-    console.log('Deleting curves on client connected');
     for (let index = this.curveManager.curves.length - 1; index >= 0; index--) {
       this.curveManager.deleteCurve(index);
     }
@@ -206,46 +203,57 @@ class MultiPlayerManager {
     // Parse the JSON string back into an object
     const state = JSON.parse(json);
 
-    let splineHelperObjects = this.curveManager.getSplineHelperObjects();
+    // Initialize a mapping of old indices to new indices
+    let indexMapping = new Map();
+    this.curveManager.curves.forEach((curve, index) => {
+      indexMapping.set(index, index);
+    });
 
-    // remove the extra curves
+    // Remove the extra curves and update indexMapping
     while (this.curveManager.curves.length > state.curves.length) {
-      this.curveManager.deleteCurve(this.curveManager.curves.length - 1);
+      const lastIndex = this.curveManager.curves.length - 1;
+      this.curveManager.deleteCurve(lastIndex);
+      indexMapping.delete(lastIndex);
     }
 
-    state.curves.forEach((curveData, index) => {
+    state.curves.forEach((curveData, newIndex) => {
       let curve;
-
       const positions = curveData.points.map(
         (point) => new THREE.Vector3(point.x, point.y, point.z),
       );
 
-      if (index < this.curveManager.curves.length) {
-        // Replace the points for the existing curve
-        curve = this.curveManager.curves[index];
+      if (newIndex < this.curveManager.curves.length) {
+        // Find the correct index using indexMapping
+        const actualIndex = indexMapping.get(newIndex);
+        curve = this.curveManager.curves[actualIndex];
         curve.points.length = 0;
 
-        let i = splineHelperObjects.length;
+        let i = this.curveManager.splineHelperObjects.length;
+        // replace the splineHelperObjects for the curve
         while (i--) {
-          if (splineHelperObjects[i].curveIndex === index) {
+          if (
+            this.curveManager.splineHelperObjects[i].curveIndex === actualIndex
+          ) {
             this.curveManager.deleteSplineObjectforSync(i);
           }
         }
-        // Add the new points
+
         curveData.points.forEach((point, pointIndex) => {
-          this.curveManager.addSplineObject(positions[pointIndex], index);
+          this.curveManager.addSplineObject(positions[pointIndex], actualIndex);
         });
       } else {
-        // Add a new curve
         this.curveManager.addPointsCurve(positions);
         curve = this.curveManager.curves[this.curveManager.curves.length - 1];
         this.curveManager.updateCurveGeometry(curve);
+        // Update indexMapping
+        indexMapping.set(newIndex, this.curveManager.curves.length - 1);
       }
+
       curve.closed = curveData.closed;
-      this.curveManager.toggleCurveClosed(index, curve.closed);
+      this.curveManager.toggleCurveClosed(newIndex, curve.closed);
 
       curve.tension = curveData.tension;
-      this.curveManager.updateCurveTension(index, parseFloat(curve.tension));
+      this.curveManager.updateCurveTension(newIndex, parseFloat(curve.tension));
 
       if (curve.mesh && curve.mesh.material) {
         curve.mesh.material.color.set(
@@ -412,41 +420,6 @@ class MultiPlayerManager {
         }
       }
     }
-  }
-
-  OLDsetTriggersClientState(stateString) {
-    const state = JSON.parse(stateString);
-    console.log('State of trigger is:', state.triggers);
-    // Create a placeholder for each element in state.triggers
-    state.triggers.forEach((triggerState, index) => {
-      const button = document.getElementById(`create-trigger-${index}`); // use default id for button on initial creation
-      this.triggerManager.createTrigger(button);
-      const newTrigger = this.triggerManager.triggers[index];
-      if (triggerState !== null && newTrigger !== undefined) {
-        newTrigger.animate = triggerState.animate;
-        newTrigger.loop = triggerState.loop;
-        newTrigger.speed = triggerState.speed;
-        newTrigger.position = triggerState.position;
-        newTrigger.curveIndex = triggerState.curveIndex;
-        newTrigger.direction = triggerState.direction;
-        newTrigger.mesh.material.color.r = triggerState.color.r;
-        newTrigger.mesh.material.color.g = triggerState.color.g;
-        newTrigger.mesh.material.color.b = triggerState.color.b;
-        this.triggerManager.updateTriggerControlDiv(index);
-      }
-    });
-
-    // Delete the placeholders that correspond to nulls in state.triggers
-    state.triggers.forEach((triggerState, index) => {
-      if (
-        triggerState === null &&
-        this.triggerManager.triggers[index] !== undefined
-      ) {
-        this.triggerManager.deleteTrigger(index);
-      }
-    });
-
-    this.triggers = this.triggerManager.triggers;
   }
 
   toggleDummyState() {

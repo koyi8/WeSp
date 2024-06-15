@@ -100,8 +100,8 @@ export const createTriggerControlDiv = (
       range: {
         min: [0],
         '30%': [1], //non-linear slider behaviour
-        '70%': [4],
-        max: [6], // change because noUI only accepts 2 digits after komma
+        '70%': [3], //non-linear slider behaviour
+        max: [4], // change because noUI only accepts 2 digits after komma
       },
       step: 0.01,
       orientation: 'vertical',
