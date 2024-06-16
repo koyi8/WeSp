@@ -1,21 +1,21 @@
 import noUiSlider from 'nouislider';
 import { logUIInteraction } from '../helpers/logUIInteraction';
 
-export const createTriggerControlDiv = (
+export const createObjectControlDiv = (
   index,
   onUpdate,
   curves,
-  triggerDefaults,
+  objectDefaults,
   onAnimateChange,
 ) => {
   const div = document.createElement('div');
-  div.id = `trigger${index}`;
-  div.className = 'trigger';
+  div.id = `object${index}`;
+  div.className = 'object';
   let selectOptions = curves
     .map(
       (_, curveIndex) =>
         `<option value="${curveIndex}" ${
-          curveIndex === triggerDefaults.curveIndex ? 'selected' : ''
+          curveIndex === objectDefaults.curveIndex ? 'selected' : ''
         }>${curveIndex + 1}</option>`,
     )
     .join('');
@@ -34,7 +34,7 @@ export const createTriggerControlDiv = (
   <div class="control inline">
     <label for="animate${index}">Animate</label>
     <input type="checkbox" id="animate${index}" name="animate" ${
-    triggerDefaults.animate ? 'checked' : ''
+    objectDefaults.animate ? 'checked' : ''
   }/>
   </div>
   <div class="control full">
@@ -48,16 +48,16 @@ export const createTriggerControlDiv = (
   <div class="control inline">
     <label for="loop${index}" class="label">Loop</label>
     <input type="checkbox" id="loop${index}" name="animate" ${
-    triggerDefaults.loop ? 'checked' : ''
+    objectDefaults.loop ? 'checked' : ''
   }/>
   </div>
   <div class="control">
     <div class="direction">
       <button id="ltr${index}" style="font-size:15px;" ${
-    triggerDefaults.direction === 'ltr' ? 'class="selected"' : ''
+    objectDefaults.direction === 'ltr' ? 'class="selected"' : ''
   }>&#11013;</button>
       <button id="rtl${index}" style="font-size:15px;" ${
-    triggerDefaults.direction === 'rtl' ? 'class="selected"' : ''
+    objectDefaults.direction === 'rtl' ? 'class="selected"' : ''
   }>&#10145;</button>
     </div>
   </div>
@@ -95,7 +95,7 @@ export const createTriggerControlDiv = (
   const speedSlider = document.getElementById(`speed${index}`);
   if (speedSlider) {
     noUiSlider.create(speedSlider, {
-      start: triggerDefaults.speed,
+      start: objectDefaults.speed,
       connect: [true, false],
       range: {
         min: [0],
@@ -129,7 +129,7 @@ export const createTriggerControlDiv = (
   const positionSlider = document.getElementById(`position${index}`);
   if (positionSlider) {
     noUiSlider.create(positionSlider, {
-      start: triggerDefaults.position,
+      start: objectDefaults.position,
       connect: [true, false],
       range: {
         min: 0,
@@ -198,7 +198,7 @@ export const createTriggerControlDiv = (
   };
 
   // Set initial selection based on defaults
-  updateDirectionSelected(triggerDefaults.direction);
+  updateDirectionSelected(objectDefaults.direction);
 
   const ltrButton = div.querySelector(`#ltr${index}`);
   ltrButton.addEventListener('click', () => {

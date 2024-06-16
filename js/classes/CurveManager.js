@@ -49,7 +49,7 @@ class CurveManager {
       this.container.offsetWidth,
       this.container.offsetHeight,
     );
-    this.trajectoryLabelRenderer.domElement.className = 'trigger-container';
+    this.trajectoryLabelRenderer.domElement.className = 'object-container';
     this.container.appendChild(this.trajectoryLabelRenderer.domElement);
   }
   renderTrajectoryLabels(camera) {

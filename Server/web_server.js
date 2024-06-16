@@ -143,10 +143,10 @@ io.on('connection', (socket) => {
   const clientColor = clientColors[0];
   clientColors.shift();
 
-  //Store client id and initialize triggers array for each client
+  //Store client id and initialize objects array for each client
   clients[socket.id] = {
     clientID: socket.id,
-    Triggers: [],
+    Objects: [],
     color: clientColor,
   };
   sockets[socket.id] = socket;
@@ -206,8 +206,8 @@ io.on('connection', (socket) => {
     delete clients[socket.id];
     delete sockets[socket.id];
 
-    io.emit('syncTriggersOnClientDisconnected', {
-      triggersState: JSON.stringify(clients),
+    io.emit('syncObjectsOnClientDisconnected', {
+      objectsState: JSON.stringify(clients),
     });
   });
 
@@ -218,16 +218,16 @@ io.on('connection', (socket) => {
   });
 
   // TRIGGERS
-  // Request Triggers State on Client Connection
-  socket.emit('requestTriggersState');
-  // Sync Triggers on Client Connection
-  socket.on('syncTriggers', syncTriggersOnClientConnect(socket, clients, io));
-  // Update Triggers Length
-  socket.on('updateTriggersLength', updateTriggersLength(socket, clients, io));
-  // Update client Triggers Settings
+  // Request Objects State on Client Connection
+  socket.emit('requestObjectsState');
+  // Sync Objects on Client Connection
+  socket.on('syncObjects', syncObjectsOnClientConnect(socket, clients, io));
+  // Update Objects Length
+  socket.on('updateObjectsLength', updateObjectsLength(socket, clients, io));
+  // Update client Objects Settings
   socket.on(
-    'updateValuesClientsTriggers',
-    updateValuesClientsTriggers(socket, clients, io),
+    'updateValuesClientsObjects',
+    updateValuesClientsObjects(socket, clients, io),
   );
 
   // Setup UDP PORTS
@@ -322,48 +322,48 @@ io.on('connection', (socket) => {
   });
 });
 
-// Function to sync triggers on client connect
-const syncTriggersOnClientConnect =
+// Function to sync objects on client connect
+const syncObjectsOnClientConnect =
   (socket, clients, io) =>
-  ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-    // Update the triggers state for this client in the clients object
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-    // Forward the updated triggers state to all clients
-    socket.emit('syncTriggers', {
-      triggersState: JSON.stringify(clients),
+  ({ objectsState }) => {
+    // Parse the received objects state
+    let parsedObjectsState = JSON.parse(objectsState);
+    // Update the objects state for this client in the clients object
+    clients[socket.id].Objects = parsedObjectsState.objects;
+    // Forward the updated objects state to all clients
+    socket.emit('syncObjects', {
+      objectsState: JSON.stringify(clients),
     });
     // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
 
-// Function to update triggers length
-const updateTriggersLength =
+// Function to update objects length
+const updateObjectsLength =
   (socket, clients, io) =>
-  ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-    // Update the triggers state for this client in the clients object
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-    // Forward the updated triggers state to all clients
-    io.emit('updateTriggersLength', {
-      triggersState: JSON.stringify(clients),
+  ({ objectsState }) => {
+    // Parse the received objects state
+    let parsedObjectsState = JSON.parse(objectsState);
+    // Update the objects state for this client in the clients object
+    clients[socket.id].Objects = parsedObjectsState.objects;
+    // Forward the updated objects state to all clients
+    io.emit('updateObjectsLength', {
+      objectsState: JSON.stringify(clients),
     });
     // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
-// Function to the triggers
-const updateValuesClientsTriggers =
+// Function to the objects
+const updateValuesClientsObjects =
   (socket, clients, io) =>
-  ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-    // Update the triggers state for this client in the clients object
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-    // Forward the updated triggers state to all clients
-    io.emit('updateValuesClientsTriggers', {
-      triggersState: JSON.stringify(clients),
+  ({ objectsState }) => {
+    // Parse the received objects state
+    let parsedObjectsState = JSON.parse(objectsState);
+    // Update the objects state for this client in the clients object
+    clients[socket.id].Objects = parsedObjectsState.objects;
+    // Forward the updated objects state to all clients
+    io.emit('updateValuesClientsObjects', {
+      objectsState: JSON.stringify(clients),
     });
     // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);

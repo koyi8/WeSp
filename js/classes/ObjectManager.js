@@ -3,23 +3,23 @@ import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
-import { createTriggerControlDiv } from '../GUI/objectsModule_GUI';
+import { createObjectControlDiv } from '../GUI/objectsModule_GUI';
 import { positionsArray } from '../..';
 
-class TriggerManager {
+class ObjectManager {
   constructor(scene, settings, curveManager, container) {
     this.scene = scene;
     this.settings = settings;
     this.curveManager = curveManager;
     this.container = container;
-    this.triggers = [];
-    this.clientTriggers = {};
+    this.objects = [];
+    this.clientObjects = {};
     this.initLabelRenderer();
-    this.triggerColor = this.setTriggerColor();
+    this.objectColor = this.setObjectColor();
   }
 
-  getTriggers() {
-    return this.triggers;
+  getObjects() {
+    return this.objects;
   }
 
   initLabelRenderer() {
@@ -28,29 +28,29 @@ class TriggerManager {
       this.container.offsetWidth,
       this.container.offsetHeight,
     );
-    this.labelRenderer.domElement.className = 'trigger-container';
+    this.labelRenderer.domElement.className = 'object-container';
     this.container.appendChild(this.labelRenderer.domElement);
   }
 
-  setupAddTriggerListeners() {
-    document.querySelectorAll('.add-trigger').forEach((button) => {
+  setupAddObjectListeners() {
+    document.querySelectorAll('.add-object').forEach((button) => {
       button.addEventListener('click', () => {
-        this.createTrigger(button);
+        this.createObject(button);
       });
     });
   }
 
-  setTriggerColor() {
+  setObjectColor() {
     const colors = [0x000000, 0xff0000, 0x0000ff, 0x808080];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    this.triggerColor = randomColor;
-    return this.triggerColor;
+    this.objectColor = randomColor;
+    return this.objectColor;
   }
 
-  createTrigger(button) {
+  createObject(button) {
     const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
     const cubeMaterial = new THREE.MeshBasicMaterial({
-      color: this.triggerColor,
+      color: this.objectColor,
     });
     const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
@@ -62,8 +62,8 @@ class TriggerManager {
 
     this.scene.add(cube);
 
-    // default properties for the new trigger
-    const triggerDefaults = {
+    // default properties for the new object
+    const objectDefaults = {
       animate: true,
       loop: true,
       speed: Math.random() * (3 - 1) + 0.3,
@@ -73,43 +73,43 @@ class TriggerManager {
     };
 
     const buttonID = button.id;
-    let index = this.triggers.indexOf(null);
+    let index = this.objects.indexOf(null);
     if (index === -1) {
-      index = this.triggers.length;
+      index = this.objects.length;
     }
 
-    const newTrigger = {
+    const newObject = {
       mesh: cube,
       label: labelElement,
       buttonID,
-      ...triggerDefaults,
+      ...objectDefaults,
     };
 
-    // Replace the null value in the array with the new trigger
-    this.triggers[index] = newTrigger;
+    // Replace the null value in the array with the new object
+    this.objects[index] = newObject;
 
-    const triggerDiv = createTriggerControlDiv(
+    const objectDiv = createObjectControlDiv(
       index,
-      (index, updates) => this.updateTrigger(index, updates, positionsArray),
+      (index, updates) => this.updateObject(index, updates, positionsArray),
       this.curveManager.curves,
-      triggerDefaults,
+      objectDefaults,
       () => this.updatePositionInput(index),
     );
 
-    button.replaceWith(triggerDiv);
+    button.replaceWith(objectDiv);
 
-    // event for Server to update the trigger
-    const event = new CustomEvent('addedTrigger', { detail: { index: index } });
+    // event for Server to update the object
+    const event = new CustomEvent('addedObject', { detail: { index: index } });
     window.dispatchEvent(event);
   }
 
-  createTriggerFromClient(clientID, clients, triggerState) {
+  createObjectFromClient(clientID, clients, objectState) {
     const cubeGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
     const cubeMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(
-        triggerState.color.r,
-        triggerState.color.g,
-        triggerState.color.b,
+        objectState.color.r,
+        objectState.color.g,
+        objectState.color.b,
       ),
       wireframe: true,
     });
@@ -122,47 +122,47 @@ class TriggerManager {
     cubeLabel.position.set(0, 0.2, 0);
     cube.add(cubeLabel);
 
-    // default properties for the new trigger
-    const triggerDefaults = {
-      animate: triggerState.animate,
-      loop: triggerState.loop,
-      speed: triggerState.speed,
-      position: triggerState.position,
-      curveIndex: triggerState.curveIndex,
-      direction: triggerState.direction,
+    // default properties for the new object
+    const objectDefaults = {
+      animate: objectState.animate,
+      loop: objectState.loop,
+      speed: objectState.speed,
+      position: objectState.position,
+      curveIndex: objectState.curveIndex,
+      direction: objectState.direction,
     };
 
-    const newTrigger = {
+    const newObject = {
       mesh: cube,
       label: labelElement,
-      ...triggerDefaults,
+      ...objectDefaults,
     };
 
-    // Store Trigger in the local clientTriggers array
-    if (!this.clientTriggers[clientID]) {
-      this.clientTriggers[clientID] = [];
+    // Store Object in the local clientObjects array
+    if (!this.clientObjects[clientID]) {
+      this.clientObjects[clientID] = [];
     }
-    let index = this.clientTriggers[clientID].indexOf(null);
+    let index = this.clientObjects[clientID].indexOf(null);
     if (index === -1) {
-      index = this.clientTriggers[clientID].length;
+      index = this.clientObjects[clientID].length;
     }
-    // Add the new trigger to the array
-    this.clientTriggers[clientID][index] = newTrigger;
-    // Store Trigger in the corresponding clients object
-    clients[clientID].Triggers[index] = newTrigger;
+    // Add the new object to the array
+    this.clientObjects[clientID][index] = newObject;
+    // Store Object in the corresponding clients object
+    clients[clientID].Objects[index] = newObject;
   }
 
-  deleteTriggerFromClient(clientID, clients, index) {
-    const triggerToRemove = this.clientTriggers[clientID][index];
-    if (!triggerToRemove) return;
+  deleteObjectFromClient(clientID, clients, index) {
+    const objectToRemove = this.clientObjects[clientID][index];
+    if (!objectToRemove) return;
 
-    this.scene.remove(triggerToRemove.mesh);
+    this.scene.remove(objectToRemove.mesh);
 
-    triggerToRemove.mesh.geometry.dispose();
-    triggerToRemove.mesh.material.dispose();
+    objectToRemove.mesh.geometry.dispose();
+    objectToRemove.mesh.material.dispose();
 
-    if (triggerToRemove.mesh.children.length > 0) {
-      const labelObject = triggerToRemove.mesh.children.find(
+    if (objectToRemove.mesh.children.length > 0) {
+      const labelObject = objectToRemove.mesh.children.find(
         (child) => child instanceof CSS2DObject,
       );
       if (labelObject) {
@@ -170,24 +170,24 @@ class TriggerManager {
         this.scene.remove(labelObject); // Remove CSS2DObject from scene graph
       }
     }
-    // Set the trigger to null in the clientTriggers array
-    this.clientTriggers[clientID][index] = null;
+    // Set the object to null in the clientObjects array
+    this.clientObjects[clientID][index] = null;
 
-    // Set the trigger to null in the clients object
-    clients[clientID].Triggers[index] = null;
+    // Set the object to null in the clients object
+    clients[clientID].Objects[index] = null;
   }
 
-  deleteTrigger(index) {
-    const triggerToRemove = this.triggers[index];
-    if (!triggerToRemove) return;
+  deleteObject(index) {
+    const objectToRemove = this.objects[index];
+    if (!objectToRemove) return;
 
-    this.scene.remove(triggerToRemove.mesh);
+    this.scene.remove(objectToRemove.mesh);
 
-    triggerToRemove.mesh.geometry.dispose();
-    triggerToRemove.mesh.material.dispose();
+    objectToRemove.mesh.geometry.dispose();
+    objectToRemove.mesh.material.dispose();
 
-    if (triggerToRemove.mesh.children.length > 0) {
-      const labelObject = triggerToRemove.mesh.children.find(
+    if (objectToRemove.mesh.children.length > 0) {
+      const labelObject = objectToRemove.mesh.children.find(
         (child) => child instanceof CSS2DObject,
       );
       if (labelObject) {
@@ -196,36 +196,36 @@ class TriggerManager {
       }
     }
 
-    const triggersContainer = document.getElementById('triggers');
+    const objectsContainer = document.getElementById('objects');
     const addButton = document.createElement('button');
-    addButton.id = triggerToRemove.buttonID;
-    addButton.className = 'add-trigger';
+    addButton.id = objectToRemove.buttonID;
+    addButton.className = 'add-object';
     addButton.textContent = '+';
     addButton.addEventListener('click', () => {
-      this.createTrigger(addButton);
+      this.createObject(addButton);
     });
 
-    const triggerDiv = document.getElementById(`trigger${index}`);
-    if (triggerDiv) {
-      triggersContainer.replaceChild(addButton, triggerDiv);
+    const objectDiv = document.getElementById(`object${index}`);
+    if (objectDiv) {
+      objectsContainer.replaceChild(addButton, objectDiv);
     }
 
-    //this.triggers.splice(index, 1);
-    // Replace the trigger in the array with null
-    this.triggers[index] = null;
+    //this.objects.splice(index, 1);
+    // Replace the object in the array with null
+    this.objects[index] = null;
 
-    // Event for Server to update the trigger
-    const event = new Event('deletedTrigger');
+    // Event for Server to update the object
+    const event = new Event('deletedObject');
     window.dispatchEvent(event);
   }
 
-  createTriggers() {
+  createObjects() {
     const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
     const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const triggersContainer = document.getElementById('triggers');
+    const objectsContainer = document.getElementById('objects');
 
-    for (let i = 0; i < this.settings.triggerAmount; i++) {
-      const triggerDefaults = {
+    for (let i = 0; i < this.settings.objectAmount; i++) {
+      const objectDefaults = {
         animate: true,
         loop: true,
         speed: Math.random() * 0.02,
@@ -241,28 +241,28 @@ class TriggerManager {
       cube.add(cubeLabel);
       this.scene.add(cube);
 
-      this.triggers.push({
+      this.objects.push({
         mesh: cube,
         label: labelElement,
-        ...triggerDefaults,
+        ...objectDefaults,
       });
 
-      const triggerDiv = createTriggerControlDiv(
+      const objectDiv = createObjectControlDiv(
         i,
-        (index, updates) => this.updateTrigger(index, updates, positionsArray),
+        (index, updates) => this.updateObject(index, updates, positionsArray),
         this.curveManager.curves,
-        triggerDefaults,
+        objectDefaults,
         () => this.updatePositionInput(i),
       );
-      triggersContainer.insertBefore(
-        triggerDiv,
-        triggersContainer.lastElementChild,
+      objectsContainer.insertBefore(
+        objectDiv,
+        objectsContainer.lastElementChild,
       );
     }
   }
 
-  animateTrigger(trigger, index, positionsArray) {
-    if (trigger === null || trigger === undefined) {
+  animateObject(object, index, positionsArray) {
+    if (object === null || object === undefined) {
       if (positionsArray) {
         positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
       }
@@ -270,41 +270,41 @@ class TriggerManager {
     }
     const curves = this.curveManager.getCurves();
 
-    const curve = curves[trigger.curveIndex];
+    const curve = curves[object.curveIndex];
 
-    let position = trigger.position;
+    let position = object.position;
 
     if (!curve) {
-      console.warn(`Curve ${trigger.curveIndex} not found`);
+      console.warn(`Curve ${object.curveIndex} not found`);
       return; // Skip this iteration
     }
-    if (trigger.animate) {
+    if (object.animate) {
       let arclength = curve.getLength();
-      let directionFactor = trigger.direction === 'rtl' ? -1 : 1;
-      let speedAdjustment = (trigger.speed / arclength) * directionFactor;
+      let directionFactor = object.direction === 'rtl' ? -1 : 1;
+      let speedAdjustment = (object.speed / arclength) * directionFactor;
 
       position += speedAdjustment;
 
-      if (trigger.loop) {
+      if (object.loop) {
         if (position < 0) position += 1;
         position %= 1;
       } else {
         if (position >= 1 || position <= 0) {
-          trigger.speed *= -1;
+          object.speed *= -1;
           position = position >= 1 ? 1 - (position - 1) : Math.abs(position);
         }
       }
 
-      trigger.position = position;
+      object.position = position;
     }
 
     const trigPos = curve.getPointAt(Math.abs(position) % 1);
-    trigger.mesh.position.copy(trigPos);
-    const label = trigger.mesh.children[0].element;
+    object.mesh.position.copy(trigPos);
+    const label = object.mesh.children[0].element;
     label.innerHTML = `${index + 1}`;
 
     if (positionsArray) {
-      const label = trigger.mesh.children[0].element;
+      const label = object.mesh.children[0].element;
       label.innerHTML = `${index + 1}: ${trigPos.x.toFixed(
         2,
       )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
@@ -318,58 +318,56 @@ class TriggerManager {
     return start * (1 - t) + end * t;
   }
 
-  animateAllTriggers(positionsArray) {
-    this.triggers.forEach((trigger, index) => {
-      this.animateTrigger(trigger, index, positionsArray);
+  animateAllObjects(positionsArray) {
+    this.objects.forEach((object, index) => {
+      this.animateObject(object, index, positionsArray);
     });
 
-    Object.entries(this.clientTriggers).forEach(
-      ([clientID, clientTriggers]) => {
-        clientTriggers.forEach((trigger, index) => {
-          this.animateTrigger(trigger, index);
-        });
-      },
-    );
+    Object.entries(this.clientObjects).forEach(([clientID, clientObjects]) => {
+      clientObjects.forEach((object, index) => {
+        this.animateObject(object, index);
+      });
+    });
   }
 
-  animateTriggers(positionsArray) {
-    this.triggers.forEach((trigger, index) => {
-      if (trigger === null || trigger === undefined) {
+  animateObjects(positionsArray) {
+    this.objects.forEach((object, index) => {
+      if (object === null || object === undefined) {
         positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
         return; // Skip this iteration
       }
       const curves = this.curveManager.getCurves();
 
-      const curve = curves[trigger.curveIndex];
-      let position = trigger.position;
+      const curve = curves[object.curveIndex];
+      let position = object.position;
       if (!curve) {
-        console.warn(`Curve ${trigger.curveIndex} not found`);
+        console.warn(`Curve ${object.curveIndex} not found`);
         return; // Skip this iteration
       }
-      if (trigger.animate) {
+      if (object.animate) {
         let arclength = curve.getLength();
-        let directionFactor = trigger.direction === 'rtl' ? -1 : 1;
-        let speedAdjustment = (trigger.speed / arclength) * directionFactor;
+        let directionFactor = object.direction === 'rtl' ? -1 : 1;
+        let speedAdjustment = (object.speed / arclength) * directionFactor;
 
         position += speedAdjustment;
 
-        if (trigger.loop) {
+        if (object.loop) {
           if (position < 0) position += 1;
           position %= 1;
         } else {
           if (position >= 1 || position <= 0) {
-            trigger.speed *= -1;
+            object.speed *= -1;
             position = position >= 1 ? 1 - (position - 1) : Math.abs(position);
           }
         }
 
-        trigger.position = position;
+        object.position = position;
       }
 
       const trigPos = curve.getPointAt(Math.abs(position) % 1);
-      trigger.mesh.position.copy(trigPos);
+      object.mesh.position.copy(trigPos);
 
-      const label = trigger.mesh.children[0].element;
+      const label = object.mesh.children[0].element;
       label.innerHTML = `${index + 1}: ${trigPos.x.toFixed(
         2,
       )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
@@ -379,10 +377,10 @@ class TriggerManager {
     });
   }
 
-  updateTrigger(index, updates, positionsArray) {
-    const trigger = this.triggers[index];
+  updateObject(index, updates, positionsArray) {
+    const object = this.objects[index];
 
-    if (!trigger) return;
+    if (!object) return;
 
     if ('animate' in updates) {
       this.updatePositionInput(index);
@@ -390,16 +388,16 @@ class TriggerManager {
 
     Object.keys(updates).forEach((key) => {
       if (key === 'delete' && updates[key] === true) {
-        // Handle trigger deletion
-        this.deleteTrigger(index, trigger.buttonID);
+        // Handle object deletion
+        this.deleteObject(index, object.buttonID);
         positionsArray.splice(index, 1);
       } else if (key === 'speed') {
         // Update speed magnitude but preserve direction
         const newSpeed = Math.abs(updates[key]);
 
-        trigger[key] = trigger.speed >= 0 ? newSpeed : -newSpeed;
+        object[key] = object.speed >= 0 ? newSpeed : -newSpeed;
       } else {
-        trigger[key] = updates[key];
+        object[key] = updates[key];
       }
     });
   }
@@ -412,7 +410,7 @@ class TriggerManager {
     const positionSlider = document.getElementById(`position${index}`);
 
     if (positionSlider && positionSlider.noUiSlider) {
-      positionSlider.noUiSlider.set(this.triggers[index].position);
+      positionSlider.noUiSlider.set(this.objects[index].position);
     } else {
       console.error(
         `Position slider with id position${index} not found or noUiSlider not initialized`,
@@ -424,13 +422,13 @@ class TriggerManager {
     this.labelRenderer.setSize(width, height);
   }
 
-  updateTriggerControlDiv(index) {
-    const trigger = this.triggers[index];
-    const div = document.getElementById(`trigger${index}`);
+  updateObjectControlDiv(index) {
+    const object = this.objects[index];
+    const div = document.getElementById(`object${index}`);
     if (div) {
       // Update the animate checkbox
       const animateCheckbox = div.querySelector(`#animate${index}`);
-      animateCheckbox.checked = trigger.animate;
+      animateCheckbox.checked = object.animate;
 
       const speedControl = div.querySelector(`div.control:has(#speed${index})`);
       const positionControl = div.querySelector(
@@ -446,23 +444,23 @@ class TriggerManager {
       }
 
       const speedRange = div.querySelector(`#speed${index}`);
-      speedRange.value = trigger.speed;
+      speedRange.value = object.speed;
 
       const positionRange = div.querySelector(`#position${index}`);
-      positionRange.value = trigger.position;
+      positionRange.value = object.position;
 
       const trajectorySelect = div.querySelector(`#trajectory${index}`);
-      trajectorySelect.value = trigger.curveIndex;
+      trajectorySelect.value = object.curveIndex;
 
       const loopCheckbox = div.querySelector(`#loop${index}`);
-      loopCheckbox.checked = trigger.loop;
+      loopCheckbox.checked = object.loop;
 
       const ltrButton = div.querySelector(`#ltr${index}`);
       const rtlButton = div.querySelector(`#rtl${index}`);
-      if (trigger.direction === 'ltr') {
+      if (object.direction === 'ltr') {
         ltrButton.classList.add('selected');
         rtlButton.classList.remove('selected');
-      } else if (trigger.direction === 'rtl') {
+      } else if (object.direction === 'rtl') {
         rtlButton.classList.add('selected');
         ltrButton.classList.remove('selected');
       }
@@ -470,4 +468,4 @@ class TriggerManager {
   }
 }
 
-export default TriggerManager;
+export default ObjectManager;

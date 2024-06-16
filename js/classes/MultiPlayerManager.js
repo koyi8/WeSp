@@ -2,18 +2,18 @@ import * as THREE from 'three';
 import { updateTrajectoriesHTML } from '../GUI/trajectoriesModule_GUI';
 
 class MultiPlayerManager {
-  constructor(scene, curveManager, triggerManager, socket) {
+  constructor(scene, curveManager, objectManager, socket) {
     this.scene = scene;
     this.curveManager = curveManager;
-    this.triggerManager = triggerManager;
+    this.objectManager = objectManager;
     this.socket = socket;
     // curves and splineobjects
     this.curves = this.curveManager.getCurves();
-    this.triggers = this.triggerManager.getTriggers();
+    this.objects = this.objectManager.getObjects();
     this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
     this.socketID = '';
     this.clients = {};
-    this.clientColor = this.triggerManager.triggerColor;
+    this.clientColor = this.objectManager.objectColor;
     this.shouldEmitLogs = false;
   }
 
@@ -39,7 +39,7 @@ class MultiPlayerManager {
 
   getClientColor() {
     this.socket.on('assignColor', ({ color }) => {
-      this.triggerManager.triggerColor = color;
+      this.objectManager.objectColor = color;
     });
   }
 
@@ -107,28 +107,28 @@ class MultiPlayerManager {
     });
   }
 
-  getTriggersOnClientConnected() {
-    let triggersState;
-    this.socket.on('requestTriggersState', () => {
-      // Get the current state of the triggers
-      triggersState = this.getTriggersClientState();
-      this.socket.emit('syncTriggers', { triggersState });
+  getObjectsOnClientConnected() {
+    let objectsState;
+    this.socket.on('requestObjectsState', () => {
+      // Get the current state of the objects
+      objectsState = this.getObjectsClientState();
+      this.socket.emit('syncObjects', { objectsState });
     });
   }
 
-  sendTriggersClientsLengthToServer() {
-    let triggersState = this.getTriggersClientState();
-    this.socket.emit('updateTriggersLength', { triggersState });
+  sendObjectsClientsLengthToServer() {
+    let objectsState = this.getObjectsClientState();
+    this.socket.emit('updateObjectsLength', { objectsState });
   }
 
-  sendUpdateTriggersClientsStateToServer() {
-    let triggersState = this.getTriggersClientState();
-    this.socket.emit('updateValuesClientsTriggers', { triggersState });
+  sendUpdateObjectsClientsStateToServer() {
+    let objectsState = this.getObjectsClientState();
+    this.socket.emit('updateValuesClientsObjects', { objectsState });
   }
 
-  updateTriggersClientsStateFromServer() {
-    this.socket.on('updateValuesClientsTriggers', ({ triggersState }) => {
-      this.updateTriggersClientSettings(triggersState);
+  updateObjectsClientsStateFromServer() {
+    this.socket.on('updateValuesClientsObjects', ({ objectsState }) => {
+      this.updateObjectsClientSettings(objectsState);
     });
   }
 
@@ -142,24 +142,24 @@ class MultiPlayerManager {
     });
   }
 
-  setTriggersOnClientConnected() {
-    // Listen for the 'syncTriggers' event from the server
-    this.socket.on('syncTriggers', ({ triggersState }) => {
-      // Set the state of the triggers
-      this.setTriggersClientState(triggersState);
+  setObjectsOnClientConnected() {
+    // Listen for the 'syncObjects' event from the server
+    this.socket.on('syncObjects', ({ objectsState }) => {
+      // Set the state of the objects
+      this.setObjectsClientState(objectsState);
     });
   }
 
-  setTriggersOnClientDisconnected() {
-    this.socket.on('syncTriggersOnClientDisconnected', ({ triggersState }) => {
-      this.deleteTriggersClientOnDisconnect(triggersState);
+  setObjectsOnClientDisconnected() {
+    this.socket.on('syncObjectsOnClientDisconnected', ({ objectsState }) => {
+      this.deleteObjectsClientOnDisconnect(objectsState);
     });
   }
 
-  updateTriggersClientOnChange() {
-    // Listen for 'updateTriggersLenght' event from the server
-    this.socket.on('updateTriggersLength', ({ triggersState }) => {
-      this.updateTriggersClientLength(triggersState);
+  updateObjectsClientOnChange() {
+    // Listen for 'updateObjectsLenght' event from the server
+    this.socket.on('updateObjectsLength', ({ objectsState }) => {
+      this.updateObjectsClientLength(objectsState);
     });
   }
 
@@ -268,16 +268,16 @@ class MultiPlayerManager {
     updateTrajectoriesHTML(this.curveManager);
   }
 
-  getTriggersClientState() {
+  getObjectsClientState() {
     const state = {
-      triggers: this.triggers.map((trigger) => {
-        if (trigger === null) return null;
+      objects: this.objects.map((object) => {
+        if (object === null) return null;
         return {
-          ...trigger,
+          ...object,
           color: {
-            r: trigger.mesh?.material.color.r,
-            g: trigger.mesh?.material.color.g,
-            b: trigger.mesh?.material.color.b,
+            r: object.mesh?.material.color.r,
+            g: object.mesh?.material.color.g,
+            b: object.mesh?.material.color.b,
           },
         };
       }),
@@ -286,43 +286,43 @@ class MultiPlayerManager {
     return JSON.stringify(state);
   }
 
-  updateTriggersClientSettings(statestring) {
+  updateObjectsClientSettings(statestring) {
     const state = JSON.parse(statestring);
     for (const clientID in state) {
       if (clientID === this.socketID) {
         continue;
       }
       const clientState = state[clientID];
-      clientState.Triggers.forEach((triggerState, index) => {
-        if (triggerState !== null) {
+      clientState.Objects.forEach((objectState, index) => {
+        if (objectState !== null) {
           // not defined
-          if (!this.triggerManager.clientTriggers[clientID]) {
+          if (!this.objectManager.clientObjects[clientID]) {
             return;
           }
 
-          const trigger = this.triggerManager.clientTriggers[clientID][index];
-          if (trigger !== undefined) {
-            trigger.animate = triggerState.animate;
-            trigger.loop = triggerState.loop;
-            trigger.speed = this.lerp(trigger.speed, triggerState.speed, 0.1);
-            // Discard trigger update from network dropouts
+          const object = this.objectManager.clientObjects[clientID][index];
+          if (object !== undefined) {
+            object.animate = objectState.animate;
+            object.loop = objectState.loop;
+            object.speed = this.lerp(object.speed, objectState.speed, 0.1);
+            // Discard object update from network dropouts
             const positionDifference = Math.abs(
-              triggerState.position - trigger.position,
+              objectState.position - object.position,
             );
             if (
-              !trigger.animate ||
-              (trigger.animate && positionDifference < 0.5)
+              !object.animate ||
+              (object.animate && positionDifference < 0.5)
             ) {
               //console.log('Position difference:', positionDifference);
-              let lerpValue = trigger.animate ? 0.01 : 0.1;
-              trigger.position = this.lerp(
-                trigger.position,
-                triggerState.position,
+              let lerpValue = object.animate ? 0.01 : 0.1;
+              object.position = this.lerp(
+                object.position,
+                objectState.position,
                 lerpValue,
               );
             }
-            trigger.curveIndex = triggerState.curveIndex;
-            trigger.direction = triggerState.direction;
+            object.curveIndex = objectState.curveIndex;
+            object.direction = objectState.direction;
           }
         }
       });
@@ -333,7 +333,7 @@ class MultiPlayerManager {
     return start * (1 - t) + end * t;
   }
 
-  setTriggersClientState(stateString) {
+  setObjectsClientState(stateString) {
     const state = JSON.parse(stateString);
     for (const clientID in state) {
       // skip for local client
@@ -341,14 +341,14 @@ class MultiPlayerManager {
         continue;
       }
       const clientState = state[clientID];
-      // Create triggers for all triggers in the clients object
-      clientState.Triggers.forEach((triggerState, index) => {
-        if (triggerState !== null) {
-          // A trigger exists, create it
-          this.triggerManager.createTriggerFromClient(
+      // Create objects for all objects in the clients object
+      clientState.Objects.forEach((objectState, index) => {
+        if (objectState !== null) {
+          // A object exists, create it
+          this.objectManager.createObjectFromClient(
             clientID,
             this.clients,
-            triggerState,
+            objectState,
           );
         }
       });
@@ -356,7 +356,7 @@ class MultiPlayerManager {
     this.clients = state;
   }
 
-  updateTriggersClientLength(stateString) {
+  updateObjectsClientLength(stateString) {
     const newState = JSON.parse(stateString);
     for (const clientID in newState) {
       // skip for local client
@@ -365,27 +365,27 @@ class MultiPlayerManager {
       }
       const newClientState = newState[clientID];
       const oldClientState = this.clients[clientID];
-      // Update the Triggers array for each client
-      newClientState.Triggers.forEach((triggerState, index) => {
+      // Update the Objects array for each client
+      newClientState.Objects.forEach((objectState, index) => {
         if (
-          triggerState !== null &&
-          (oldClientState.Triggers[index] === undefined ||
-            oldClientState.Triggers[index] === null)
+          objectState !== null &&
+          (oldClientState.Objects[index] === undefined ||
+            oldClientState.Objects[index] === null)
         ) {
-          // A trigger was added, create it
-          this.triggerManager.createTriggerFromClient(
+          // A object was added, create it
+          this.objectManager.createObjectFromClient(
             clientID,
             this.clients,
-            triggerState,
+            objectState,
           );
         } else if (
-          (triggerState === null ||
-            newState[clientID].Triggers.length <
-              oldClientState.Triggers.length) &&
-          oldClientState.Triggers[index] !== undefined
+          (objectState === null ||
+            newState[clientID].Objects.length <
+              oldClientState.Objects.length) &&
+          oldClientState.Objects[index] !== undefined
         ) {
-          // A trigger was deleted, delete it
-          this.triggerManager.deleteTriggerFromClient(
+          // A object was deleted, delete it
+          this.objectManager.deleteObjectFromClient(
             clientID,
             this.clients,
             index,
@@ -397,7 +397,7 @@ class MultiPlayerManager {
     this.clients = newState;
   }
 
-  deleteTriggersClientOnDisconnect(stateString) {
+  deleteObjectsClientOnDisconnect(stateString) {
     const newState = JSON.parse(stateString);
     for (const clientID in this.clients) {
       const newClientState = newState[clientID];
@@ -405,18 +405,14 @@ class MultiPlayerManager {
       if (
         !newClientState &&
         oldClientState &&
-        this.triggerManager.clientTriggers[clientID]
+        this.objectManager.clientObjects[clientID]
       ) {
         for (
           let i = 0;
-          i < this.triggerManager.clientTriggers[clientID].length;
+          i < this.objectManager.clientObjects[clientID].length;
           i++
         ) {
-          this.triggerManager.deleteTriggerFromClient(
-            clientID,
-            this.clients,
-            i,
-          );
+          this.objectManager.deleteObjectFromClient(clientID, this.clients, i);
         }
       }
     }
