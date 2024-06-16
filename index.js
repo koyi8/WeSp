@@ -11,11 +11,11 @@ import {
   updateTrajectoriesHTML,
   updateControlPointsHTML,
   selectedCurveIndex,
-} from './js/trajectoriesModule_GUI';
+} from './js/GUI/trajectoriesModule_GUI';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
-import { createOCSTables } from './js/oscModule_GUI';
+import { createOCSTables } from './js/GUI/oscModule_GUI';
 import Stats from 'three/addons/libs/stats.module.js';
 
 const cameraSettings = {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { updateTrajectoriesHTML } from '../trajectoriesModule_GUI';
+import { updateTrajectoriesHTML } from '../GUI/trajectoriesModule_GUI';
 
 class MultiPlayerManager {
   constructor(scene, curveManager, triggerManager, socket) {

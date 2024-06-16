@@ -3,7 +3,7 @@ import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
-import { updateTrajectoriesHTML } from '../trajectoriesModule_GUI';
+import { updateTrajectoriesHTML } from '../GUI/trajectoriesModule_GUI';
 import MultiPlayerManager from './MultiPlayerManager';
 
 class CurveManager {

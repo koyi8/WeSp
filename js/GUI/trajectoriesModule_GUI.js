@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { logUIInteraction } from './helpers/logUIInteraction';
+import { logUIInteraction } from '../helpers/logUIInteraction';
 import { debouncedUpdateControlPointsHTML } from '/index.js';
 
 let selectedPointIndex;
