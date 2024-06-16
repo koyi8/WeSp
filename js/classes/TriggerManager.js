@@ -3,7 +3,7 @@ import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
-import { createTriggerControlDiv } from '../createTriggerControlDiv';
+import { createTriggerControlDiv } from '../objectsModule_GUI';
 import { positionsArray } from '../..';
 
 class TriggerManager {

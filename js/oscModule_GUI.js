@@ -6,7 +6,7 @@ import {
   isValidIP,
   interpolateStringOscMessage,
   interpolateStringScaling,
-} from './heplers/checkOSCInputs.js';
+} from './helpers/checkOSCInputs.js';
 
 export const createOCSTables = () => {
   const container = document.getElementById('osc-container');

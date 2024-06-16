@@ -5,17 +5,17 @@ import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
-import { debounce } from './js/heplers/debounce';
-import { logUIInteraction } from './js/heplers/logUIInteraction';
+import { debounce } from './js/helpers/debounce';
+import { logUIInteraction } from './js/helpers/logUIInteraction';
 import {
   updateTrajectoriesHTML,
   updateControlPointsHTML,
   selectedCurveIndex,
-} from './js/updateTrajectoriesHTML';
+} from './js/trajectoriesModule_GUI';
 import CurveManager from './js/classes/CurveManager';
 import TriggerManager from './js/classes/TriggerManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
-import { createOCSTables } from './js/createOCSTables';
+import { createOCSTables } from './js/oscModule_GUI';
 import Stats from 'three/addons/libs/stats.module.js';
 
 const cameraSettings = {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { logUIInteraction } from './heplers/logUIInteraction';
+import { logUIInteraction } from './helpers/logUIInteraction';
 import { debouncedUpdateControlPointsHTML } from '/index.js';
 
 let selectedPointIndex;
@@ -156,8 +156,6 @@ export const updateTrajectoriesHTML = (
           }`,
         )
         .classList.add('active');
-
-      console.log('curves', curveManager.curves);
 
       //logging interaction
       logUIInteraction('trajectoryModule', `curve deleted ${curveIndex + 1}`);

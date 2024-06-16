@@ -1,5 +1,5 @@
 import noUiSlider from 'nouislider';
-import { logUIInteraction } from './heplers/logUIInteraction';
+import { logUIInteraction } from './helpers/logUIInteraction';
 
 export const createTriggerControlDiv = (
   index,
