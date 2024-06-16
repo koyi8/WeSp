@@ -145,9 +145,9 @@ let udpPortObjects = [], // Array to store the udpPortRow objects
 let labels = ['X', 'Y', 'Z'],
   scales = ['scaleX', 'scaleY', 'scaleZ'];
 
-// array to store all the SourceObject -> Javascript objects
-let triggerObjects = [],
-  triggerObject = {
+// array to store all the objects -> Javascript objects
+let objects = [],
+  object = {
     clientID: '',
     outPort: '',
     outAddress: '',
@@ -157,10 +157,10 @@ let triggerObjects = [],
     z: '',
   };
 
-// updates the triggerObjects, keeps track of x,y,z values
+// updates the objects, keeps track of x,y,z values
 setInterval(() => {
-  updateTriggerObjectsLength(positionsArray);
-  updateTriggerObjectsPositions(positionsArray);
+  updateObjectsLength(positionsArray);
+  updateObjectsPositions(positionsArray);
 }, 17); // ~16.67 ms (1 second / 60) for 60 fps
 
 // addRowPort function
@@ -345,22 +345,19 @@ const addRowOSCMessage = () => {
 
       //assign the row variables outport, outaddress, oscMessage
       sendingIntervals[rowIndex] = setInterval(() => {
-        let triggerObjectsCopy = triggerObjects.map((triggerObject, index) => {
-          let oscMessage = interpolateStringOscMessage(
-            row.oscMessage,
-            triggerObjects,
-          );
-          let scaledTriggerObject = {
-            ...triggerObject,
+        let objectsCopy = objects.map((object, index) => {
+          let oscMessage = interpolateStringOscMessage(row.oscMessage, objects);
+          let scaledObject = {
+            ...object,
             outPort: row.outPort,
             outAddress: row.outAddress,
             oscMessage: oscMessage[index].oscMessage,
           };
           // Apply scaling factors
-          scaledTriggerObject.x = eval(`${scaledTriggerObject.x}${row.scaleX}`);
-          scaledTriggerObject.y = eval(`${scaledTriggerObject.y}${row.scaleY}`);
-          scaledTriggerObject.z = eval(`${scaledTriggerObject.z}${row.scaleZ}`);
-          return scaledTriggerObject;
+          scaledObject.x = eval(`${scaledObject.x}${row.scaleX}`);
+          scaledObject.y = eval(`${scaledObject.y}${row.scaleY}`);
+          scaledObject.z = eval(`${scaledObject.z}${row.scaleZ}`);
+          return scaledObject;
         });
         // Determine which objects to send
         let objectsToSend;
@@ -369,14 +366,14 @@ const addRowOSCMessage = () => {
           row.sendY === 'allY' &&
           row.sendZ === 'allZ'
         ) {
-          //objectsToSend = triggerObjectsCopy;
-          objectsToSend = triggerObjectsCopy.filter(
+          //objectsToSend = objectsCopy;
+          objectsToSend = objectsCopy.filter(
             (obj) => !(obj.x === 0 && obj.y === 0 && obj.z === 0),
           );
         } else {
-          let xObject = triggerObjectsCopy[row.sendX.slice(1) - 1];
-          let yObject = triggerObjectsCopy[row.sendY.slice(1) - 1];
-          let zObject = triggerObjectsCopy[row.sendZ.slice(1) - 1];
+          let xObject = objectsCopy[row.sendX.slice(1) - 1];
+          let yObject = objectsCopy[row.sendY.slice(1) - 1];
+          let zObject = objectsCopy[row.sendZ.slice(1) - 1];
           // Select the first defined object
           let definedObject = xObject || yObject || zObject;
           objectsToSend = [
@@ -401,7 +398,7 @@ const addRowOSCMessage = () => {
 
   oscMessageObjects.push(row);
   updatePortSelect(oscMessageObjects, udpPortObjects);
-  updateDropdownSelect(triggerObjects, labels);
+  updateDropdownSelect(objects, labels);
 };
 
 // deletePort function
@@ -438,7 +435,7 @@ const updatePortSelect = (rowOSCObjects, udpPortObjects) => {
   });
 };
 
-const updateDropdownSelect = (triggerObjects, labels) => {
+const updateDropdownSelect = (objects, labels) => {
   const dropdowns = document.getElementsByClassName('osc-select');
   const numRowOSCObjects = dropdowns.length / labels.length;
 
@@ -455,20 +452,20 @@ const updateDropdownSelect = (triggerObjects, labels) => {
       allOption.text = 'all' + label;
       dropdown.appendChild(allOption);
 
-      if (triggerObjects.length > 0) {
-        for (let index = 0; index < triggerObjects.length; index++) {
+      if (objects.length > 0) {
+        for (let index = 0; index < objects.length; index++) {
           if (
-            triggerObjects[index].x === null ||
-            triggerObjects[index].y === null ||
-            triggerObjects[index].z === null
+            objects[index].x === null ||
+            objects[index].y === null ||
+            objects[index].z === null
           )
             continue;
 
           // Create and append the Object option
-          let triggerOption = document.createElement('option');
-          triggerOption.value = label + (index + 1);
-          triggerOption.text = label + (index + 1);
-          dropdown.appendChild(triggerOption);
+          let objectOption = document.createElement('option');
+          objectOption.value = label + (index + 1);
+          objectOption.text = label + (index + 1);
+          dropdown.appendChild(objectOption);
         }
       }
       // Restore the selected value
@@ -477,34 +474,34 @@ const updateDropdownSelect = (triggerObjects, labels) => {
   }
 };
 
-const updateTriggerObjectsLength = (positionsArray) => {
-  if (positionsArray.length > triggerObjects.length) {
-    let diff = positionsArray.length - triggerObjects.length;
+const updateObjectsLength = (positionsArray) => {
+  if (positionsArray.length > objects.length) {
+    let diff = positionsArray.length - objects.length;
     for (let i = 0; i < diff; i++) {
-      let newTriggerObject = { ...triggerObject };
-      triggerObjects.push(newTriggerObject);
+      let newObject = { ...object };
+      objects.push(newObject);
     }
-    updateDropdownSelect(triggerObjects, labels);
-  } else if (positionsArray.length < triggerObjects.length) {
-    let diff = triggerObjects.length - positionsArray.length;
+    updateDropdownSelect(objects, labels);
+  } else if (positionsArray.length < objects.length) {
+    let diff = objects.length - positionsArray.length;
     for (let i = 0; i < diff; i++) {
-      triggerObjects.pop();
+      objects.pop();
     }
-    updateDropdownSelect(triggerObjects, labels);
+    updateDropdownSelect(objects, labels);
   }
 };
 
-const updateTriggerObjectsPositions = (positionsArray) => {
-  // Update the x, y, z values for all triggerObjects
+const updateObjectsPositions = (positionsArray) => {
+  // Update the x, y, z values for all objects
   for (let i = 0; i < positionsArray.length; i++) {
-    if (triggerObjects[i]) {
-      const oldX = triggerObjects[i].x;
-      const oldY = triggerObjects[i].y;
-      const oldZ = triggerObjects[i].z;
+    if (objects[i]) {
+      const oldX = objects[i].x;
+      const oldY = objects[i].y;
+      const oldZ = objects[i].z;
 
-      triggerObjects[i].x = positionsArray[i].x;
-      triggerObjects[i].y = positionsArray[i].y;
-      triggerObjects[i].z = positionsArray[i].z;
+      objects[i].x = positionsArray[i].x;
+      objects[i].y = positionsArray[i].y;
+      objects[i].z = positionsArray[i].z;
 
       if (
         (oldX !== null && positionsArray[i].x === null) ||
@@ -514,7 +511,7 @@ const updateTriggerObjectsPositions = (positionsArray) => {
         (oldY === null && positionsArray[i].y !== null) ||
         (oldZ === null && positionsArray[i].z !== null)
       ) {
-        updateDropdownSelect(triggerObjects, labels);
+        updateDropdownSelect(objects, labels);
         break;
       }
     }

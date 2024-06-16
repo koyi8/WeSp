@@ -244,7 +244,7 @@ io.on('connection', (socket) => {
 
   let shouldSendMap = new Map();
 
-  // Receive triggerObjects from client
+  // Receive objects from client
   socket.on('sendOSC', (objectsToSend) => {
     objectsToSend.forEach((object) => {
       // If shouldSend flag for this row is false, return

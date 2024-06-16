@@ -22,26 +22,26 @@ export const isValidIP = (ip) => {
   return ipFormat.test(ip);
 };
 
-//Checks adress input and sets sendOSC flag for the corresponding triggerObject
-// also sets osc adress attribute for the triggerObject
-export const interpolateString = (input, triggerObjects) => {
+//Checks adress input and sets sendOSC flag for the corresponding object
+// also sets osc adress attribute for the object
+export const interpolateString = (input, objects) => {
   // Initialize sendOSC to false for all objects
-  triggerObjects.forEach((triggerObject) => (triggerObject.sendOSC = false));
+  objects.forEach((object) => (object.sendOSC = false));
 
   // Determine which placeholders are present in the input string
   let generalPlaceholdersPresent = /\$x\b|\$y\b|\$z\b/.test(input);
   let idPlaceholderPresent = /\$srcID\b/.test(input);
 
-  // Iterate over the triggerObjects
-  for (let i = 0; i < triggerObjects.length; i++) {
-    let triggerObject = triggerObjects[i];
+  // Iterate over the objects
+  for (let i = 0; i < objects.length; i++) {
+    let object = objects[i];
 
     // Reset result to the original input value at the start of each iteration
     let result = input;
 
     // Set sendOSC to true for all objects if general placeholders are present
     if (generalPlaceholdersPresent) {
-      triggerObject.sendOSC = true;
+      object.sendOSC = true;
     }
 
     // Set sendOSC to true for the corresponding object if specific placeholders are present
@@ -49,7 +49,7 @@ export const interpolateString = (input, triggerObjects) => {
       `\\$x${i + 1}\\b|\\$y${i + 1}\\b|\\$z${i + 1}\\b`,
     ).test(input);
     if (specificPlaceholderPresent) {
-      triggerObject.sendOSC = true;
+      object.sendOSC = true;
     }
 
     // Replace $srcID placeholder
@@ -70,20 +70,20 @@ export const interpolateString = (input, triggerObjects) => {
     // Remove trailing whitespaces
     result = result.trim();
 
-    // Apply the result of the string replacement to the address attribute of the triggerObject
-    triggerObject.address = result;
+    // Apply the result of the string replacement to the address attribute of the object
+    object.address = result;
   }
 
-  console.log(triggerObjects); // Logs the triggerObjects array
+  console.log(objects); // Logs the objects array
 };
 
-export const interpolateStringOscMessage = (input, triggerObjects) => {
+export const interpolateStringOscMessage = (input, objects) => {
   // Determine if the $srcID placeholder is present in the input string
   let idPlaceholderPresent = /\$srcID\b/.test(input);
 
-  // Iterate over the triggerObjects
-  for (let i = 0; i < triggerObjects.length; i++) {
-    let triggerObject = triggerObjects[i];
+  // Iterate over the objects
+  for (let i = 0; i < objects.length; i++) {
+    let object = objects[i];
 
     // Reset result to the original input value at the start of each iteration
     let result = input;
@@ -93,12 +93,12 @@ export const interpolateStringOscMessage = (input, triggerObjects) => {
       result = result.replace(/\$srcID\b/g, i + 1);
     }
 
-    // Apply the result of the string replacement to the address attribute of the triggerObject
-    triggerObject.oscMessage = result;
+    // Apply the result of the string replacement to the address attribute of the object
+    object.oscMessage = result;
   }
-  return triggerObjects;
+  return objects;
 
-  //console.log(triggerObjects); // Logs the triggerObjects array
+  //console.log(objects); // Logs the objects array
 };
 
 export const interpolateStringScaling = (input, row, scale) => {
