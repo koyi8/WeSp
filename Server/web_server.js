@@ -155,23 +155,23 @@ io.on('connection', (socket) => {
   // Send the assigned color to the client
   socket.emit('assignColor', { color: clients[socket.id].color });
 
-  // Update the client divs for Curves
+  // Update the client divs for Trajectories
   socket.on('updateClientsDiv', () => {
     io.emit('syncClientsDiv', clients);
   });
 
   // CURVES
-  // SynCurves on Client Connection
+  // SynTrajectories on Client Connection
   if (!firstClientSocket) {
     firstClientSocket = socket;
-    firstClientSocket.on('syncCurves', ({ curvesState }) => {
+    firstClientSocket.on('syncTrajectories', ({ trajectoriesState }) => {
       // Forward the scene data to all connected clients
-      firstClientSocket.broadcast.emit('syncCurves', {
-        curvesState,
+      firstClientSocket.broadcast.emit('syncTrajectories', {
+        trajectoriesState,
       });
     });
   } else {
-    firstClientSocket.emit('requestCurveState');
+    firstClientSocket.emit('requestTrajectoryState');
   }
   // Handle Client Disconnection
   socket.on('disconnect', () => {
@@ -187,10 +187,10 @@ io.on('connection', (socket) => {
       const socketKeys = Object.keys(sockets);
       if (socketKeys.length > 1) {
         firstClientSocket = sockets[socketKeys[1]];
-        firstClientSocket.on('syncCurves', ({ curvesState }) => {
+        firstClientSocket.on('syncTrajectories', ({ trajectoriesState }) => {
           // Forward the scene data to all connected clients
-          firstClientSocket.broadcast.emit('syncCurves', {
-            curvesState,
+          firstClientSocket.broadcast.emit('syncTrajectories', {
+            trajectoriesState,
           });
         });
       } else {
@@ -211,10 +211,10 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Listen for the 'updateCurves' event from the client
-  socket.on('updateCurves', (curvesState) => {
-    // Broadcast the new curvesState to all connected clients
-    socket.broadcast.emit('updateCurves', curvesState);
+  // Listen for the 'updateTrajectories' event from the client
+  socket.on('updateTrajectories', (trajectoriesState) => {
+    // Broadcast the new trajectoriesState to all connected clients
+    socket.broadcast.emit('updateTrajectories', trajectoriesState);
   });
 
   // TRIGGERS

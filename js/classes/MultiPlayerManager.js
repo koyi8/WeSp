@@ -2,15 +2,15 @@ import * as THREE from 'three';
 import { updateTrajectoriesHTML } from '../GUI/trajectoriesModule_GUI';
 
 class MultiPlayerManager {
-  constructor(scene, curveManager, objectManager, socket) {
+  constructor(scene, trajectoryManager, objectManager, socket) {
     this.scene = scene;
-    this.curveManager = curveManager;
+    this.trajectoryManager = trajectoryManager;
     this.objectManager = objectManager;
     this.socket = socket;
-    // curves and splineobjects
-    this.curves = this.curveManager.getCurves();
+    // trajectories and splineobjects
+    this.trajectories = this.trajectoryManager.getTrajectories();
     this.objects = this.objectManager.getObjects();
-    this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
+    this.splineHelperObjects = this.trajectoryManager.getSplineHelperObjects();
     this.socketID = '';
     this.clients = {};
     this.clientColor = this.objectManager.objectColor;
@@ -99,11 +99,11 @@ class MultiPlayerManager {
     });
   }
 
-  getCurvesOnClientConnected() {
-    let curvesState;
-    this.socket.on('requestCurveState', () => {
-      curvesState = this.getCurvesUIState();
-      this.socket.emit('syncCurves', { curvesState });
+  getTrajectoriesOnClientConnected() {
+    let trajectoriesState;
+    this.socket.on('requestTrajectoryState', () => {
+      trajectoriesState = this.getTrajectoriesUIState();
+      this.socket.emit('syncTrajectories', { trajectoriesState });
     });
   }
 
@@ -132,12 +132,12 @@ class MultiPlayerManager {
     });
   }
 
-  setCurvesOnClientConnected() {
-    // Listen for the 'syncCurves' event from the server
-    this.socket.on('syncCurves', ({ curvesState }) => {
-      this.deleteCurvesOnClientConnected();
-      // Set the state of the curves
-      this.setCurvesUIState(curvesState);
+  setTrajectoriesOnClientConnected() {
+    // Listen for the 'syncTrajectories' event from the server
+    this.socket.on('syncTrajectories', ({ trajectoriesState }) => {
+      this.deleteTrajectoriesOnClientConnected();
+      // Set the state of the trajectories
+      this.setTrajectoriesUIState(trajectoriesState);
       this.socket.emit('updateClientsDiv');
     });
   }
@@ -163,109 +163,131 @@ class MultiPlayerManager {
     });
   }
 
-  updateCurvesOnChanges() {
-    // Listen for the 'updateCurves' event from the server
-    this.socket.on('updateCurves', (state) => {
-      // Update the state of the curves UI
-      this.setCurvesUIState(state);
+  updateTrajectoriesOnChanges() {
+    // Listen for the 'updateTrajectories' event from the server
+    this.socket.on('updateTrajectories', (state) => {
+      // Update the state of the trajectories UI
+      this.setTrajectoriesUIState(state);
     });
   }
 
-  sendCurvesStateToServer = () => {
-    const state = this.getCurvesUIState();
-    this.socket.emit('updateCurves', state);
+  sendTrajectoriesStateToServer = () => {
+    const state = this.getTrajectoriesUIState();
+    this.socket.emit('updateTrajectories', state);
   };
 
-  getCurvesUIState() {
+  getTrajectoriesUIState() {
     const state = {
-      curves: this.curves.map((curve, index) => ({
-        tension: curve.tension,
-        closed: curve.closed,
+      trajectories: this.trajectories.map((trajectory, index) => ({
+        tension: trajectory.tension,
+        closed: trajectory.closed,
         color: {
-          r: curve.mesh.material.color.r,
-          g: curve.mesh.material.color.g,
-          b: curve.mesh.material.color.b,
+          r: trajectory.mesh.material.color.r,
+          g: trajectory.mesh.material.color.g,
+          b: trajectory.mesh.material.color.b,
         },
-        points: curve.points.map(({ x, y, z }) => ({ x, y, z })),
+        points: trajectory.points.map(({ x, y, z }) => ({ x, y, z })),
       })),
       splineHelperObjects: this.splineHelperObjects,
     };
     return JSON.stringify(state);
   }
 
-  deleteCurvesOnClientConnected() {
-    for (let index = this.curveManager.curves.length - 1; index >= 0; index--) {
-      this.curveManager.deleteCurve(index);
+  deleteTrajectoriesOnClientConnected() {
+    for (
+      let index = this.trajectoryManager.trajectories.length - 1;
+      index >= 0;
+      index--
+    ) {
+      this.trajectoryManager.deleteTrajectory(index);
     }
   }
 
-  setCurvesUIState(json) {
+  setTrajectoriesUIState(json) {
     // Parse the JSON string back into an object
     const state = JSON.parse(json);
 
     // Initialize a mapping of old indices to new indices
     let indexMapping = new Map();
-    this.curveManager.curves.forEach((curve, index) => {
+    this.trajectoryManager.trajectories.forEach((trajectory, index) => {
       indexMapping.set(index, index);
     });
 
-    // Remove the extra curves and update indexMapping
-    while (this.curveManager.curves.length > state.curves.length) {
-      const lastIndex = this.curveManager.curves.length - 1;
-      this.curveManager.deleteCurve(lastIndex);
+    // Remove the extra trajectories and update indexMapping
+    while (
+      this.trajectoryManager.trajectories.length > state.trajectories.length
+    ) {
+      const lastIndex = this.trajectoryManager.trajectories.length - 1;
+      this.trajectoryManager.deleteTrajectory(lastIndex);
       indexMapping.delete(lastIndex);
     }
 
-    state.curves.forEach((curveData, newIndex) => {
-      let curve;
-      const positions = curveData.points.map(
+    state.trajectories.forEach((trajectoryData, newIndex) => {
+      let trajectory;
+      const positions = trajectoryData.points.map(
         (point) => new THREE.Vector3(point.x, point.y, point.z),
       );
 
-      if (newIndex < this.curveManager.curves.length) {
+      if (newIndex < this.trajectoryManager.trajectories.length) {
         // Find the correct index using indexMapping
         const actualIndex = indexMapping.get(newIndex);
-        curve = this.curveManager.curves[actualIndex];
-        curve.points.length = 0;
+        trajectory = this.trajectoryManager.trajectories[actualIndex];
+        trajectory.points.length = 0;
 
-        let i = this.curveManager.splineHelperObjects.length;
-        // replace the splineHelperObjects for the curve
+        let i = this.trajectoryManager.splineHelperObjects.length;
+        // replace the splineHelperObjects for the trajectory
         while (i--) {
           if (
-            this.curveManager.splineHelperObjects[i].curveIndex === actualIndex
+            this.trajectoryManager.splineHelperObjects[i].trajectoryIndex ===
+            actualIndex
           ) {
-            this.curveManager.deleteSplineObjectforSync(i);
+            this.trajectoryManager.deleteSplineObjectforSync(i);
           }
         }
 
-        curveData.points.forEach((point, pointIndex) => {
-          this.curveManager.addSplineObject(positions[pointIndex], actualIndex);
+        trajectoryData.points.forEach((point, pointIndex) => {
+          this.trajectoryManager.addSplineObject(
+            positions[pointIndex],
+            actualIndex,
+          );
         });
       } else {
-        this.curveManager.addPointsCurve(positions);
-        curve = this.curveManager.curves[this.curveManager.curves.length - 1];
-        this.curveManager.updateCurveGeometry(curve);
+        this.trajectoryManager.addPointsTrajectory(positions);
+        trajectory =
+          this.trajectoryManager.trajectories[
+            this.trajectoryManager.trajectories.length - 1
+          ];
+        this.trajectoryManager.updateTrajectoryGeometry(trajectory);
         // Update indexMapping
-        indexMapping.set(newIndex, this.curveManager.curves.length - 1);
-      }
-
-      curve.closed = curveData.closed;
-      this.curveManager.toggleCurveClosed(newIndex, curve.closed);
-
-      curve.tension = curveData.tension;
-      this.curveManager.updateCurveTension(newIndex, parseFloat(curve.tension));
-
-      if (curve.mesh && curve.mesh.material) {
-        curve.mesh.material.color.set(
-          curveData.color.r,
-          curveData.color.g,
-          curveData.color.b,
+        indexMapping.set(
+          newIndex,
+          this.trajectoryManager.trajectories.length - 1,
         );
       }
-      curve.needsUpdate = true;
+
+      trajectory.closed = trajectoryData.closed;
+      this.trajectoryManager.toggleTrajectoryClosed(
+        newIndex,
+        trajectory.closed,
+      );
+
+      trajectory.tension = trajectoryData.tension;
+      this.trajectoryManager.updateTrajectoryTension(
+        newIndex,
+        parseFloat(trajectory.tension),
+      );
+
+      if (trajectory.mesh && trajectory.mesh.material) {
+        trajectory.mesh.material.color.set(
+          trajectoryData.color.r,
+          trajectoryData.color.g,
+          trajectoryData.color.b,
+        );
+      }
+      trajectory.needsUpdate = true;
     });
 
-    updateTrajectoriesHTML(this.curveManager);
+    updateTrajectoriesHTML(this.trajectoryManager);
   }
 
   getObjectsClientState() {
@@ -321,7 +343,7 @@ class MultiPlayerManager {
                 lerpValue,
               );
             }
-            object.curveIndex = objectState.curveIndex;
+            object.trajectoryIndex = objectState.trajectoryIndex;
             object.direction = objectState.direction;
           }
         }

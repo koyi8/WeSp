@@ -4,19 +4,19 @@ import { logUIInteraction } from '../helpers/logUIInteraction';
 export const createObjectControlDiv = (
   index,
   onUpdate,
-  curves,
+  trajectories,
   objectDefaults,
   onAnimateChange,
 ) => {
   const div = document.createElement('div');
   div.id = `object${index}`;
   div.className = 'object';
-  let selectOptions = curves
+  let selectOptions = trajectories
     .map(
-      (_, curveIndex) =>
-        `<option value="${curveIndex}" ${
-          curveIndex === objectDefaults.curveIndex ? 'selected' : ''
-        }>${curveIndex + 1}</option>`,
+      (_, trajectoryIndex) =>
+        `<option value="${trajectoryIndex}" ${
+          trajectoryIndex === objectDefaults.trajectoryIndex ? 'selected' : ''
+        }>${trajectoryIndex + 1}</option>`,
     )
     .join('');
 
@@ -158,7 +158,7 @@ export const createObjectControlDiv = (
   // Trajectory Select
   const trajectorySelect = div.querySelector(`#trajectory${index}`);
   trajectorySelect.addEventListener('change', (e) => {
-    onUpdate(index, { curveIndex: e.target.value });
+    onUpdate(index, { trajectoryIndex: e.target.value });
 
     // interaction logging
     logUIInteraction(

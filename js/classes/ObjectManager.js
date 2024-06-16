@@ -7,10 +7,10 @@ import { createObjectControlDiv } from '../GUI/objectsModule_GUI';
 import { positionsArray } from '../..';
 
 class ObjectManager {
-  constructor(scene, settings, curveManager, container) {
+  constructor(scene, settings, trajectoryManager, container) {
     this.scene = scene;
     this.settings = settings;
-    this.curveManager = curveManager;
+    this.trajectoryManager = trajectoryManager;
     this.container = container;
     this.objects = [];
     this.clientObjects = {};
@@ -68,7 +68,7 @@ class ObjectManager {
       loop: true,
       speed: Math.random() * (3 - 1) + 0.3,
       position: Math.random(),
-      curveIndex: 0,
+      trajectoryIndex: 0,
       direction: 'ltr',
     };
 
@@ -91,7 +91,7 @@ class ObjectManager {
     const objectDiv = createObjectControlDiv(
       index,
       (index, updates) => this.updateObject(index, updates, positionsArray),
-      this.curveManager.curves,
+      this.trajectoryManager.trajectories,
       objectDefaults,
       () => this.updatePositionInput(index),
     );
@@ -128,7 +128,7 @@ class ObjectManager {
       loop: objectState.loop,
       speed: objectState.speed,
       position: objectState.position,
-      curveIndex: objectState.curveIndex,
+      trajectoryIndex: objectState.trajectoryIndex,
       direction: objectState.direction,
     };
 
@@ -230,7 +230,7 @@ class ObjectManager {
         loop: true,
         speed: Math.random() * 0.02,
         position: Math.random(),
-        curveIndex: 0,
+        trajectoryIndex: 0,
         direction: 'ltr',
       };
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
@@ -250,7 +250,7 @@ class ObjectManager {
       const objectDiv = createObjectControlDiv(
         i,
         (index, updates) => this.updateObject(index, updates, positionsArray),
-        this.curveManager.curves,
+        this.trajectoryManager.trajectories,
         objectDefaults,
         () => this.updatePositionInput(i),
       );
@@ -268,18 +268,18 @@ class ObjectManager {
       }
       return; // Skip this iteration
     }
-    const curves = this.curveManager.getCurves();
+    const trajectories = this.trajectoryManager.getTrajectories();
 
-    const curve = curves[object.curveIndex];
+    const trajectory = trajectories[object.trajectoryIndex];
 
     let position = object.position;
 
-    if (!curve) {
-      console.warn(`Curve ${object.curveIndex} not found`);
+    if (!trajectory) {
+      console.warn(`Trajectory ${object.trajectoryIndex} not found`);
       return; // Skip this iteration
     }
     if (object.animate) {
-      let arclength = curve.getLength();
+      let arclength = trajectory.getLength();
       let directionFactor = object.direction === 'rtl' ? -1 : 1;
       let speedAdjustment = (object.speed / arclength) * directionFactor;
 
@@ -298,7 +298,7 @@ class ObjectManager {
       object.position = position;
     }
 
-    const trigPos = curve.getPointAt(Math.abs(position) % 1);
+    const trigPos = trajectory.getPointAt(Math.abs(position) % 1);
     object.mesh.position.copy(trigPos);
     const label = object.mesh.children[0].element;
     label.innerHTML = `${index + 1}`;
@@ -311,7 +311,7 @@ class ObjectManager {
 
       positionsArray[index] = trigPos.clone();
     }
-    curve.updateArcLengths();
+    trajectory.updateArcLengths();
   }
 
   lerp(start, end, t) {
@@ -336,16 +336,16 @@ class ObjectManager {
         positionsArray[index] = { x: null, y: null, z: null }; // Set the corresponding index in positionsArray to null for OSC UI
         return; // Skip this iteration
       }
-      const curves = this.curveManager.getCurves();
+      const trajectories = this.trajectoryManager.getTrajectories();
 
-      const curve = curves[object.curveIndex];
+      const trajectory = trajectories[object.trajectoryIndex];
       let position = object.position;
-      if (!curve) {
-        console.warn(`Curve ${object.curveIndex} not found`);
+      if (!trajectory) {
+        console.warn(`Trajectory ${object.trajectoryIndex} not found`);
         return; // Skip this iteration
       }
       if (object.animate) {
-        let arclength = curve.getLength();
+        let arclength = trajectory.getLength();
         let directionFactor = object.direction === 'rtl' ? -1 : 1;
         let speedAdjustment = (object.speed / arclength) * directionFactor;
 
@@ -364,7 +364,7 @@ class ObjectManager {
         object.position = position;
       }
 
-      const trigPos = curve.getPointAt(Math.abs(position) % 1);
+      const trigPos = trajectory.getPointAt(Math.abs(position) % 1);
       object.mesh.position.copy(trigPos);
 
       const label = object.mesh.children[0].element;
@@ -373,7 +373,7 @@ class ObjectManager {
       )}, ${trigPos.y.toFixed(2)}, ${trigPos.z.toFixed(2)}`;
 
       positionsArray[index] = trigPos.clone();
-      curve.updateArcLengths();
+      trajectory.updateArcLengths();
     });
   }
 
@@ -450,7 +450,7 @@ class ObjectManager {
       positionRange.value = object.position;
 
       const trajectorySelect = div.querySelector(`#trajectory${index}`);
-      trajectorySelect.value = object.curveIndex;
+      trajectorySelect.value = object.trajectoryIndex;
 
       const loopCheckbox = div.querySelector(`#loop${index}`);
       loopCheckbox.checked = object.loop;

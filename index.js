@@ -10,9 +10,9 @@ import { logUIInteraction } from './js/helpers/logUIInteraction';
 import {
   updateTrajectoriesHTML,
   updateControlPointsHTML,
-  selectedCurveIndex,
+  selectedTrajectoryIndex,
 } from './js/GUI/trajectoriesModule_GUI';
-import CurveManager from './js/classes/CurveManager';
+import TrajectoryManager from './js/classes/TrajectoryManager';
 import ObjectManager from './js/classes/ObjectManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
 import { createOCSTables } from './js/GUI/oscModule_GUI';
@@ -61,14 +61,14 @@ const settings = {
   arcLength: 0,
   antialias: true,
   objectAmount: 2,
-  curveAmount: 1,
+  trajectoryAmount: 1,
 };
 
 const container = document.getElementById('3d-container');
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let camera, scene, renderer;
-let curveManager;
+let trajectoryManager;
 let objectManager;
 let multiPlayerManager;
 let positionsArray = [];
@@ -90,20 +90,25 @@ const init = () => {
   setupLights();
   setupGeometry();
   setupControls();
-  curveManager = new CurveManager(scene, settings, container);
-  curveManager.initCurves();
-  objectManager = new ObjectManager(scene, settings, curveManager, container);
+  trajectoryManager = new TrajectoryManager(scene, settings, container);
+  trajectoryManager.initTrajectories();
+  objectManager = new ObjectManager(
+    scene,
+    settings,
+    trajectoryManager,
+    container,
+  );
   objectManager.setupAddObjectListeners();
   multiPlayerManager = new MultiPlayerManager(
     scene,
-    curveManager,
+    trajectoryManager,
     objectManager,
     socket,
   );
-  curveManager.setMultiPlayerManager(multiPlayerManager);
+  trajectoryManager.setMultiPlayerManager(multiPlayerManager);
   initListeners();
   render();
-  updateTrajectoriesHTML(curveManager, true); // true value for isNewTrajectory
+  updateTrajectoriesHTML(trajectoryManager, true); // true value for isNewTrajectory
   createOCSTables();
   setupMultiPlayerManager();
 };
@@ -118,11 +123,11 @@ const setupMultiPlayerManager = () => {
   multiPlayerManager.initSocketID();
   multiPlayerManager.toggleDummyState();
   multiPlayerManager.receiveClientList();
-  multiPlayerManager.getCurvesOnClientConnected();
+  multiPlayerManager.getTrajectoriesOnClientConnected();
   multiPlayerManager.getObjectsOnClientConnected();
-  multiPlayerManager.setCurvesOnClientConnected();
+  multiPlayerManager.setTrajectoriesOnClientConnected();
   multiPlayerManager.setObjectsOnClientConnected();
-  multiPlayerManager.updateCurvesOnChanges();
+  multiPlayerManager.updateTrajectoriesOnChanges();
   multiPlayerManager.updateClientsDiv();
   multiPlayerManager.updateObjectsClientOnChange();
   multiPlayerManager.updateObjectsClientsStateFromServer();
@@ -298,7 +303,7 @@ const animate = () => {
   }, 1000 / 40);
   //objectManager.animateObjects(positionsArray);
   objectManager.animateAllObjects(positionsArray);
-  curveManager.updateSplineOutline();
+  trajectoryManager.updateSplineOutline();
   multiPlayerManager.sendUpdateObjectsClientsStateToServer();
   render();
   stats.update();
@@ -321,7 +326,7 @@ const animate = () => {
   if (delta > renderInterval) {
     // The draw or time dependent code are here
     objectManager.animateAllObjects(positionsArray);
-    curveManager.updateSplineOutline();
+    trajectoryManager.updateSplineOutline();
     render();
 
     lastRenderTime = currentTime - (delta % renderInterval);
@@ -354,7 +359,7 @@ const onWindowResize = () => {
 
 const onDocumentMouseDown = (event) => {
   event.preventDefault();
-  //console.log(selectedCurveIndex);
+  //console.log(selectedTrajectoryIndex);
 
   mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -362,7 +367,7 @@ const onDocumentMouseDown = (event) => {
   raycaster.setFromCamera(mouse, camera);
 
   const intersects = raycaster.intersectObjects(
-    curveManager.getSplineHelperObjects(),
+    trajectoryManager.getSplineHelperObjects(),
     true,
   );
 
@@ -370,14 +375,16 @@ const onDocumentMouseDown = (event) => {
     const object = intersects[0].object;
 
     if (transformControl.object !== object) {
-      const curveIndex = selectedObject ? selectedObject.curveIndex : undefined;
+      const trajectoryIndex = selectedObject
+        ? selectedObject.trajectoryIndex
+        : undefined;
 
       transformControl.detach();
       selectedObject = object;
       transformControl.attach(selectedObject);
 
-      if (curveIndex !== undefined) {
-        curveManager.curves[curveIndex].needsUpdate = true;
+      if (trajectoryIndex !== undefined) {
+        trajectoryManager.trajectories[trajectoryIndex].needsUpdate = true;
       }
     }
   } else {
@@ -389,9 +396,9 @@ const onDocumentMouseDown = (event) => {
 };
 
 export const debouncedUpdateControlPointsHTML = debounce(() => {
-  // multiPlayerManager.sendCurvesStateToServer();
-  updateControlPointsHTML(curveManager);
-  multiPlayerManager.sendCurvesStateToServer();
+  // multiPlayerManager.sendTrajectoriesStateToServer();
+  updateControlPointsHTML(trajectoryManager);
+  multiPlayerManager.sendTrajectoriesStateToServer();
   //console.log(positionsArray);
 }, 300);
 
@@ -436,7 +443,7 @@ const initListeners = () => {
 
   transformControl.addEventListener('objectChange', () => {
     if (selectedObject) {
-      curveManager.updateCurveFromControlPoint(selectedObject);
+      trajectoryManager.updateTrajectoryFromControlPoint(selectedObject);
       debouncedUpdateControlPointsHTML();
     }
   });
