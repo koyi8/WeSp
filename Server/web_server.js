@@ -81,7 +81,7 @@ const setupUDPPort = (
 ) => {
   // Get all the local port numbers from the udpPorts array
   const localPorts = udpPorts.map((udp) => udp.options.localPort);
-  // If the provided localPort is already in use, return without doing anything
+  // If the provided localPort is already in use, return
   if (localPorts.includes(localPort)) {
     console.log('inPort already in use');
     return;
@@ -128,7 +128,7 @@ let clientColors = [
   '#006400', // Dark Green
 ];
 
-// Event fired when client connects, giving each client a unique "socket" instance
+// Event fired when client connects
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
 
@@ -161,7 +161,7 @@ io.on('connection', (socket) => {
   });
 
   // CURVES
-  // SynTrajectories on Client Connection
+  // SyncTrajectories on Client Connection
   if (!firstClientSocket) {
     firstClientSocket = socket;
     firstClientSocket.on('syncTrajectories', ({ trajectoriesState }) => {
@@ -326,15 +326,11 @@ io.on('connection', (socket) => {
 const syncObjectsOnClientConnect =
   (socket, clients, io) =>
   ({ objectsState }) => {
-    // Parse the received objects state
     let parsedObjectsState = JSON.parse(objectsState);
-    // Update the objects state for this client in the clients object
     clients[socket.id].Objects = parsedObjectsState.objects;
-    // Forward the updated objects state to all clients
     socket.emit('syncObjects', {
       objectsState: JSON.stringify(clients),
     });
-    // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
 
@@ -342,30 +338,23 @@ const syncObjectsOnClientConnect =
 const updateObjectsLength =
   (socket, clients, io) =>
   ({ objectsState }) => {
-    // Parse the received objects state
     let parsedObjectsState = JSON.parse(objectsState);
-    // Update the objects state for this client in the clients object
     clients[socket.id].Objects = parsedObjectsState.objects;
-    // Forward the updated objects state to all clients
     io.emit('updateObjectsLength', {
       objectsState: JSON.stringify(clients),
     });
-    // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
+
 // Function to the objects
 const updateValuesClientsObjects =
   (socket, clients, io) =>
   ({ objectsState }) => {
-    // Parse the received objects state
     let parsedObjectsState = JSON.parse(objectsState);
-    // Update the objects state for this client in the clients object
     clients[socket.id].Objects = parsedObjectsState.objects;
-    // Forward the updated objects state to all clients
     io.emit('updateValuesClientsObjects', {
       objectsState: JSON.stringify(clients),
     });
-    // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
 
@@ -400,7 +389,6 @@ const storeLogData = (timestamp, logData) => {
 
 // Function to write the stored log data to a file
 const writeLogData = () => {
-  // Convert the log entries to CSV
   let csvData = logEntries
     .map(
       (entry) =>

@@ -347,7 +347,7 @@ class TrajectoryManager {
         .filter((object) => object.trajectoryIndex === trajectoryIndex)
         .map((object) => object.position.clone());
 
-      trajectory.trajectoryType = 'catmullrom';
+      trajectory.curveType = 'catmullrom';
       trajectory.tension = tension;
       trajectory.points = points;
 
