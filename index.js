@@ -121,7 +121,7 @@ const setupSocket = () => {
 
 const setupMultiPlayerManager = () => {
   multiPlayerManager.initSocketID();
-  multiPlayerManager.toggleDummyState();
+  multiPlayerManager.interactionLogGUI();
   multiPlayerManager.receiveClientList();
   multiPlayerManager.getTrajectoriesOnClientConnected();
   multiPlayerManager.getObjectsOnClientConnected();

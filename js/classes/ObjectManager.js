@@ -146,9 +146,8 @@ class ObjectManager {
     if (index === -1) {
       index = this.clientObjects[clientID].length;
     }
-    // Add the new object to the array
+
     this.clientObjects[clientID][index] = newObject;
-    // Store Object in the corresponding clients object
     clients[clientID].Objects[index] = newObject;
   }
 
@@ -166,8 +165,8 @@ class ObjectManager {
         (child) => child instanceof CSS2DObject,
       );
       if (labelObject) {
-        labelObject.element.remove(); // Remove label from the DOM
-        this.scene.remove(labelObject); // Remove CSS2DObject from scene graph
+        labelObject.element.remove();
+        this.scene.remove(labelObject);
       }
     }
     // Set the object to null in the clientObjects array
@@ -191,8 +190,8 @@ class ObjectManager {
         (child) => child instanceof CSS2DObject,
       );
       if (labelObject) {
-        labelObject.element.remove(); // Remove label from the DOM
-        this.scene.remove(labelObject); // Remove CSS2DObject from scene graph
+        labelObject.element.remove();
+        this.scene.remove(labelObject);
       }
     }
 
@@ -210,7 +209,6 @@ class ObjectManager {
       objectsContainer.replaceChild(addButton, objectDiv);
     }
 
-    //this.objects.splice(index, 1);
     // Replace the object in the array with null
     this.objects[index] = null;
 
@@ -436,11 +434,11 @@ class ObjectManager {
       );
       // Show or hide the speed and position controls based on the animate checkbox
       if (animateCheckbox.checked) {
-        positionControl.style.display = 'none'; // Hide position control when animated
-        speedControl.style.display = ''; // Show speed control (use default or '' to reset)
+        positionControl.style.display = 'none';
+        speedControl.style.display = '';
       } else {
-        positionControl.style.display = ''; // Show position control when not animated
-        speedControl.style.display = 'none'; // Hide speed control
+        positionControl.style.display = '';
+        speedControl.style.display = 'none';
       }
 
       const speedRange = div.querySelector(`#speed${index}`);

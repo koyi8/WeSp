@@ -4,7 +4,6 @@ import {
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
 import { updateTrajectoriesHTML } from '../GUI/trajectoriesModule_GUI';
-import MultiPlayerManager from './MultiPlayerManager';
 
 class TrajectoryManager {
   constructor(scene, settings, container) {
@@ -79,7 +78,7 @@ class TrajectoryManager {
 
   addNewSplineObject(trajectoryIndex, position = new THREE.Vector3()) {
     this.addSplineObject(position, trajectoryIndex);
-    this.updateTrajectoryFromControlPoint({ trajectoryIndex }); //// THIS FIXED THE ISSUE  WITH THE CLOSED Property!!!
+    this.updateTrajectoryFromControlPoint({ trajectoryIndex });
   }
 
   deleteSplineObject(objectIndex) {
@@ -93,7 +92,6 @@ class TrajectoryManager {
       (child) => child instanceof CSS2DObject,
     );
 
-    // If a label was found, remove it
     if (label) {
       label.element.remove();
       this.scene.remove(label);
@@ -112,15 +110,12 @@ class TrajectoryManager {
     const objectToRemove = this.splineHelperObjects[objectIndex];
     if (!objectToRemove) return;
 
-    // Find the label among the children of the object
     const label = objectToRemove.children.find(
       (child) => child instanceof CSS2DObject,
     );
-
-    // If a label was found, remove it
     if (label) {
-      label.element.remove(); // Remove label from the DOM
-      this.scene.remove(label); // Remove CSS2DObject from scene graph
+      label.element.remove();
+      this.scene.remove(label);
     }
 
     this.scene.remove(objectToRemove);
@@ -236,7 +231,6 @@ class TrajectoryManager {
       }
     }
 
-    // TODO refactor
     const selects = document.querySelectorAll('.trajectory-select');
     selects.forEach((select) => {
       const isLastOptionSelected =
@@ -322,7 +316,7 @@ class TrajectoryManager {
           Math.random() * this.trajectoryColors.length,
         );
         color = this.trajectoryColors[randomIndex];
-        this.trajectoryColors.splice(randomIndex, 1); // Remove the chosen color from the array
+        this.trajectoryColors.splice(randomIndex, 1);
       } else {
         // If all colors have been used, reset the array
         this.trajectoryColors = [...this.originalTrajectoryColors];

@@ -3,8 +3,6 @@ import { logUIInteraction } from '../helpers/logUIInteraction';
 import { debouncedUpdateControlPointsHTML } from '/index.js';
 
 let selectedPointIndex;
-let isNewTrajectory = false;
-let previousTrajectoryIndex = null;
 
 export let selectedTrajectoryIndex;
 
@@ -85,11 +83,6 @@ export const updateTrajectoriesHTML = (
 
     const headerDiv = document.createElement('div');
     headerDiv.className = 'header';
-
-    // const titleDiv = document.createElement('div');
-    // titleDiv.className = 'title';
-    // titleDiv.textContent = `Trajectory ${trajectoryIndex + 1}`;
-    // headerDiv.appendChild(titleDiv);
 
     const closedCheckbox = document.createElement('input');
     closedCheckbox.type = 'checkbox';
@@ -320,7 +313,7 @@ export const updateTrajectoriesHTML = (
 
     trajectoryDiv.appendChild(pointsDiv);
     container.appendChild(trajectoryDiv);
-    //selectPointIndex++;
+
     // Initially hide all trajectories
     trajectoryDiv.style.display = 'none';
     container.appendChild(trajectoryDiv);
@@ -367,8 +360,6 @@ export const updateTrajectoriesHTML = (
   });
   tabContainer.appendChild(createTrajectoryDiv);
 
-  //console.log('selectedtrajectory index', selectedTrajectoryIndex);
-
   // Adjust for deletion of the last trajectory
   if (activeTabIndex >= trajectoryManager.trajectories.length) {
     activeTabIndex = trajectoryManager.trajectories.length - 1; // Update to new last index
@@ -414,8 +405,6 @@ const addControlPoint = (trajectoryIndex, trajectoryManager, objectIndex) => {
     .addVectors(currentPoint, nextPoint)
     .multiplyScalar(0.5);
 
-  //console.log(trajectoryManager.trajectories[trajectoryIndex].tension);
-
   const newControlPoint = trajectoryManager.addSplineObject(
     midPoint,
     trajectoryIndex,
@@ -448,13 +437,10 @@ const selectPointListener = (
   trajectoryManager,
 ) => {
   return () => {
-    //console.log(`Trajectory ${trajectoryIndex}, Point ${pointIndex} clicked`);
     selectedPointIndex = pointIndex;
     for (let i = 0; i < trajectoryIndex; i++) {
       selectedPointIndex += trajectoryManager.trajectories[i].points.length;
     }
-    //console.log(trajectoryManager.splineHelperObjects[selectedPointIndex]);
-    //console.log(trajectoryManager.splineHelperObjects);
   };
 };
 

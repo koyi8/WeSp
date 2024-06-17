@@ -83,7 +83,6 @@ class MultiPlayerManager {
     // Get the settings-container div
     const container = document.getElementById('settings-container');
 
-    // Remove the old clients div if it exists
     const oldClientsDiv = document.getElementById('clients');
     if (oldClientsDiv) {
       oldClientsDiv.remove();
@@ -133,19 +132,15 @@ class MultiPlayerManager {
   }
 
   setTrajectoriesOnClientConnected() {
-    // Listen for the 'syncTrajectories' event from the server
     this.socket.on('syncTrajectories', ({ trajectoriesState }) => {
       this.deleteTrajectoriesOnClientConnected();
-      // Set the state of the trajectories
       this.setTrajectoriesUIState(trajectoriesState);
       this.socket.emit('updateClientsDiv');
     });
   }
 
   setObjectsOnClientConnected() {
-    // Listen for the 'syncObjects' event from the server
     this.socket.on('syncObjects', ({ objectsState }) => {
-      // Set the state of the objects
       this.setObjectsClientState(objectsState);
     });
   }
@@ -157,16 +152,13 @@ class MultiPlayerManager {
   }
 
   updateObjectsClientOnChange() {
-    // Listen for 'updateObjectsLenght' event from the server
     this.socket.on('updateObjectsLength', ({ objectsState }) => {
       this.updateObjectsClientLength(objectsState);
     });
   }
 
   updateTrajectoriesOnChanges() {
-    // Listen for the 'updateTrajectories' event from the server
     this.socket.on('updateTrajectories', (state) => {
-      // Update the state of the trajectories UI
       this.setTrajectoriesUIState(state);
     });
   }
@@ -335,7 +327,6 @@ class MultiPlayerManager {
               !object.animate ||
               (object.animate && positionDifference < 0.5)
             ) {
-              //console.log('Position difference:', positionDifference);
               let lerpValue = object.animate ? 0.01 : 0.1;
               object.position = this.lerp(
                 object.position,
@@ -351,6 +342,7 @@ class MultiPlayerManager {
     }
   }
 
+  // linear interpolation
   lerp(start, end, t) {
     return start * (1 - t) + end * t;
   }
@@ -366,7 +358,6 @@ class MultiPlayerManager {
       // Create objects for all objects in the clients object
       clientState.Objects.forEach((objectState, index) => {
         if (objectState !== null) {
-          // A object exists, create it
           this.objectManager.createObjectFromClient(
             clientID,
             this.clients,
@@ -394,7 +385,6 @@ class MultiPlayerManager {
           (oldClientState.Objects[index] === undefined ||
             oldClientState.Objects[index] === null)
         ) {
-          // A object was added, create it
           this.objectManager.createObjectFromClient(
             clientID,
             this.clients,
@@ -406,7 +396,6 @@ class MultiPlayerManager {
               oldClientState.Objects.length) &&
           oldClientState.Objects[index] !== undefined
         ) {
-          // A object was deleted, delete it
           this.objectManager.deleteObjectFromClient(
             clientID,
             this.clients,
@@ -415,7 +404,6 @@ class MultiPlayerManager {
         }
       });
     }
-    // Update the previous state
     this.clients = newState;
   }
 
@@ -440,46 +428,37 @@ class MultiPlayerManager {
     }
   }
 
-  toggleDummyState() {
+  interactionLogGUI() {
     const container = document.getElementById('settings-container');
 
-    // Create a new checkbox for startLogging
     const startCheckbox = document.createElement('input');
     startCheckbox.type = 'checkbox';
     startCheckbox.id = 'startLoggingCheckbox';
 
-    // Add an event listener to the startCheckbox
     startCheckbox.addEventListener('change', () => {
       if (startCheckbox.checked) {
-        // Emit 'startLogging' event when the checkbox is checked
         this.socket.emit('startLogging');
       } else {
-        // Emit 'stopLogging' event when the checkbox is unchecked
         this.socket.emit('stopLogging');
       }
     });
-    // Add an event listener to the socket to update the checkbox
     this.socket.on('updateCheckbox', () => {
       startCheckbox.checked = this.shouldEmitLogs;
     });
 
-    // Create a new label for startCheckbox
     const startLabel = document.createElement('label');
     startLabel.htmlFor = 'startLoggingCheckbox';
     startLabel.textContent = 'Start/Stop Logging';
 
-    // Add the startCheckbox and startLabel to the container
     container.appendChild(startCheckbox);
     container.appendChild(startLabel);
 
-    // Create a new button for logMarker
+    // button for logMarker
     const markerButton = document.createElement('button');
     markerButton.id = 'markerButton';
     markerButton.textContent = 'Marker';
 
-    // Add a click event listener to the markerButton
     markerButton.addEventListener('click', () => {
-      // Emit 'logMarker' event when the button is clicked
       this.socket.emit('logMarker');
     });
 
