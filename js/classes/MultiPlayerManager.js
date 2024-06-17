@@ -1,19 +1,19 @@
 import * as THREE from 'three';
-import { updateTrajectoriesHTML } from '../updateTrajectoriesHTML';
+import { updateTrajectoriesHTML } from '../GUI/trajectoriesModule_GUI';
 
 class MultiPlayerManager {
-  constructor(scene, curveManager, triggerManager, socket) {
+  constructor(scene, trajectoryManager, objectManager, socket) {
     this.scene = scene;
-    this.curveManager = curveManager;
-    this.triggerManager = triggerManager;
+    this.trajectoryManager = trajectoryManager;
+    this.objectManager = objectManager;
     this.socket = socket;
-    // curves and splineobjects
-    this.curves = this.curveManager.getCurves();
-    this.triggers = this.triggerManager.getTriggers();
-    this.splineHelperObjects = this.curveManager.getSplineHelperObjects();
+    // trajectories and splineobjects
+    this.trajectories = this.trajectoryManager.getTrajectories();
+    this.objects = this.objectManager.getObjects();
+    this.splineHelperObjects = this.trajectoryManager.getSplineHelperObjects();
     this.socketID = '';
     this.clients = {};
-    this.clientColor = this.triggerManager.triggerColor;
+    this.clientColor = this.objectManager.objectColor;
     this.shouldEmitLogs = false;
   }
 
@@ -39,7 +39,7 @@ class MultiPlayerManager {
 
   getClientColor() {
     this.socket.on('assignColor', ({ color }) => {
-      this.triggerManager.triggerColor = color;
+      this.objectManager.objectColor = color;
     });
   }
 
@@ -83,7 +83,6 @@ class MultiPlayerManager {
     // Get the settings-container div
     const container = document.getElementById('settings-container');
 
-    // Remove the old clients div if it exists
     const oldClientsDiv = document.getElementById('clients');
     if (oldClientsDiv) {
       oldClientsDiv.remove();
@@ -99,185 +98,200 @@ class MultiPlayerManager {
     });
   }
 
-  getCurvesOnClientConnected() {
-    let curvesState;
-    this.socket.on('requestCurveState', () => {
-      curvesState = this.getCurvesUIState();
-      this.socket.emit('syncCurves', { curvesState });
+  getTrajectoriesOnClientConnected() {
+    let trajectoriesState;
+    this.socket.on('requestTrajectoryState', () => {
+      trajectoriesState = this.getTrajectoriesUIState();
+      this.socket.emit('syncTrajectories', { trajectoriesState });
     });
   }
 
-  getTriggersOnClientConnected() {
-    let triggersState;
-    this.socket.on('requestTriggersState', () => {
-      // Get the current state of the triggers
-      triggersState = this.getTriggersClientState();
-      this.socket.emit('syncTriggers', { triggersState });
+  getObjectsOnClientConnected() {
+    let objectsState;
+    this.socket.on('requestObjectsState', () => {
+      // Get the current state of the objects
+      objectsState = this.getObjectsClientState();
+      this.socket.emit('syncObjects', { objectsState });
     });
   }
 
-  sendTriggersClientsLengthToServer() {
-    let triggersState = this.getTriggersClientState();
-    this.socket.emit('updateTriggersLength', { triggersState });
+  sendObjectsClientsLengthToServer() {
+    let objectsState = this.getObjectsClientState();
+    this.socket.emit('updateObjectsLength', { objectsState });
   }
 
-  sendUpdateTriggersClientsStateToServer() {
-    let triggersState = this.getTriggersClientState();
-    this.socket.emit('updateValuesClientsTriggers', { triggersState });
+  sendUpdateObjectsClientsStateToServer() {
+    let objectsState = this.getObjectsClientState();
+    this.socket.emit('updateValuesClientsObjects', { objectsState });
   }
 
-  updateTriggersClientsStateFromServer() {
-    this.socket.on('updateValuesClientsTriggers', ({ triggersState }) => {
-      this.updateTriggersClientSettings(triggersState);
+  updateObjectsClientsStateFromServer() {
+    this.socket.on('updateValuesClientsObjects', ({ objectsState }) => {
+      this.updateObjectsClientSettings(objectsState);
     });
   }
 
-  setCurvesOnClientConnected() {
-    // Listen for the 'syncCurves' event from the server
-    this.socket.on('syncCurves', ({ curvesState }) => {
-      this.deleteCurvesOnClientConnected();
-      // Set the state of the curves
-      this.setCurvesUIState(curvesState);
+  setTrajectoriesOnClientConnected() {
+    this.socket.on('syncTrajectories', ({ trajectoriesState }) => {
+      this.deleteTrajectoriesOnClientConnected();
+      this.setTrajectoriesUIState(trajectoriesState);
       this.socket.emit('updateClientsDiv');
     });
   }
 
-  setTriggersOnClientConnected() {
-    // Listen for the 'syncTriggers' event from the server
-    this.socket.on('syncTriggers', ({ triggersState }) => {
-      // Set the state of the triggers
-      this.setTriggersClientState(triggersState);
+  setObjectsOnClientConnected() {
+    this.socket.on('syncObjects', ({ objectsState }) => {
+      this.setObjectsClientState(objectsState);
     });
   }
 
-  setTriggersOnClientDisconnected() {
-    this.socket.on('syncTriggersOnClientDisconnected', ({ triggersState }) => {
-      this.deleteTriggersClientOnDisconnect(triggersState);
+  setObjectsOnClientDisconnected() {
+    this.socket.on('syncObjectsOnClientDisconnected', ({ objectsState }) => {
+      this.deleteObjectsClientOnDisconnect(objectsState);
     });
   }
 
-  updateTriggersClientOnChange() {
-    // Listen for 'updateTriggersLenght' event from the server
-    this.socket.on('updateTriggersLength', ({ triggersState }) => {
-      this.updateTriggersClientLength(triggersState);
+  updateObjectsClientOnChange() {
+    this.socket.on('updateObjectsLength', ({ objectsState }) => {
+      this.updateObjectsClientLength(objectsState);
     });
   }
 
-  updateCurvesOnChanges() {
-    // Listen for the 'updateCurves' event from the server
-    this.socket.on('updateCurves', (state) => {
-      // Update the state of the curves UI
-      this.setCurvesUIState(state);
+  updateTrajectoriesOnChanges() {
+    this.socket.on('updateTrajectories', (state) => {
+      this.setTrajectoriesUIState(state);
     });
   }
 
-  sendCurvesStateToServer = () => {
-    const state = this.getCurvesUIState();
-    this.socket.emit('updateCurves', state);
+  sendTrajectoriesStateToServer = () => {
+    const state = this.getTrajectoriesUIState();
+    this.socket.emit('updateTrajectories', state);
   };
 
-  getCurvesUIState() {
+  getTrajectoriesUIState() {
     const state = {
-      curves: this.curves.map((curve, index) => ({
-        tension: curve.tension,
-        closed: curve.closed,
+      trajectories: this.trajectories.map((trajectory, index) => ({
+        tension: trajectory.tension,
+        closed: trajectory.closed,
         color: {
-          r: curve.mesh.material.color.r,
-          g: curve.mesh.material.color.g,
-          b: curve.mesh.material.color.b,
+          r: trajectory.mesh.material.color.r,
+          g: trajectory.mesh.material.color.g,
+          b: trajectory.mesh.material.color.b,
         },
-        points: curve.points.map(({ x, y, z }) => ({ x, y, z })),
+        points: trajectory.points.map(({ x, y, z }) => ({ x, y, z })),
       })),
       splineHelperObjects: this.splineHelperObjects,
     };
     return JSON.stringify(state);
   }
 
-  deleteCurvesOnClientConnected() {
-    for (let index = this.curveManager.curves.length - 1; index >= 0; index--) {
-      this.curveManager.deleteCurve(index);
+  deleteTrajectoriesOnClientConnected() {
+    for (
+      let index = this.trajectoryManager.trajectories.length - 1;
+      index >= 0;
+      index--
+    ) {
+      this.trajectoryManager.deleteTrajectory(index);
     }
   }
 
-  setCurvesUIState(json) {
+  setTrajectoriesUIState(json) {
     // Parse the JSON string back into an object
     const state = JSON.parse(json);
 
     // Initialize a mapping of old indices to new indices
     let indexMapping = new Map();
-    this.curveManager.curves.forEach((curve, index) => {
+    this.trajectoryManager.trajectories.forEach((trajectory, index) => {
       indexMapping.set(index, index);
     });
 
-    // Remove the extra curves and update indexMapping
-    while (this.curveManager.curves.length > state.curves.length) {
-      const lastIndex = this.curveManager.curves.length - 1;
-      this.curveManager.deleteCurve(lastIndex);
+    // Remove the extra trajectories and update indexMapping
+    while (
+      this.trajectoryManager.trajectories.length > state.trajectories.length
+    ) {
+      const lastIndex = this.trajectoryManager.trajectories.length - 1;
+      this.trajectoryManager.deleteTrajectory(lastIndex);
       indexMapping.delete(lastIndex);
     }
 
-    state.curves.forEach((curveData, newIndex) => {
-      let curve;
-      const positions = curveData.points.map(
+    state.trajectories.forEach((trajectoryData, newIndex) => {
+      let trajectory;
+      const positions = trajectoryData.points.map(
         (point) => new THREE.Vector3(point.x, point.y, point.z),
       );
 
-      if (newIndex < this.curveManager.curves.length) {
+      if (newIndex < this.trajectoryManager.trajectories.length) {
         // Find the correct index using indexMapping
         const actualIndex = indexMapping.get(newIndex);
-        curve = this.curveManager.curves[actualIndex];
-        curve.points.length = 0;
+        trajectory = this.trajectoryManager.trajectories[actualIndex];
+        trajectory.points.length = 0;
 
-        let i = this.curveManager.splineHelperObjects.length;
-        // replace the splineHelperObjects for the curve
+        let i = this.trajectoryManager.splineHelperObjects.length;
+        // replace the splineHelperObjects for the trajectory
         while (i--) {
           if (
-            this.curveManager.splineHelperObjects[i].curveIndex === actualIndex
+            this.trajectoryManager.splineHelperObjects[i].trajectoryIndex ===
+            actualIndex
           ) {
-            this.curveManager.deleteSplineObjectforSync(i);
+            this.trajectoryManager.deleteSplineObjectforSync(i);
           }
         }
 
-        curveData.points.forEach((point, pointIndex) => {
-          this.curveManager.addSplineObject(positions[pointIndex], actualIndex);
+        trajectoryData.points.forEach((point, pointIndex) => {
+          this.trajectoryManager.addSplineObject(
+            positions[pointIndex],
+            actualIndex,
+          );
         });
       } else {
-        this.curveManager.addPointsCurve(positions);
-        curve = this.curveManager.curves[this.curveManager.curves.length - 1];
-        this.curveManager.updateCurveGeometry(curve);
+        this.trajectoryManager.addPointsTrajectory(positions);
+        trajectory =
+          this.trajectoryManager.trajectories[
+            this.trajectoryManager.trajectories.length - 1
+          ];
+        this.trajectoryManager.updateTrajectoryGeometry(trajectory);
         // Update indexMapping
-        indexMapping.set(newIndex, this.curveManager.curves.length - 1);
-      }
-
-      curve.closed = curveData.closed;
-      this.curveManager.toggleCurveClosed(newIndex, curve.closed);
-
-      curve.tension = curveData.tension;
-      this.curveManager.updateCurveTension(newIndex, parseFloat(curve.tension));
-
-      if (curve.mesh && curve.mesh.material) {
-        curve.mesh.material.color.set(
-          curveData.color.r,
-          curveData.color.g,
-          curveData.color.b,
+        indexMapping.set(
+          newIndex,
+          this.trajectoryManager.trajectories.length - 1,
         );
       }
-      curve.needsUpdate = true;
+
+      trajectory.closed = trajectoryData.closed;
+      this.trajectoryManager.toggleTrajectoryClosed(
+        newIndex,
+        trajectory.closed,
+      );
+
+      trajectory.tension = trajectoryData.tension;
+      this.trajectoryManager.updateTrajectoryTension(
+        newIndex,
+        parseFloat(trajectory.tension),
+      );
+
+      if (trajectory.mesh && trajectory.mesh.material) {
+        trajectory.mesh.material.color.set(
+          trajectoryData.color.r,
+          trajectoryData.color.g,
+          trajectoryData.color.b,
+        );
+      }
+      trajectory.needsUpdate = true;
     });
 
-    updateTrajectoriesHTML(this.curveManager);
+    updateTrajectoriesHTML(this.trajectoryManager);
   }
 
-  getTriggersClientState() {
+  getObjectsClientState() {
     const state = {
-      triggers: this.triggers.map((trigger) => {
-        if (trigger === null) return null;
+      objects: this.objects.map((object) => {
+        if (object === null) return null;
         return {
-          ...trigger,
+          ...object,
           color: {
-            r: trigger.mesh?.material.color.r,
-            g: trigger.mesh?.material.color.g,
-            b: trigger.mesh?.material.color.b,
+            r: object.mesh?.material.color.r,
+            g: object.mesh?.material.color.g,
+            b: object.mesh?.material.color.b,
           },
         };
       }),
@@ -286,54 +300,54 @@ class MultiPlayerManager {
     return JSON.stringify(state);
   }
 
-  updateTriggersClientSettings(statestring) {
+  updateObjectsClientSettings(statestring) {
     const state = JSON.parse(statestring);
     for (const clientID in state) {
       if (clientID === this.socketID) {
         continue;
       }
       const clientState = state[clientID];
-      clientState.Triggers.forEach((triggerState, index) => {
-        if (triggerState !== null) {
+      clientState.Objects.forEach((objectState, index) => {
+        if (objectState !== null) {
           // not defined
-          if (!this.triggerManager.clientTriggers[clientID]) {
+          if (!this.objectManager.clientObjects[clientID]) {
             return;
           }
 
-          const trigger = this.triggerManager.clientTriggers[clientID][index];
-          if (trigger !== undefined) {
-            trigger.animate = triggerState.animate;
-            trigger.loop = triggerState.loop;
-            trigger.speed = this.lerp(trigger.speed, triggerState.speed, 0.1);
-            // Discard trigger update from network dropouts
+          const object = this.objectManager.clientObjects[clientID][index];
+          if (object !== undefined) {
+            object.animate = objectState.animate;
+            object.loop = objectState.loop;
+            object.speed = this.lerp(object.speed, objectState.speed, 0.1);
+            // Discard object update from network dropouts
             const positionDifference = Math.abs(
-              triggerState.position - trigger.position,
+              objectState.position - object.position,
             );
             if (
-              !trigger.animate ||
-              (trigger.animate && positionDifference < 0.5)
+              !object.animate ||
+              (object.animate && positionDifference < 0.5)
             ) {
-              //console.log('Position difference:', positionDifference);
-              let lerpValue = trigger.animate ? 0.01 : 0.1;
-              trigger.position = this.lerp(
-                trigger.position,
-                triggerState.position,
+              let lerpValue = object.animate ? 0.01 : 0.1;
+              object.position = this.lerp(
+                object.position,
+                objectState.position,
                 lerpValue,
               );
             }
-            trigger.curveIndex = triggerState.curveIndex;
-            trigger.direction = triggerState.direction;
+            object.trajectoryIndex = objectState.trajectoryIndex;
+            object.direction = objectState.direction;
           }
         }
       });
     }
   }
 
+  // linear interpolation
   lerp(start, end, t) {
     return start * (1 - t) + end * t;
   }
 
-  setTriggersClientState(stateString) {
+  setObjectsClientState(stateString) {
     const state = JSON.parse(stateString);
     for (const clientID in state) {
       // skip for local client
@@ -341,14 +355,13 @@ class MultiPlayerManager {
         continue;
       }
       const clientState = state[clientID];
-      // Create triggers for all triggers in the clients object
-      clientState.Triggers.forEach((triggerState, index) => {
-        if (triggerState !== null) {
-          // A trigger exists, create it
-          this.triggerManager.createTriggerFromClient(
+      // Create objects for all objects in the clients object
+      clientState.Objects.forEach((objectState, index) => {
+        if (objectState !== null) {
+          this.objectManager.createObjectFromClient(
             clientID,
             this.clients,
-            triggerState,
+            objectState,
           );
         }
       });
@@ -356,7 +369,7 @@ class MultiPlayerManager {
     this.clients = state;
   }
 
-  updateTriggersClientLength(stateString) {
+  updateObjectsClientLength(stateString) {
     const newState = JSON.parse(stateString);
     for (const clientID in newState) {
       // skip for local client
@@ -365,27 +378,25 @@ class MultiPlayerManager {
       }
       const newClientState = newState[clientID];
       const oldClientState = this.clients[clientID];
-      // Update the Triggers array for each client
-      newClientState.Triggers.forEach((triggerState, index) => {
+      // Update the Objects array for each client
+      newClientState.Objects.forEach((objectState, index) => {
         if (
-          triggerState !== null &&
-          (oldClientState.Triggers[index] === undefined ||
-            oldClientState.Triggers[index] === null)
+          objectState !== null &&
+          (oldClientState.Objects[index] === undefined ||
+            oldClientState.Objects[index] === null)
         ) {
-          // A trigger was added, create it
-          this.triggerManager.createTriggerFromClient(
+          this.objectManager.createObjectFromClient(
             clientID,
             this.clients,
-            triggerState,
+            objectState,
           );
         } else if (
-          (triggerState === null ||
-            newState[clientID].Triggers.length <
-              oldClientState.Triggers.length) &&
-          oldClientState.Triggers[index] !== undefined
+          (objectState === null ||
+            newState[clientID].Objects.length <
+              oldClientState.Objects.length) &&
+          oldClientState.Objects[index] !== undefined
         ) {
-          // A trigger was deleted, delete it
-          this.triggerManager.deleteTriggerFromClient(
+          this.objectManager.deleteObjectFromClient(
             clientID,
             this.clients,
             index,
@@ -393,11 +404,10 @@ class MultiPlayerManager {
         }
       });
     }
-    // Update the previous state
     this.clients = newState;
   }
 
-  deleteTriggersClientOnDisconnect(stateString) {
+  deleteObjectsClientOnDisconnect(stateString) {
     const newState = JSON.parse(stateString);
     for (const clientID in this.clients) {
       const newClientState = newState[clientID];
@@ -405,63 +415,50 @@ class MultiPlayerManager {
       if (
         !newClientState &&
         oldClientState &&
-        this.triggerManager.clientTriggers[clientID]
+        this.objectManager.clientObjects[clientID]
       ) {
         for (
           let i = 0;
-          i < this.triggerManager.clientTriggers[clientID].length;
+          i < this.objectManager.clientObjects[clientID].length;
           i++
         ) {
-          this.triggerManager.deleteTriggerFromClient(
-            clientID,
-            this.clients,
-            i,
-          );
+          this.objectManager.deleteObjectFromClient(clientID, this.clients, i);
         }
       }
     }
   }
 
-  toggleDummyState() {
+  interactionLogGUI() {
     const container = document.getElementById('settings-container');
 
-    // Create a new checkbox for startLogging
     const startCheckbox = document.createElement('input');
     startCheckbox.type = 'checkbox';
     startCheckbox.id = 'startLoggingCheckbox';
 
-    // Add an event listener to the startCheckbox
     startCheckbox.addEventListener('change', () => {
       if (startCheckbox.checked) {
-        // Emit 'startLogging' event when the checkbox is checked
         this.socket.emit('startLogging');
       } else {
-        // Emit 'stopLogging' event when the checkbox is unchecked
         this.socket.emit('stopLogging');
       }
     });
-    // Add an event listener to the socket to update the checkbox
     this.socket.on('updateCheckbox', () => {
       startCheckbox.checked = this.shouldEmitLogs;
     });
 
-    // Create a new label for startCheckbox
     const startLabel = document.createElement('label');
     startLabel.htmlFor = 'startLoggingCheckbox';
     startLabel.textContent = 'Start/Stop Logging';
 
-    // Add the startCheckbox and startLabel to the container
     container.appendChild(startCheckbox);
     container.appendChild(startLabel);
 
-    // Create a new button for logMarker
+    // button for logMarker
     const markerButton = document.createElement('button');
     markerButton.id = 'markerButton';
     markerButton.textContent = 'Marker';
 
-    // Add a click event listener to the markerButton
     markerButton.addEventListener('click', () => {
-      // Emit 'logMarker' event when the button is clicked
       this.socket.emit('logMarker');
     });
 

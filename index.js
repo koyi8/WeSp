@@ -5,17 +5,17 @@ import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/addons/renderers/CSS2DRenderer.js';
-import { debounce } from './js/heplers/debounce';
-import { logUIInteraction } from './js/heplers/logUIInteraction';
+import { debounce } from './js/helpers/debounce';
+import { logUIInteraction } from './js/helpers/logUIInteraction';
 import {
   updateTrajectoriesHTML,
   updateControlPointsHTML,
-  selectedCurveIndex,
-} from './js/updateTrajectoriesHTML';
-import CurveManager from './js/classes/CurveManager';
-import TriggerManager from './js/classes/TriggerManager';
+  selectedTrajectoryIndex,
+} from './js/GUI/trajectoriesModule_GUI';
+import TrajectoryManager from './js/classes/TrajectoryManager';
+import ObjectManager from './js/classes/ObjectManager';
 import MultiPlayerManager from './js/classes/MultiPlayerManager';
-import { createOCSTables } from './js/createOCSTables';
+import { createOCSTables } from './js/GUI/oscModule_GUI';
 import Stats from 'three/addons/libs/stats.module.js';
 
 const cameraSettings = {
@@ -60,16 +60,16 @@ const settings = {
   loop: true,
   arcLength: 0,
   antialias: true,
-  triggerAmount: 2,
-  curveAmount: 1,
+  objectAmount: 2,
+  trajectoryAmount: 1,
 };
 
 const container = document.getElementById('3d-container');
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let camera, scene, renderer;
-let curveManager;
-let triggerManager;
+let trajectoryManager;
+let objectManager;
 let multiPlayerManager;
 let positionsArray = [];
 let selectedObject = null;
@@ -90,20 +90,25 @@ const init = () => {
   setupLights();
   setupGeometry();
   setupControls();
-  curveManager = new CurveManager(scene, settings, container);
-  curveManager.initCurves();
-  triggerManager = new TriggerManager(scene, settings, curveManager, container);
-  triggerManager.setupAddTriggerListeners();
+  trajectoryManager = new TrajectoryManager(scene, settings, container);
+  trajectoryManager.initTrajectories();
+  objectManager = new ObjectManager(
+    scene,
+    settings,
+    trajectoryManager,
+    container,
+  );
+  objectManager.setupAddObjectListeners();
   multiPlayerManager = new MultiPlayerManager(
     scene,
-    curveManager,
-    triggerManager,
+    trajectoryManager,
+    objectManager,
     socket,
   );
-  curveManager.setMultiPlayerManager(multiPlayerManager);
+  trajectoryManager.setMultiPlayerManager(multiPlayerManager);
   initListeners();
   render();
-  updateTrajectoriesHTML(curveManager, true); // true value for isNewTrajectory
+  updateTrajectoriesHTML(trajectoryManager, true); // true value for isNewTrajectory
   createOCSTables();
   setupMultiPlayerManager();
 };
@@ -116,17 +121,17 @@ const setupSocket = () => {
 
 const setupMultiPlayerManager = () => {
   multiPlayerManager.initSocketID();
-  multiPlayerManager.toggleDummyState();
+  multiPlayerManager.interactionLogGUI();
   multiPlayerManager.receiveClientList();
-  multiPlayerManager.getCurvesOnClientConnected();
-  multiPlayerManager.getTriggersOnClientConnected();
-  multiPlayerManager.setCurvesOnClientConnected();
-  multiPlayerManager.setTriggersOnClientConnected();
-  multiPlayerManager.updateCurvesOnChanges();
+  multiPlayerManager.getTrajectoriesOnClientConnected();
+  multiPlayerManager.getObjectsOnClientConnected();
+  multiPlayerManager.setTrajectoriesOnClientConnected();
+  multiPlayerManager.setObjectsOnClientConnected();
+  multiPlayerManager.updateTrajectoriesOnChanges();
   multiPlayerManager.updateClientsDiv();
-  multiPlayerManager.updateTriggersClientOnChange();
-  multiPlayerManager.updateTriggersClientsStateFromServer();
-  multiPlayerManager.setTriggersOnClientDisconnected();
+  multiPlayerManager.updateObjectsClientOnChange();
+  multiPlayerManager.updateObjectsClientsStateFromServer();
+  multiPlayerManager.setObjectsOnClientDisconnected();
   multiPlayerManager.getClientColor();
   multiPlayerManager.listenRequestLogging();
 };
@@ -296,10 +301,10 @@ const animate = () => {
   setTimeout(function () {
     requestAnimationFrame(animate);
   }, 1000 / 40);
-  //triggerManager.animateTriggers(positionsArray);
-  triggerManager.animateAllTriggers(positionsArray);
-  curveManager.updateSplineOutline();
-  multiPlayerManager.sendUpdateTriggersClientsStateToServer();
+  //objectManager.animateObjects(positionsArray);
+  objectManager.animateAllObjects(positionsArray);
+  trajectoryManager.updateSplineOutline();
+  multiPlayerManager.sendUpdateObjectsClientsStateToServer();
   render();
   stats.update();
 };
@@ -320,27 +325,27 @@ const animate = () => {
 
   if (delta > renderInterval) {
     // The draw or time dependent code are here
-    triggerManager.animateAllTriggers(positionsArray);
-    curveManager.updateSplineOutline();
+    objectManager.animateAllObjects(positionsArray);
+    trajectoryManager.updateSplineOutline();
     render();
 
     lastRenderTime = currentTime - (delta % renderInterval);
     stats.update();
   }
 
-  updateTriggersToServer(currentTime);
+  updateObjectsToServer(currentTime);
 };
 
-const updateTriggersToServer = (currentTime) => {
+const updateObjectsToServer = (currentTime) => {
   if (currentTime - lastUpdateTime > updateRate) {
-    multiPlayerManager.sendUpdateTriggersClientsStateToServer();
+    multiPlayerManager.sendUpdateObjectsClientsStateToServer();
     lastUpdateTime = currentTime;
   }
 };
 
 const render = () => {
   renderer.render(scene, camera);
-  triggerManager.renderLabels(camera);
+  objectManager.renderLabels(camera);
 };
 
 const onWindowResize = () => {
@@ -348,13 +353,13 @@ const onWindowResize = () => {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
-  triggerManager.updateLabelRendererSize(width, height);
+  objectManager.updateLabelRendererSize(width, height);
   render();
 };
 
 const onDocumentMouseDown = (event) => {
   event.preventDefault();
-  //console.log(selectedCurveIndex);
+  //console.log(selectedTrajectoryIndex);
 
   mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -362,7 +367,7 @@ const onDocumentMouseDown = (event) => {
   raycaster.setFromCamera(mouse, camera);
 
   const intersects = raycaster.intersectObjects(
-    curveManager.getSplineHelperObjects(),
+    trajectoryManager.getSplineHelperObjects(),
     true,
   );
 
@@ -370,14 +375,16 @@ const onDocumentMouseDown = (event) => {
     const object = intersects[0].object;
 
     if (transformControl.object !== object) {
-      const curveIndex = selectedObject ? selectedObject.curveIndex : undefined;
+      const trajectoryIndex = selectedObject
+        ? selectedObject.trajectoryIndex
+        : undefined;
 
       transformControl.detach();
       selectedObject = object;
       transformControl.attach(selectedObject);
 
-      if (curveIndex !== undefined) {
-        curveManager.curves[curveIndex].needsUpdate = true;
+      if (trajectoryIndex !== undefined) {
+        trajectoryManager.trajectories[trajectoryIndex].needsUpdate = true;
       }
     }
   } else {
@@ -389,9 +396,9 @@ const onDocumentMouseDown = (event) => {
 };
 
 export const debouncedUpdateControlPointsHTML = debounce(() => {
-  // multiPlayerManager.sendCurvesStateToServer();
-  updateControlPointsHTML(curveManager);
-  multiPlayerManager.sendCurvesStateToServer();
+  // multiPlayerManager.sendTrajectoriesStateToServer();
+  updateControlPointsHTML(trajectoryManager);
+  multiPlayerManager.sendTrajectoriesStateToServer();
   //console.log(positionsArray);
 }, 300);
 
@@ -436,20 +443,20 @@ const initListeners = () => {
 
   transformControl.addEventListener('objectChange', () => {
     if (selectedObject) {
-      curveManager.updateCurveFromControlPoint(selectedObject);
+      trajectoryManager.updateTrajectoryFromControlPoint(selectedObject);
       debouncedUpdateControlPointsHTML();
     }
   });
   window.addEventListener('uiUpdated', () => {
     debouncedUpdateControlPointsHTML();
   });
-  window.addEventListener('addedTrigger', (event) => {
-    multiPlayerManager.sendTriggersClientsLengthToServer();
+  window.addEventListener('addedObject', (event) => {
+    multiPlayerManager.sendObjectsClientsLengthToServer();
     //interaction logging
     logUIInteraction('objectsModule', `Added Object ${event.detail.index + 1}`);
   });
-  window.addEventListener('deletedTrigger', () => {
-    multiPlayerManager.sendTriggersClientsLengthToServer();
+  window.addEventListener('deletedObject', () => {
+    multiPlayerManager.sendObjectsClientsLengthToServer();
   });
   window.addEventListener('interactionLog', (e) => {
     const entry = e.detail;

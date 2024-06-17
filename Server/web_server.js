@@ -19,10 +19,12 @@ const __dirname = dirname(__filename);
 
 // Serve static files from the 'dist' directory
 app.use(express.static(resolve(__dirname, '../dist')));
+
 // socket.io server
 const io = new Server(httpServer, {
   cors: { origin: '*' }, // wild card since security isn't a concern
 });
+
 // Get current IP-Addresses for the local machine
 const getIPAddresses = () => {
   const interfaces = os.networkInterfaces();
@@ -81,7 +83,7 @@ const setupUDPPort = (
 ) => {
   // Get all the local port numbers from the udpPorts array
   const localPorts = udpPorts.map((udp) => udp.options.localPort);
-  // If the provided localPort is already in use, return without doing anything
+  // If the provided localPort is already in use, return
   if (localPorts.includes(localPort)) {
     console.log('inPort already in use');
     return;
@@ -114,6 +116,7 @@ const closeUDPPort = (localPort, remotePort) => {
 
 // Websocket MultiClient communication
 //--------------------------------------------------
+
 // Objects to store clients and sockets
 let clients = {},
   sockets = {};
@@ -128,7 +131,7 @@ let clientColors = [
   '#006400', // Dark Green
 ];
 
-// Event fired when client connects, giving each client a unique "socket" instance
+// Event fired when client connects
 io.on('connection', (socket) => {
   console.log('a user connected ' + socket.id);
 
@@ -143,10 +146,10 @@ io.on('connection', (socket) => {
   const clientColor = clientColors[0];
   clientColors.shift();
 
-  //Store client id and initialize triggers array for each client
+  //Store client id and initialize objects array for each client
   clients[socket.id] = {
     clientID: socket.id,
-    Triggers: [],
+    Objects: [],
     color: clientColor,
   };
   sockets[socket.id] = socket;
@@ -155,23 +158,23 @@ io.on('connection', (socket) => {
   // Send the assigned color to the client
   socket.emit('assignColor', { color: clients[socket.id].color });
 
-  // Update the client divs for Curves
+  // Update the client divs for Trajectories
   socket.on('updateClientsDiv', () => {
     io.emit('syncClientsDiv', clients);
   });
 
   // CURVES
-  // SynCurves on Client Connection
+  // SyncTrajectories on Client Connection
   if (!firstClientSocket) {
     firstClientSocket = socket;
-    firstClientSocket.on('syncCurves', ({ curvesState }) => {
+    firstClientSocket.on('syncTrajectories', ({ trajectoriesState }) => {
       // Forward the scene data to all connected clients
-      firstClientSocket.broadcast.emit('syncCurves', {
-        curvesState,
+      firstClientSocket.broadcast.emit('syncTrajectories', {
+        trajectoriesState,
       });
     });
   } else {
-    firstClientSocket.emit('requestCurveState');
+    firstClientSocket.emit('requestTrajectoryState');
   }
   // Handle Client Disconnection
   socket.on('disconnect', () => {
@@ -187,10 +190,10 @@ io.on('connection', (socket) => {
       const socketKeys = Object.keys(sockets);
       if (socketKeys.length > 1) {
         firstClientSocket = sockets[socketKeys[1]];
-        firstClientSocket.on('syncCurves', ({ curvesState }) => {
+        firstClientSocket.on('syncTrajectories', ({ trajectoriesState }) => {
           // Forward the scene data to all connected clients
-          firstClientSocket.broadcast.emit('syncCurves', {
-            curvesState,
+          firstClientSocket.broadcast.emit('syncTrajectories', {
+            trajectoriesState,
           });
         });
       } else {
@@ -206,28 +209,28 @@ io.on('connection', (socket) => {
     delete clients[socket.id];
     delete sockets[socket.id];
 
-    io.emit('syncTriggersOnClientDisconnected', {
-      triggersState: JSON.stringify(clients),
+    io.emit('syncObjectsOnClientDisconnected', {
+      objectsState: JSON.stringify(clients),
     });
   });
 
-  // Listen for the 'updateCurves' event from the client
-  socket.on('updateCurves', (curvesState) => {
-    // Broadcast the new curvesState to all connected clients
-    socket.broadcast.emit('updateCurves', curvesState);
+  // Listen for the 'updateTrajectories' event from the client
+  socket.on('updateTrajectories', (trajectoriesState) => {
+    // Broadcast the new trajectoriesState to all connected clients
+    socket.broadcast.emit('updateTrajectories', trajectoriesState);
   });
 
   // TRIGGERS
-  // Request Triggers State on Client Connection
-  socket.emit('requestTriggersState');
-  // Sync Triggers on Client Connection
-  socket.on('syncTriggers', syncTriggersOnClientConnect(socket, clients, io));
-  // Update Triggers Length
-  socket.on('updateTriggersLength', updateTriggersLength(socket, clients, io));
-  // Update client Triggers Settings
+  // Request Objects State on Client Connection
+  socket.emit('requestObjectsState');
+  // Sync Objects on Client Connection
+  socket.on('syncObjects', syncObjectsOnClientConnect(socket, clients, io));
+  // Update Objects Length
+  socket.on('updateObjectsLength', updateObjectsLength(socket, clients, io));
+  // Update client Objects Settings
   socket.on(
-    'updateValuesClientsTriggers',
-    updateValuesClientsTriggers(socket, clients, io),
+    'updateValuesClientsObjects',
+    updateValuesClientsObjects(socket, clients, io),
   );
 
   // Setup UDP PORTS
@@ -241,10 +244,9 @@ io.on('connection', (socket) => {
   });
 
   // SEND OSC MESSAGES
-
   let shouldSendMap = new Map();
 
-  // Receive triggerObjects from client
+  // Receive objects from client
   socket.on('sendOSC', (objectsToSend) => {
     objectsToSend.forEach((object) => {
       // If shouldSend flag for this row is false, return
@@ -322,50 +324,36 @@ io.on('connection', (socket) => {
   });
 });
 
-// Function to sync triggers on client connect
-const syncTriggersOnClientConnect =
+const syncObjectsOnClientConnect =
   (socket, clients, io) =>
-  ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-    // Update the triggers state for this client in the clients object
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-    // Forward the updated triggers state to all clients
-    socket.emit('syncTriggers', {
-      triggersState: JSON.stringify(clients),
+  ({ objectsState }) => {
+    let parsedObjectsState = JSON.parse(objectsState);
+    clients[socket.id].Objects = parsedObjectsState.objects;
+    socket.emit('syncObjects', {
+      objectsState: JSON.stringify(clients),
     });
-    // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
 
-// Function to update triggers length
-const updateTriggersLength =
+const updateObjectsLength =
   (socket, clients, io) =>
-  ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-    // Update the triggers state for this client in the clients object
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-    // Forward the updated triggers state to all clients
-    io.emit('updateTriggersLength', {
-      triggersState: JSON.stringify(clients),
+  ({ objectsState }) => {
+    let parsedObjectsState = JSON.parse(objectsState);
+    clients[socket.id].Objects = parsedObjectsState.objects;
+    io.emit('updateObjectsLength', {
+      objectsState: JSON.stringify(clients),
     });
-    // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
-// Function to the triggers
-const updateValuesClientsTriggers =
+
+const updateValuesClientsObjects =
   (socket, clients, io) =>
-  ({ triggersState }) => {
-    // Parse the received triggers state
-    let parsedTriggersState = JSON.parse(triggersState);
-    // Update the triggers state for this client in the clients object
-    clients[socket.id].Triggers = parsedTriggersState.triggers;
-    // Forward the updated triggers state to all clients
-    io.emit('updateValuesClientsTriggers', {
-      triggersState: JSON.stringify(clients),
+  ({ objectsState }) => {
+    let parsedObjectsState = JSON.parse(objectsState);
+    clients[socket.id].Objects = parsedObjectsState.objects;
+    io.emit('updateValuesClientsObjects', {
+      objectsState: JSON.stringify(clients),
     });
-    // Emit the 'clientList' event with the updated clients object
     io.emit('clientList', clients);
   };
 
@@ -375,7 +363,6 @@ const updateValuesClientsTriggers =
 let logEntries = [];
 let logFilePath = null;
 
-// Function to generate a new file path based on the timestamp
 const generateFilePath = (timestamp) => {
   let filename = `log_${new Date(timestamp)
     .toISOString()
@@ -398,9 +385,7 @@ const storeLogData = (timestamp, logData) => {
   }
 };
 
-// Function to write the stored log data to a file
 const writeLogData = () => {
-  // Convert the log entries to CSV
   let csvData = logEntries
     .map(
       (entry) =>
