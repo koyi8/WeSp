@@ -19,10 +19,12 @@ const __dirname = dirname(__filename);
 
 // Serve static files from the 'dist' directory
 app.use(express.static(resolve(__dirname, '../dist')));
+
 // socket.io server
 const io = new Server(httpServer, {
   cors: { origin: '*' }, // wild card since security isn't a concern
 });
+
 // Get current IP-Addresses for the local machine
 const getIPAddresses = () => {
   const interfaces = os.networkInterfaces();
@@ -114,6 +116,7 @@ const closeUDPPort = (localPort, remotePort) => {
 
 // Websocket MultiClient communication
 //--------------------------------------------------
+
 // Objects to store clients and sockets
 let clients = {},
   sockets = {};
@@ -241,7 +244,6 @@ io.on('connection', (socket) => {
   });
 
   // SEND OSC MESSAGES
-
   let shouldSendMap = new Map();
 
   // Receive objects from client
@@ -322,7 +324,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Function to sync objects on client connect
 const syncObjectsOnClientConnect =
   (socket, clients, io) =>
   ({ objectsState }) => {
@@ -334,7 +335,6 @@ const syncObjectsOnClientConnect =
     io.emit('clientList', clients);
   };
 
-// Function to update objects length
 const updateObjectsLength =
   (socket, clients, io) =>
   ({ objectsState }) => {
@@ -346,7 +346,6 @@ const updateObjectsLength =
     io.emit('clientList', clients);
   };
 
-// Function to the objects
 const updateValuesClientsObjects =
   (socket, clients, io) =>
   ({ objectsState }) => {
@@ -364,7 +363,6 @@ const updateValuesClientsObjects =
 let logEntries = [];
 let logFilePath = null;
 
-// Function to generate a new file path based on the timestamp
 const generateFilePath = (timestamp) => {
   let filename = `log_${new Date(timestamp)
     .toISOString()
@@ -387,7 +385,6 @@ const storeLogData = (timestamp, logData) => {
   }
 };
 
-// Function to write the stored log data to a file
 const writeLogData = () => {
   let csvData = logEntries
     .map(
