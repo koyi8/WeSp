@@ -1,3 +1,15 @@
+# WeSp - Real-time collaborative trajectory editing for spatialization
+
+![Example Image](images/wesp_teaser.png 'Example Image Title')
+
+WeSp is a web interface providing real-time collaborative control
+of spatial audio scenes via object-spatialization. It allows the creation and editing of 3D-trajectories and objects moving along these
+curves which can be manipulated in real-time with a control interface. Multiuser features allow editing and modification of shared
+trajectories and visual feedback of all objects created by individual
+users.
+
+WeSp currently runs in the development environment using Vite. In the future, we plan to create a Docker image.
+
 # How to run WeSp:
 
 1. We need to install [Node.js](https://nodejs.org/de) on the local machine.
@@ -75,5 +87,3 @@ a user connectedwBj4dhKxvNHdgriuAAAB
 The Browser Web-App and the server are now connected!
 
 10. NOTE: Using Vite is only for development.
-
-In the finalversion starting the server will be sufficient to launch the app.
