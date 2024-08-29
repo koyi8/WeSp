@@ -8,82 +8,43 @@ curves which can be manipulated in real-time with a control interface. Multiuser
 trajectories and visual feedback of all objects created by individual
 users.
 
-WeSp currently runs in the development environment using Vite. In the future, we plan to create a Docker image.
+Via the OSC-module WeSp sends positional data via the webserver to the spatial rendering software (e.g. Ambisonics Plugins).
 
 # How to run WeSp:
 
-1. We need to install [Node.js](https://nodejs.org/de) on the local machine.
+1. Clone/Copy the repository from Github.
 
-2. Clone the repository to the local machine via git.
+2. Navigate to the Server-Folder. Here you find two executables for the server: **server-macos** for Mac and **server-win** for Windows. \
+   You can run the server by doubleclicking the designated file for your system.
 
-3. Open a terminal (in VS-CODE) and move to the Repository.
+3. A terminal-window will start displaying the following messages:
 
-4. With Node installed we can use <code>npm install</code> to install the required packages, which are saved in the package.json - File.
-
-5. NOTE: We have to run <code>npm install</code> TWICE! Once inside the parent directory, where the package.json looks like this:
-
-```javascript
-{
-  "dependencies": {
-    "normalize.css": "^8.0.1",
-    "osc": "2.4.4",
-    "three": "^0.156.1"
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35",
-    "sass": "^1.70.0",
-    "vite": "^4.4.9"
-  },
-  "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
-    "preview": "vite preview"
-  }
-}
+```
+Serving static files from C:\Users\Lennart\Documents\CODE\Javascript\WeSp\dist
+Log into WeSp as client with IP address 192.168.0.173:8081
+The server is listening on port: 8081
 
 ```
 
-6. Secondly inside the Server Subfolder (which will be used as a node based local server bridging the messages from the Web-App to the OSC-Receiver).
-   So we direct to the server folder via <code>cd Server</code> and then run <code>npm install</code>. This should install all the dependencies for the server!
+The first line shows the relative path from where the frontend is served. This is an individual path, depending where the WeSp-Repository is located after the clone/download.\
+The second line displays the address where other clients in the same local network can connect to the webserver. It consists of the individual IP address of the device and the port where the server is listening.
 
-7. We then need to start the server in a terminal tab with the command <code>node .</code>
-   If everything works correctly we should see the following message in the terminal window:
+Running the frontend on the same machine as the webserver, you can also simply use `localhost:8081` in your browser.
 
-```
-the server is listening on port: 8081
-```
+Other devices in the same local network can connect to the WeSp-scene via the address shown in the terminal window.
 
-The Server is running now bridging between the Spat_App via websockets and send the OSC-Data via the Port 7500.
+**FOR MAC USERS**: If you run the server on a mac and have problems with other devices trying to connect via the address: Disable the firewall while running the WeSp-webserver. Do not forget to enable again after usage!
 
-8. We then open a NEW terminal! Navigate back into the parent folder and run the command
-   <code>npm run dev</code><br>
-   This should give us the following in the terminal:
+4. If you successfully connected to the webserver via the address you should see the WeSp-scene running in your browser window.
+
+The webserver terminal will show a message like:
 
 ```
-  VITE v4.4.9  ready in 181 ms
-
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: http://192.168.0.140:5173/
-  ➜  press h to show help
-```
-
-With ctrl+click we can run the Link. This should open a new tab in your preferenced Browser (I used Firefox thus far).
-
-NOTE: If you want to connect to the App from another device in the same local network, you can do that by entering the adress shown in the network tab above. In this case for example:
+a user connected uKcnI3Db-zIgXxvvAAAB
 
 ```
- ➜  Network: http://192.168.0.140:5173/
-```
 
-If everything is running correctly you should see WeSp running. At this state on default two circular trajectories are visible.
+5. If more than one client is connected you can check in the Settings-module. Each client has a unique color, which will also be the color of the objects by that user.
 
-9. Inside the Server-Terminal we should see the message like this:
-
-```
-a user connectedwBj4dhKxvNHdgriuAAAB
-```
-
-The Browser Web-App and the server are now connected!
-
-10. NOTE: Using Vite is only for development.
+6. Feel free to report any bugs or open issues.
+   Happy you try it out!
