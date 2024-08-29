@@ -1,25 +1,29 @@
-//refactor
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import osc from 'osc';
-import os from 'os';
-import fs from 'fs';
-import { log } from 'console';
+// Refactor to CommonJS
+const express = require('express');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const { fileURLToPath } = require('url');
+const { dirname, resolve } = require('path');
+const osc = require('osc');
+const os = require('os');
+const fs = require('fs');
+const { log } = require('console');
 
 // Server Setup Host Satic Files with express
 //--------------------------------------------------
 const app = express(); // create express app
 const httpServer = createServer(app);
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Determine the correct directory to serve static files from
+const isPackaged = typeof process.pkg !== 'undefined';
+const currentDirname = isPackaged ? dirname(process.execPath) : __dirname;
+
+// Log the directory being served
+const staticFilesPath = resolve(currentDirname, '../dist');
+console.log(`Serving static files from ${staticFilesPath}`);
 
 // Serve static files from the 'dist' directory
-app.use(express.static(resolve(__dirname, '../dist')));
-
+app.use(express.static(staticFilesPath));
 // socket.io server
 const io = new Server(httpServer, {
   cors: { origin: '*' }, // wild card since security isn't a concern
@@ -29,13 +33,23 @@ const io = new Server(httpServer, {
 const getIPAddresses = () => {
   const interfaces = os.networkInterfaces();
 
-  return Object.values(interfaces)
+  const ipAddresses = Object.values(interfaces)
     .flat()
     .filter(
       (addressInfo) => addressInfo.family === 'IPv4' && !addressInfo.internal,
     )
     .map((addressInfo) => addressInfo.address);
+
+  // Log the IP addresses with the specified message
+  ipAddresses.forEach((ip) => {
+    console.log(`Log into WeSp as client with IP address ${ip}:8081`);
+  });
+
+  return ipAddresses;
 };
+
+// Call the function to log IP addresses
+getIPAddresses();
 
 // UDP-Ports for OSC communication
 //--------------------------------------------------
@@ -405,7 +419,7 @@ const writeLogData = () => {
 };
 
 // Launch server
-const myPort = process.env.PORT || 8081; // let Glitch choose port OR use 3000
-httpServer.listen(myPort, () => {
-  console.log(`the server is listening on port: ${myPort}`);
+const myPort = process.env.PORT || 8081; // let Glitch choose port OR use 8081
+httpServer.listen(myPort, '0.0.0.0', () => {
+  console.log(`The server is listening on port: ${myPort}`);
 });
