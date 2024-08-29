@@ -8,10 +8,29 @@
     />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>WeSp</title>
-    <!-- <link rel="icon" href="/favicon.ico" type="image/x-icon" /> -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AQAAAAAVtjufAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAd2KE6QAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfnBRINEC8cri2lAAAAG0lEQVRYw+3BAQ0AAADCoPdPbQ43oAAAAAC+DRDgAAH9lyBvAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIzLTA1LTE4VDEzOjE2OjQ3KzAwOjAwUmMATwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMy0wNS0xOFQxMzoxNjo0NyswMDowMCM+uPMAAABXelRYdFJhdyBwcm9maWxlIHR5cGUgaXB0YwAAeJzj8gwIcVYoKMpPy8xJ5VIAAyMLLmMLEyMTS5MUAxMgRIA0w2QDI7NUIMvY1MjEzMQcxAfLgEigSi4A6hcRdPJCNZUAAAAASUVORK5CYII="
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgAQAAAABbAUdZAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAd2KE6QAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfnBRINEDCRpiBQAAAADElEQVQI12NgGNwAAACgAAFhJX1HAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIzLTA1LTE4VDEzOjE2OjQ4KzAwOjAwpCtwpgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMy0wNS0xOFQxMzoxNjo0OCswMDowMNV2yBoAAABXelRYdFJhdyBwcm9maWxlIHR5cGUgaXB0YwAAeJzj8gwIcVYoKMpPy8xJ5VIAAyMLLmMLEyMTS5MUAxMgRIA0w2QDI7NUIMvY1MjEzMQcxAfLgEigSi4A6hcRdPJCNZUAAAAASUVORK5CYII="
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQAAAAA3iMLMAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAd2KE6QAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfnBRINEC8cri2lAAAADElEQVQI12NgIA0AAAAwAAHHqoWOAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIzLTA1LTE4VDEzOjE2OjQ3KzAwOjAwUmMATwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMy0wNS0xOFQxMzoxNjo0NyswMDowMCM+uPMAAABXelRYdFJhdyBwcm9maWxlIHR5cGUgaXB0YwAAeJzj8gwIcVYoKMpPy8xJ5VIAAyMLLmMLEyMTS5MUAxMgRIA0w2QDI7NUIMvY1MjEzMQcxAfLgEigSi4A6hcRdPJCNZUAAAAASUVORK5CYII="
+    />
+    <link rel="mask-icon" href="/assets/safari-pinned-tab-7b62bd1e.svg" color="#5bbad5" />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
     
-    <script type="module" crossorigin src="/assets/index-773461fe.js"></script>
-    <link rel="stylesheet" href="/assets/index-cc20a7f4.css">
+    <script type="module" crossorigin src="/assets/index-76ac7698.js"></script>
+    <link rel="stylesheet" href="/assets/index-7442b621.css">
   </head>
   <body>
     <div class="main-container">
@@ -25,7 +44,7 @@
 
       <div id="gui-container" class="col right">
         <div class="tabs">
-          <button class="tab" onclick="openTab(event, 'Tab1')">
+          <button class="tab active" onclick="openTab(event, 'Tab1')">
             Trajectories
           </button>
           <button class="tab" onclick="openTab(event, 'Tab2')">Objects</button>
@@ -37,19 +56,13 @@
           class="tabcontent trajectories-container"
           style="display: block"
         >
-          <button id="create-curve">Add trajectory</button>
-          <!-- <div id="trajectory-tabs" class="trajectory-tabs">
-            <button>Trajectory 1</button>
-            <button>Trajectory 2</button>
-            <button>Trajectory 3</button>
-          </div> -->
-          <!-- array of tragectories -->
+          <div id="tab-container" class="tab-container"></div>
           <div class="trajectories" id="trajectories-container"></div>
         </div>
         <div id="Tab2" class="tabcontent">
           <div>
             <div class="lines">
-              <div class="line top"></div>
+              <!-- <div class="line top"></div> -->
               <div class="line middle"></div>
               <div class="line left20"></div>
               <div class="line left40"></div>
@@ -57,17 +70,17 @@
               <div class="line left80"></div>
             </div>
           </div>
-          <div id="triggers" class="triggers">
-            <button id="create-trigger-0" class="add-trigger">+</button>
-            <button id="create-trigger-1" class="add-trigger">+</button>
-            <button id="create-trigger-2" class="add-trigger">+</button>
-            <button id="create-trigger-3" class="add-trigger">+</button>
-            <button id="create-trigger-4" class="add-trigger">+</button>
-            <button id="create-trigger-5" class="add-trigger">+</button>
-            <button id="create-trigger-6" class="add-trigger">+</button>
-            <button id="create-trigger-7" class="add-trigger">+</button>
-            <button id="create-trigger-8" class="add-trigger">+</button>
-            <button id="create-trigger-9" class="add-trigger">+</button>
+          <div id="objects" class="objects">
+            <button id="create-object-0" class="add-object">+</button>
+            <button id="create-object-1" class="add-object">+</button>
+            <button id="create-object-2" class="add-object">+</button>
+            <button id="create-object-3" class="add-object">+</button>
+            <button id="create-object-4" class="add-object">+</button>
+            <button id="create-object-5" class="add-object">+</button>
+            <button id="create-object-6" class="add-object">+</button>
+            <button id="create-object-7" class="add-object">+</button>
+            <button id="create-object-8" class="add-object">+</button>
+            <button id="create-object-9" class="add-object">+</button>
           </div>
         </div>
         <div id="Tab3" class="tabcontent">
@@ -108,9 +121,22 @@
       </div>
     </div>
     <!-- Including Socket.IO for real-time communication -->
-    <script src="gui-actions.js"></script>
+    <script>
+      function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName('tabcontent');
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = 'none';
+        }
+        tablinks = document.getElementsByClassName('tab');
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(' active', '');
+        }
+        document.getElementById(tabName).style.display = 'block';
+        evt.currentTarget.className += ' active';
+      }
+    </script>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-    
     
   </body>
 </html>
